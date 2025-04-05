@@ -22,13 +22,12 @@ facet/
 │   │   └── Layout/        # Layout components
 │   ├── context/           # React context for state management
 │   ├── pages/             # Next.js pages
-│   └── public/            # Static assets
+│   └── styles/            # CSS and styling
 ├── backend/               # FastAPI backend application
-│   ├── app/               # Application code
-│   │   ├── database/      # Database connectors
-│   │   ├── models/        # Pydantic models
-│   │   ├── routers/       # API routes
-│   │   └── services/      # Business logic
+│   ├── database/          # Database connectors
+│   ├── models/            # Pydantic models
+│   ├── routers/           # API routes
+│   ├── services/          # Business logic
 │   ├── mockdb/            # Mock database for testing
 │   │   └── data/          # Sample data files
 │   ├── scripts/           # Database initialization scripts
@@ -42,7 +41,7 @@ facet/
 
 - Docker and Docker Compose
 - Node.js 16+ (for local development outside Docker)
-- Python 3.11+ (for local development outside Docker)
+- Python 3.13+ (for local development outside Docker)
 
 ### Quick Start with Docker
 
@@ -127,8 +126,11 @@ pytest
 
 Run tests with coverage:
 ```bash
-pytest --cov=app
+pip install pytest-cov  # Install pytest-cov if not installed
+pytest --cov=.
 ```
+
+Note: Currently, there are some failing tests in the project that need to be fixed.
 
 ## Database Connection
 

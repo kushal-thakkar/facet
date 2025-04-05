@@ -22,6 +22,9 @@ var/
 .pytest_cache/
 venv/
 .venv/
+.coverage
+htmlcov/
+coverage.xml
 
 # Next.js
 .next/

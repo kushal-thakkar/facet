@@ -43,7 +43,21 @@ async def root():
     """
     Root endpoint for health checks
     """
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now().isoformat(), "api_version": "v1"}
+
+@app.get("/api", tags=["Health"])
+async def api_root():
+    """
+    API root endpoint
+    """
+    return {
+        "status": "healthy", 
+        "timestamp": datetime.now().isoformat(),
+        "endpoints": [
+            {"path": "/api/v1/connections", "methods": ["GET", "POST"]},
+            {"path": "/api/v1/metadata/connections/{conn_id}/tables", "methods": ["GET"]}
+        ]
+    }
 
 @app.get("/api/health", tags=["Health"])
 async def health_check():

@@ -1,6 +1,7 @@
 // components/Connection/ConnectionForm.js
 import React, { useState } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import api from '../../utils/apiClient';
 
 // Database types with their configurations
 const DATABASE_TYPES = [
@@ -90,22 +91,13 @@ function ConnectionForm({ connection, onSave, onCancel }) {
     setTestResult(null);
     
     try {
-      const response = await fetch('/api/connections/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: formState.type,
-          config: formState.config
-        }),
+      // Test the connection using the API client
+      console.log('Testing connection with:', formState.type, formState.config);
+      
+      const data = await api.post('/api/v1/connections/test', {
+        type: formState.type,
+        config: formState.config
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to test connection');
-      }
       
       setTestResult({
         success: true,
@@ -144,22 +136,23 @@ function ConnectionForm({ connection, onSave, onCancel }) {
     setError(null);
     
     try {
-      // This would be an API call in a real application
-      // For now, we'll just simulate it
-      
-      // Generate ID if it's a new connection
-      const connectionId = formState.id || `conn_${Date.now()}`;
-      
-      const newConnection = {
-        id: connectionId,
+      // Prepare connection data
+      const connectionData = {
         name: formState.name,
         type: formState.type,
         config: { ...formState.config }
       };
       
+      console.log("Saving connection:", connectionData);
+      
+      // Create connection using API client
+      console.log("Creating connection via API client:", connectionData);
+      const newConnection = await api.post('/api/v1/connections', connectionData);
+      console.log("Connection created:", newConnection);
+      
       // Update connections in state
       const updatedConnections = [
-        ...state.connections.filter(c => c.id !== connectionId),
+        ...state.connections.filter(c => c.id !== newConnection.id),
         newConnection
       ];
       
@@ -168,6 +161,34 @@ function ConnectionForm({ connection, onSave, onCancel }) {
       // Set as current connection if it's new or was already current
       if (!formState.id || state.currentConnection?.id === formState.id) {
         actions.setCurrentConnection(newConnection);
+        
+        // Fetch metadata after a short delay to allow the backend to process the new connection
+        try {
+          setTimeout(async () => {
+            console.log("Fetching metadata for connection:", newConnection.id);
+            
+            try {
+              console.log("Fetching tables via API client");
+              const tables = await api.get(`/api/v1/metadata/connections/${newConnection.id}/tables`);
+              console.log("Fetched tables:", tables);
+              
+              // Convert array to object with table name as key
+              const tablesObject = {};
+              tables.forEach(table => {
+                tablesObject[table.name] = table;
+              });
+              
+              // Update metadata in app state
+              actions.updateMetadata({
+                tables: tablesObject
+              });
+            } catch (error) {
+              console.error("Error fetching tables:", error);
+            }
+          }, 1000); // Give the backend a moment to recognize the new connection
+        } catch (error) {
+          console.error('Error setting up metadata fetch:', error);
+        }
       }
       
       // Call onSave callback

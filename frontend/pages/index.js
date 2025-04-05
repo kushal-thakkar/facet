@@ -5,6 +5,7 @@ import ExplorationControls from '../components/Exploration/ExplorationControls';
 import ResultsArea from '../components/Exploration/ResultsArea';
 import ConnectionForm from '../components/Connection/ConnectionForm';
 import { useAppState } from '../context/AppStateContext';
+import api from '../utils/apiClient';
 
 export default function Home() {
   const { state } = useAppState();
@@ -31,23 +32,12 @@ export default function Home() {
     setError(null);
 
     try {
-      // This would be an API call to the backend
-      const response = await fetch('/api/query/execute', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          connectionId: currentConnection.id,
-          query: currentExploration
-        }),
+      // Execute query using API client
+      console.log("Executing query for connection:", currentConnection.id);
+      const data = await api.post('/api/v1/query/execute', {
+        connectionId: currentConnection.id,
+        query: currentExploration
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to execute query');
-      }
-
-      const data = await response.json();
       setQueryResults(data);
     } catch (err) {
       console.error('Error executing query:', err);

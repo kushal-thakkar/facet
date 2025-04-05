@@ -156,12 +156,16 @@ class ConnectionService:
         """
         try:
             # Check if connections file exists
-            if os.path.exists('connections.json'):
-                with open('connections.json', 'r') as f:
+            connections_file = '/app/connections.json'
+            if os.path.exists(connections_file):
+                with open(connections_file, 'r') as f:
                     connections_data = json.load(f)
                 
                 # Convert to Connection objects
                 self.connections = [Connection(**conn) for conn in connections_data]
+                logger.info(f"Loaded {len(self.connections)} connections from connections.json")
+            else:
+                logger.info(f"No connections file found at {connections_file}")
         except Exception as e:
             logger.error(f"Error loading connections: {str(e)}")
     
@@ -173,8 +177,11 @@ class ConnectionService:
             # Convert Connection objects to dictionaries
             connections_data = [conn.dict() for conn in self.connections]
             
-            # Save to file
-            with open('connections.json', 'w') as f:
+            # Save to file with absolute path
+            with open('/app/connections.json', 'w') as f:
                 json.dump(connections_data, f, default=str, indent=2)
+            
+            # Log success
+            logger.info(f"Saved {len(connections_data)} connections to connections.json")
         except Exception as e:
             logger.error(f"Error saving connections: {str(e)}")

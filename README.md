@@ -58,6 +58,12 @@ cd facet
 docker-compose -f docker-compose.dev.yml up
 ```
 
+   If you need to reset the database (for example, if you don't see data in Postgres):
+   ```bash
+   docker-compose -f docker-compose.dev.yml down -v
+   docker-compose -f docker-compose.dev.yml up
+   ```
+
 4. Access the application:
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000
@@ -131,6 +137,22 @@ pytest --cov=.
 ```
 
 Note: Currently, there are some failing tests in the project that need to be fixed.
+
+## Troubleshooting
+
+### Database Initialization Issues
+
+If you don't see any data in the PostgreSQL database after starting the containers, the initialization script might not have been executed. This can happen if the volume already exists but doesn't contain the required tables and data.
+
+To resolve this issue:
+
+```bash
+# Remove containers and volumes, then restart
+docker-compose -f docker-compose.dev.yml down -v
+docker-compose -f docker-compose.dev.yml up
+```
+
+The `-v` flag ensures that volumes are removed, allowing the initialization scripts to run when the containers are recreated.
 
 ## Database Connection
 

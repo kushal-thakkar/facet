@@ -1,15 +1,57 @@
 // components/Layout/Header.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import api from '../../utils/apiClient';
 
 function Header() {
   const { state, actions } = useAppState();
   const { connections, currentConnection } = state;
 
+  // Fetch metadata when connection changes
+  useEffect(() => {
+    if (currentConnection) {
+      console.log("Current connection:", currentConnection);
+      fetchMetadata(currentConnection.id);
+    }
+  }, [currentConnection]);
+
   const handleConnectionChange = (e) => {
     const connectionId = e.target.value;
     const selectedConnection = connections.find(conn => conn.id === connectionId);
     actions.setCurrentConnection(selectedConnection);
+  };
+  
+  const fetchMetadata = async (connectionId) => {
+    try {
+      console.log(`Fetching metadata for connection ID: ${connectionId}`);
+      
+      // Fetch connection info
+      const connection = await api.get(`/api/v1/connections/${connectionId}`);
+      console.log("Connection:", connection);
+      
+      // Fetch tables
+      const tables = await api.get(`/api/v1/metadata/connections/${connectionId}/tables`);
+      console.log("Fetched tables:", tables);
+      
+      if (!tables) {
+        console.error("Failed to fetch tables");
+        return;
+      }
+      
+      // Convert array to object with table name as key
+      const tablesObject = {};
+      tables.forEach(table => {
+        tablesObject[table.name] = table;
+      });
+      
+      // Update metadata in app state
+      actions.updateMetadata({
+        tables: tablesObject
+      });
+      
+    } catch (error) {
+      console.error('Error fetching metadata:', error);
+    }
   };
 
   return (

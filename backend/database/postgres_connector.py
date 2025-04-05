@@ -42,7 +42,7 @@ class PostgresConnector(DatabaseConnector):
                 database=self.connection.config.database,
                 ssl=self.connection.config.ssl,
                 command_timeout=30,  # 30 second timeout for queries
-                connect_timeout=10,  # 10 second timeout for connection
+                timeout=10,  # Connection timeout in seconds
                 min_size=1,
                 max_size=10
             )

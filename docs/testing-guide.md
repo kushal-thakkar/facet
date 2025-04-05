@@ -306,8 +306,24 @@ bun test
 
 # Backend checks
 cd backend
-flake8 app tests
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Run code formatting
+python -m black .
+python -m isort .
+
+# Run linting
+python -m flake8
+
+# Run type checking
+python -m mypy .
+
+# Run tests
 pytest
+
+# Or use the Makefile to run all checks
+make ci-check
 ```
 
 ## Troubleshooting Tests

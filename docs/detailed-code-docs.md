@@ -1,84 +1,223 @@
-# Detailed Code Documentation
+# Facet Code Documentation
 
-## Frontend
+This document provides detailed documentation for the codebase, including architecture, key components, and code organization.
 
-Context and State Management:
+## Architecture Overview
 
-AppStateContext.js: Central state management for the application
+Facet follows a typical client-server architecture with a React.js frontend and a FastAPI backend.
 
+### High-Level Architecture
 
-Layout Components:
+```
++----------------+         +----------------+         +-------------------+
+|                |         |                |         |                   |
+|   Frontend     | <-----> |   Backend API  | <-----> |   Databases       |
+|   (Next.js)    |         |   (FastAPI)    |         |   (PG/ClickHouse) |
+|                |         |                |         |                   |
++----------------+         +----------------+         +-------------------+
+```
 
-MainLayout.js: Main application layout with panels
-Header.js: Application header with connection selector
-SidePanel.js: Navigation for tables and saved queries
-InfoPanel.js: Metadata and help information
-Footer.js: Query status and performance information
+## Backend Architecture
 
+The backend follows a layered architecture:
 
-Exploration Components:
+1. **Routes Layer** (`/routers`): Defines API endpoints and handles HTTP requests/responses
+2. **Service Layer** (`/services`): Contains business logic
+3. **Database Layer** (`/database`): Manages database connections and queries
+4. **Models Layer** (`/models`): Defines data structures using Pydantic
 
-ExplorationControls.js: Container for filter, group by, and metrics
-FilterBar.js: UI for creating and managing filters
-GroupBySelector.js: UI for selecting dimensions to group by
-MetricSelector.js: UI for defining metrics and aggregations
-TimeRangeSelector.js: UI for selecting time ranges
+### Key Components
 
+#### Routers
 
-Results Components:
+API routes are organized by functionality:
 
-ResultsArea.js: Container for result visualizations
-ResultsTable.js: Data grid with pagination and sorting
-ResultsChart.js: Chart visualization options
+- `connections.py`: Manage database connections
+- `metadata.py`: Retrieve database schema information
+- `query.py`: Execute and manage queries
+- `explorations.py`: Save and retrieve exploration configurations
 
+#### Services
 
-Connection Components:
+Services implement the business logic:
 
-ConnectionForm.js: Form for creating and editing connections
+- `connection_service.py`: Handle database connection management
+- `metadata_service.py`: Retrieve and format schema information
+- `query_service.py`: Execute queries and process results
+- `query_translator.py`: Translate UI query definitions to SQL
+- `exploration_service.py`: Manage saved explorations
 
+#### Database Connectors
 
-Pages:
+Database connectors provide a unified interface for different database types:
 
-index.js: Main application page
-_app.js: Next.js application wrapper
+- `base_connector.py`: Abstract base class defining the connector interface
+- `postgres_connector.py`: PostgreSQL implementation
+- `clickhouse_connector.py`: ClickHouse implementation
+- `connector_factory.py`: Factory to create appropriate connectors
 
+#### Models
 
+Pydantic models define the data structures:
 
-## Backend
+- `connection.py`: Database connection configuration
+- `metadata.py`: Table and column metadata
+- `query.py`: Query structure and parameters
+- `explorations.py`: Saved exploration configuration
 
-Database Connectors:
+## Frontend Architecture
 
-base_connector.py: Abstract base class for database connectors
-postgres_connector.py: PostgreSQL implementation
-clickhouse_connector.py: ClickHouse implementation
-connector_factory.py: Factory for creating appropriate connectors
+The frontend is built with Next.js and follows a component-based architecture.
 
+### Key Components
 
-Data Models:
+#### Pages
 
-connection.py: Database connection models
-query.py: Query definition and result models
-metadata.py: Table/column metadata models
-exploration.py: Saved exploration models
+- `index.js`: Main application page
+- `_app.js`: Next.js application wrapper
 
+#### Components
 
-API Routers:
+Components are organized by functionality:
 
-connections.py: Endpoints for managing connections
-metadata.py: Endpoints for retrieving database metadata
-query.py: Endpoints for executing and analyzing queries
-explorations.py: Endpoints for saving and loading explorations
+**Layout:**
+- `MainLayout.js`: Main application layout
+- `Header.js`: Application header
+- `Footer.js`: Application footer
+- `SidePanel.js`: Sidebar navigation
+- `InfoPanel.js`: Information display panel
 
+**Connection:**
+- `ConnectionForm.js`: Database connection form
 
-Services:
+**Exploration:**
+- `ExplorationControls.js`: Query building controls
+- `FilterBar.js`: Query filtering controls
+- `GroupBySelector.js`: Dimension selection
+- `MetricSelector.js`: Metric selection
+- `ResultsArea.js`: Query results container
+- `ResultsTable.js`: Tabular results display
+- `ResultsChart.js`: Chart visualization
+- `TimeRangeSelector.js`: Time range selection
 
-connection_service.py: Logic for connection management
-metadata_service.py: Logic for metadata extraction and management
-query_service.py: Logic for query execution
-query_translator.py: Translation from JSON query model to SQL
-exploration_service.py: Logic for exploration management
+#### Context
 
+- `AppStateContext.js`: Global state management using React Context
 
-Main Application:
+## Code Style and Standards
 
-main.py: FastAPI application entry point
+### Python Code Style
+
+The backend code follows these conventions:
+
+- **Formatting**: [Black](https://black.readthedocs.io/) with a line length of 100 characters
+- **Imports**: Sorted with [isort](https://pycqa.github.io/isort/) using Black-compatible settings
+- **Linting**: [Flake8](https://flake8.pycqa.org/) for code quality checks
+- **Type Checking**: [mypy](https://mypy.readthedocs.io/) for static type checking
+
+Use the following commands to format and lint the code:
+
+```bash
+# From the backend directory:
+
+# Format code
+make format  # Runs black and isort
+
+# Lint code
+make lint  # Runs flake8
+
+# Type checking
+make typecheck  # Runs mypy
+
+# Run all checks
+make ci-check
+
+# Install development tools
+make install-dev
+```
+
+### JavaScript Code Style
+
+The frontend code follows these conventions:
+
+- **Formatting**: Prettier with default settings
+- **Linting**: ESLint with the Next.js configuration
+
+## Testing Strategy
+
+### Backend Testing
+
+Backend tests use pytest and are organized to mirror the application structure:
+
+- Unit tests for services and utilities
+- Integration tests for API endpoints
+- Database connector tests with mock responses
+
+### Frontend Testing
+
+Frontend tests use Jest and React Testing Library:
+
+- Component tests for UI components
+- Context tests for state management
+
+See the [Testing Guide](./testing-guide.md) for more details on testing.
+
+## Database Schema
+
+### PostgreSQL Schema
+
+The PostgreSQL schema is designed to store connection information and saved explorations:
+
+```sql
+CREATE TABLE connections (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    host VARCHAR(255) NOT NULL,
+    port INTEGER NOT NULL,
+    database VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE explorations (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    connection_id UUID REFERENCES connections(id),
+    query JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+## API Documentation
+
+### Connections API
+
+- `GET /api/connections`: List all saved connections
+- `POST /api/connections`: Create a new connection
+- `GET /api/connections/{connection_id}`: Get connection details
+- `PUT /api/connections/{connection_id}`: Update a connection
+- `DELETE /api/connections/{connection_id}`: Delete a connection
+- `POST /api/connections/{connection_id}/test`: Test a connection
+
+### Metadata API
+
+- `GET /api/metadata/connections/{connection_id}/tables`: List tables for a connection
+- `GET /api/metadata/connections/{connection_id}/tables/{table_name}`: Get table details
+
+### Query API
+
+- `POST /api/query/execute`: Execute a query
+- `GET /api/query/{query_id}/status`: Check query status
+- `GET /api/query/{query_id}/results`: Get query results
+
+### Explorations API
+
+- `GET /api/explorations`: List saved explorations
+- `POST /api/explorations`: Save a new exploration
+- `GET /api/explorations/{exploration_id}`: Get exploration details
+- `PUT /api/explorations/{exploration_id}`: Update an exploration
+- `DELETE /api/explorations/{exploration_id}`: Delete an exploration

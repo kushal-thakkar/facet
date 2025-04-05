@@ -97,7 +97,8 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 2. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt  # For production dependencies only
+pip install -r requirements-dev.txt  # For development and testing
 ```
 
 3. Start the development server:
@@ -106,6 +107,29 @@ uvicorn main:app --reload
 ```
 
 4. Access the API at http://localhost:8000
+
+## Development Tools
+
+### Code Formatting and Linting
+
+The project uses standardized formatting and linting tools:
+
+```bash
+# Format code
+cd backend && make format  # Runs black and isort on Python code
+
+# Lint code
+cd backend && make lint  # Runs flake8 on Python code
+
+# Type checking
+cd backend && make typecheck  # Runs mypy on Python code
+
+# Run all checks
+cd backend && make ci-check  # Runs format, lint, typecheck, and tests
+
+# Install development tools
+cd backend && make install-dev  # Installs development dependencies
+```
 
 ## Testing
 

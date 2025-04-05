@@ -1,6 +1,8 @@
 import asyncio
-import pytest
 from asyncio import Future
+
+import pytest
+
 
 # Make tests run with pytest-asyncio
 @pytest.fixture
@@ -9,6 +11,7 @@ def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
 
 # Helper for working with async tests
 def async_return(result):

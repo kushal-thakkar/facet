@@ -1,12 +1,15 @@
 # app/models/metadata.py
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
 
 class TableMetadata(BaseModel):
     """
     Metadata for a database table
     """
+
     name: str
     displayName: Optional[str] = None
     description: Optional[str] = None
@@ -18,10 +21,12 @@ class TableMetadata(BaseModel):
     refreshedAt: Optional[datetime] = None
     columns: List[str] = []
 
+
 class ColumnMetadata(BaseModel):
     """
     Metadata for a database column
     """
+
     name: str
     tableName: str
     displayName: Optional[str] = None
@@ -35,10 +40,12 @@ class ColumnMetadata(BaseModel):
     explorable: bool = True
     valueMap: Optional[Dict[str, str]] = None
 
+
 class RelationshipMetadata(BaseModel):
     """
     Metadata for a relationship between tables
     """
+
     sourceTable: str
     sourceColumn: str
     targetTable: str
@@ -47,10 +54,12 @@ class RelationshipMetadata(BaseModel):
     displayName: Optional[str] = None
     automatic: bool = True  # whether inferred from db or manually defined
 
+
 class MetadataUpdateRequest(BaseModel):
     """
     Request model for updating metadata
     """
+
     displayName: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None

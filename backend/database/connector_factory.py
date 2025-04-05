@@ -2,26 +2,27 @@
 import logging
 from typing import Optional
 
-from models.connection import Connection
 from database.base_connector import DatabaseConnector
-from database.postgres_connector import PostgresConnector
 from database.clickhouse_connector import ClickHouseConnector
+from database.postgres_connector import PostgresConnector
+from models.connection import Connection
 
 logger = logging.getLogger(__name__)
+
 
 class DatabaseConnectorFactory:
     """
     Factory for creating database connectors
     """
-    
+
     @staticmethod
     async def create_connector(connection: Connection) -> Optional[DatabaseConnector]:
         """
         Create a connector for the given connection
-        
+
         Args:
             connection: The connection configuration
-            
+
         Returns:
             A database connector instance, or None if the database type is not supported
         """

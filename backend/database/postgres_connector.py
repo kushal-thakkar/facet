@@ -1,37 +1,39 @@
 # app/database/postgres_connector.py
-import asyncpg
 import logging
 import time
-from typing import List, Dict, Any, Optional, Tuple, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
-from models.connection import Connection
-from models.metadata import TableMetadata, ColumnMetadata, RelationshipMetadata
+import asyncpg
+
 from database.base_connector import DatabaseConnector
+from models.connection import Connection
+from models.metadata import ColumnMetadata, RelationshipMetadata, TableMetadata
 
 logger = logging.getLogger(__name__)
+
 
 class PostgresConnector(DatabaseConnector):
     """
     Connector for PostgreSQL databases
     """
-    
+
     def __init__(self, connection: Connection):
         """
         Initialize the connector with connection details
-        
+
         Args:
             connection: The connection configuration
         """
         super().__init__(connection)
         self.pool = None
-    
+
     async def connect(self) -> None:
         """
         Establish connection to the database
         """
         if self.pool:
             return
-        
+
         try:
             # Create connection pool
             self.pool = await asyncpg.create_pool(
@@ -44,12 +46,12 @@ class PostgresConnector(DatabaseConnector):
                 command_timeout=30,  # 30 second timeout for queries
                 timeout=10,  # Connection timeout in seconds
                 min_size=1,
-                max_size=10
+                max_size=10,
             )
         except Exception as e:
             logger.error(f"Error connecting to PostgreSQL: {str(e)}")
             raise
-    
+
     async def close(self) -> None:
         """
         Close the connection pool
@@ -57,11 +59,11 @@ class PostgresConnector(DatabaseConnector):
         if self.pool:
             await self.pool.close()
             self.pool = None
-    
+
     async def test_connection(self) -> Tuple[bool, str]:
         """
         Test if the connection is valid
-        
+
         Returns:
             Tuple of (success, message)
         """
@@ -69,25 +71,27 @@ class PostgresConnector(DatabaseConnector):
             await self.connect()
             async with self.pool.acquire() as conn:
                 # Execute a simple query
-                version = await conn.fetchval('SELECT version()')
+                version = await conn.fetchval("SELECT version()")
                 return True, f"Connection successful. PostgreSQL version: {version}"
         except Exception as e:
             logger.error(f"Connection test failed: {str(e)}")
             return False, f"Connection failed: {str(e)}"
-    
-    async def get_metadata(self) -> Tuple[List[TableMetadata], List[ColumnMetadata], List[RelationshipMetadata]]:
+
+    async def get_metadata(
+        self,
+    ) -> Tuple[List[TableMetadata], List[ColumnMetadata], List[RelationshipMetadata]]:
         """
         Extract metadata from the database
-        
+
         Returns:
             Tuple of (tables, columns, relationships)
         """
         await self.connect()
-        
+
         tables = []
         columns = []
         relationships = []
-        
+
         try:
             async with self.pool.acquire() as conn:
                 # Get tables
@@ -108,19 +112,21 @@ class PostgresConnector(DatabaseConnector):
                 AND t.table_type IN ('BASE TABLE', 'VIEW')
                 ORDER BY t.table_schema, t.table_name
                 """
-                
+
                 table_records = await conn.fetch(tables_query)
-                
+
                 for record in table_records:
-                    tables.append(TableMetadata(
-                        name=record['name'],
-                        schema_name=record['schema'],
-                        description=record['description'],
-                        type=record['type'],
-                        rowCount=record['row_count'],
-                        explorable=True
-                    ))
-                
+                    tables.append(
+                        TableMetadata(
+                            name=record["name"],
+                            schema_name=record["schema"],
+                            description=record["description"],
+                            type=record["type"],
+                            rowCount=record["row_count"],
+                            explorable=True,
+                        )
+                    )
+
                 # Get columns
                 columns_query = """
                 SELECT 
@@ -170,40 +176,42 @@ class PostgresConnector(DatabaseConnector):
                 WHERE c.table_schema NOT IN ('pg_catalog', 'information_schema')
                 ORDER BY c.table_name, c.ordinal_position
                 """
-                
+
                 column_records = await conn.fetch(columns_query)
-                
+
                 for record in column_records:
                     # Map PostgreSQL types to normalized types
-                    data_type = record['data_type'].lower()
+                    data_type = record["data_type"].lower()
                     normalized_type = data_type
-                    
-                    if 'int' in data_type:
-                        normalized_type = 'integer'
-                    elif data_type in ('real', 'double precision', 'numeric', 'decimal'):
-                        normalized_type = 'number'
-                    elif 'char' in data_type or 'text' in data_type:
-                        normalized_type = 'string'
-                    elif 'bool' in data_type:
-                        normalized_type = 'boolean'
-                    elif 'date' in data_type:
-                        normalized_type = 'date'
-                    elif 'time' in data_type:
-                        normalized_type = 'timestamp'
-                    elif 'json' in data_type:
-                        normalized_type = 'json'
-                    
-                    columns.append(ColumnMetadata(
-                        name=record['name'],
-                        tableName=record['table_name'],
-                        dataType=normalized_type,
-                        nullable=record['nullable'],
-                        description=record['description'],
-                        primaryKey=record['primary_key'],
-                        foreignKey=record['foreign_key'],
-                        explorable=True
-                    ))
-                
+
+                    if "int" in data_type:
+                        normalized_type = "integer"
+                    elif data_type in ("real", "double precision", "numeric", "decimal"):
+                        normalized_type = "number"
+                    elif "char" in data_type or "text" in data_type:
+                        normalized_type = "string"
+                    elif "bool" in data_type:
+                        normalized_type = "boolean"
+                    elif "date" in data_type:
+                        normalized_type = "date"
+                    elif "time" in data_type:
+                        normalized_type = "timestamp"
+                    elif "json" in data_type:
+                        normalized_type = "json"
+
+                    columns.append(
+                        ColumnMetadata(
+                            name=record["name"],
+                            tableName=record["table_name"],
+                            dataType=normalized_type,
+                            nullable=record["nullable"],
+                            description=record["description"],
+                            primaryKey=record["primary_key"],
+                            foreignKey=record["foreign_key"],
+                            explorable=True,
+                        )
+                    )
+
                 # Get relationships
                 relationships_query = """
                 SELECT 
@@ -222,135 +230,137 @@ class PostgresConnector(DatabaseConnector):
                 WHERE tc.constraint_type = 'FOREIGN KEY'
                 AND tc.table_schema NOT IN ('pg_catalog', 'information_schema')
                 """
-                
+
                 relationship_records = await conn.fetch(relationships_query)
-                
+
                 for record in relationship_records:
                     # Determine relationship type (many-to-one is the most common for FK)
                     relationship_type = "many-to-one"
-                    
-                    relationships.append(RelationshipMetadata(
-                        sourceTable=record['source_table'],
-                        sourceColumn=record['source_column'],
-                        targetTable=record['target_table'],
-                        targetColumn=record['target_column'],
-                        relationship=relationship_type,
-                        automatic=True
-                    ))
-        
+
+                    relationships.append(
+                        RelationshipMetadata(
+                            sourceTable=record["source_table"],
+                            sourceColumn=record["source_column"],
+                            targetTable=record["target_table"],
+                            targetColumn=record["target_column"],
+                            relationship=relationship_type,
+                            automatic=True,
+                        )
+                    )
+
         except Exception as e:
             logger.error(f"Error getting metadata: {str(e)}")
             raise
-        
+
         return tables, columns, relationships
-    
-    async def execute_query(self, sql: str, params: Optional[Dict[str, Any]] = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], float]:
+
+    async def execute_query(
+        self, sql: str, params: Optional[Dict[str, Any]] = None
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], float]:
         """
         Execute a SQL query and return results
-        
+
         Args:
             sql: The SQL query to execute
             params: Query parameters
-            
+
         Returns:
             Tuple of (results, columns, execution_time)
         """
         await self.connect()
-        
+
         try:
             start_time = time.time()
             param_values = list(params.values()) if params else []
-            
+
             async with self.pool.acquire() as conn:
                 # Execute query
                 statement = await conn.prepare(sql)
                 records = await statement.fetch(*param_values)
-                
+
                 # Get column information
                 columns = [
-                    {
-                        "name": key, 
-                        "type": statement.get_attributes()[i].type.name
-                    }
+                    {"name": key, "type": statement.get_attributes()[i].type.name}
                     for i, key in enumerate(statement.get_attributes())
                 ]
-                
+
                 # Convert records to dictionaries
                 results = [dict(record) for record in records]
-                
+
                 execution_time = time.time() - start_time
-                
+
                 return results, columns, execution_time
-        
+
         except Exception as e:
             logger.error(f"Error executing query: {str(e)}")
             raise
-    
-    async def execute_with_streaming(self, sql: str, params: Optional[Dict[str, Any]] = None) -> AsyncGenerator[Dict[str, Any], None]:
+
+    async def execute_with_streaming(
+        self, sql: str, params: Optional[Dict[str, Any]] = None
+    ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Execute a SQL query with streaming results
-        
+
         Args:
             sql: The SQL query to execute
             params: Query parameters
-            
+
         Returns:
             An async generator yielding result rows
         """
         await self.connect()
-        
+
         try:
             param_values = list(params.values()) if params else []
-            
+
             async with self.pool.acquire() as conn:
                 # Start a transaction
                 async with conn.transaction():
                     # Execute query
                     stmt = await conn.prepare(sql)
                     cursor = await stmt.cursor(*param_values)
-                    
+
                     async for record in cursor:
                         yield dict(record)
-        
+
         except Exception as e:
             logger.error(f"Error executing streaming query: {str(e)}")
             raise
-    
-    async def get_query_explanation(self, sql: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    async def get_query_explanation(
+        self, sql: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Get execution plan for a query
-        
+
         Args:
             sql: The SQL query to explain
             params: Query parameters
-            
+
         Returns:
             Query plan information
         """
         await self.connect()
-        
+
         try:
             param_values = list(params.values()) if params else []
             explain_sql = f"EXPLAIN (FORMAT JSON, ANALYZE, VERBOSE) {sql}"
-            
+
             async with self.pool.acquire() as conn:
                 # Execute EXPLAIN
                 plan = await conn.fetchval(explain_sql, *param_values)
-                
+
                 # The result is a JSON string
-                return {
-                    "plan": plan[0],
-                    "cost": plan[0].get("Plan", {}).get("Total Cost")
-                }
-        
+                return {"plan": plan[0], "cost": plan[0].get("Plan", {}).get("Total Cost")}
+
         except Exception as e:
             logger.error(f"Error getting query explanation: {str(e)}")
             raise
-    
+
     def get_dialect(self) -> str:
         """
         Get SQL dialect information
-        
+
         Returns:
             String identifying the SQL dialect
         """

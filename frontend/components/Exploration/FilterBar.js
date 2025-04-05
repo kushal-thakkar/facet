@@ -226,10 +226,11 @@ function FilterBar() {
                 <div className="mt-4 space-y-4">
                   {/* Column Select */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="filter-field" className="block text-sm font-medium text-gray-700 mb-1">
                       Field
                     </label>
                     <select
+                      id="filter-field"
                       value={newFilter.column}
                       onChange={(e) => setNewFilter({
                         ...newFilter,
@@ -248,10 +249,11 @@ function FilterBar() {
                   
                   {/* Operator Select */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="filter-operator" className="block text-sm font-medium text-gray-700 mb-1">
                       Operator
                     </label>
                     <select
+                      id="filter-operator"
                       value={newFilter.operator}
                       onChange={(e) => setNewFilter({
                         ...newFilter,
@@ -271,12 +273,13 @@ function FilterBar() {
                   {/* Value Input */}
                   {!['is_null', 'is_not_null'].includes(newFilter.operator) && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="filter-value" className="block text-sm font-medium text-gray-700 mb-1">
                         Value
                       </label>
                       
                       {getSelectedColumnType() === 'boolean' ? (
                         <select
+                          id="filter-value"
                           value={newFilter.value}
                           onChange={(e) => setNewFilter({
                             ...newFilter,
@@ -289,6 +292,7 @@ function FilterBar() {
                         </select>
                       ) : getSelectedColumnType() === 'date' || getSelectedColumnType() === 'timestamp' ? (
                         <input
+                          id="filter-value"
                           type="date"
                           value={newFilter.value}
                           onChange={(e) => setNewFilter({
@@ -299,6 +303,7 @@ function FilterBar() {
                         />
                       ) : newFilter.operator === 'in' || newFilter.operator === 'not_in' ? (
                         <textarea
+                          id="filter-value"
                           value={newFilter.value}
                           onChange={(e) => setNewFilter({
                             ...newFilter,
@@ -310,6 +315,7 @@ function FilterBar() {
                         />
                       ) : (
                         <input
+                          id="filter-value"
                           type={getSelectedColumnType() === 'number' ? 'number' : 'text'}
                           value={newFilter.value}
                           onChange={(e) => setNewFilter({

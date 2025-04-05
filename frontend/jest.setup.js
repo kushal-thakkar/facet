@@ -35,3 +35,22 @@ document.createRange = () => {
   }));
   return range;
 };
+
+// Fix React 18 rendering in tests
+jest.mock('react-dom/client', () => {
+  const original = jest.requireActual('react-dom/client');
+  
+  return {
+    ...original,
+    createRoot: (container) => {
+      return {
+        render(element) {
+          require('react-dom').render(element, container);
+        },
+        unmount() {
+          require('react-dom').unmountComponentAtNode(container);
+        }
+      };
+    },
+  };
+});

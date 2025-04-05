@@ -65,27 +65,27 @@ describe('FilterBar Component', () => {
     render(<FilterBar />);
     
     // Open dialog
-    fireEvent.click(screen.getByText('+ Add Filter'));
+    fireEvent.click(screen.getByRole('button', { name: '+ Add Filter' }));
     
     // Dialog should be open
     expect(screen.getByText('Add Filter')).toBeInTheDocument();
-    expect(screen.getByText('Field')).toBeInTheDocument();
-    expect(screen.getByText('Operator')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Field/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Operator/i)).toBeInTheDocument();
   });
   
   it('adds a new filter when form is submitted', async () => {
     render(<FilterBar />);
     
     // Open dialog
-    fireEvent.click(screen.getByText('+ Add Filter'));
+    fireEvent.click(screen.getByRole('button', { name: '+ Add Filter' }));
     
     // Fill out form
-    fireEvent.change(screen.getByLabelText('Field'), { target: { value: 'country' } });
-    fireEvent.change(screen.getByLabelText('Operator'), { target: { value: '=' } });
-    fireEvent.change(screen.getByLabelText('Value'), { target: { value: 'US' } });
+    fireEvent.change(screen.getByLabelText(/Field/i), { target: { value: 'country' } });
+    fireEvent.change(screen.getByLabelText(/Operator/i), { target: { value: '=' } });
+    fireEvent.change(screen.getByLabelText(/Value/i), { target: { value: 'US' } });
     
     // Submit form
-    fireEvent.click(screen.getByText('Add'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     
     // Verify updateCurrentExploration was called with new filter
     expect(mockActions.updateCurrentExploration).toHaveBeenCalledWith({
@@ -113,18 +113,18 @@ describe('FilterBar Component', () => {
     render(<FilterBar />);
     
     // Open dialog
-    fireEvent.click(screen.getByText('+ Add Filter'));
+    fireEvent.click(screen.getByRole('button', { name: '+ Add Filter' }));
     
     // Select timestamp field
-    fireEvent.change(screen.getByLabelText('Field'), { target: { value: 'timestamp' } });
+    fireEvent.change(screen.getByLabelText(/Field/i), { target: { value: 'timestamp' } });
     
     // Should show date input
-    expect(screen.getByLabelText('Value')).toHaveAttribute('type', 'date');
+    expect(screen.getByLabelText(/Value/i)).toHaveAttribute('type', 'date');
     
     // Change to string field
-    fireEvent.change(screen.getByLabelText('Field'), { target: { value: 'country' } });
+    fireEvent.change(screen.getByLabelText(/Field/i), { target: { value: 'country' } });
     
     // Should show text input
-    expect(screen.getByLabelText('Value')).toHaveAttribute('type', 'text');
+    expect(screen.getByLabelText(/Value/i)).toHaveAttribute('type', 'text');
   });
 });

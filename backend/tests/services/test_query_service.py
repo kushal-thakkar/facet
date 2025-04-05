@@ -47,7 +47,7 @@ def mock_query_result():
 
 class TestQueryService:
     @pytest.mark.asyncio
-    @patch('app.database.connector_factory.DatabaseConnectorFactory.create_connector')
+    @patch('database.connector_factory.DatabaseConnectorFactory.create_connector')
     async def test_execute_query(self, mock_create_connector, mock_connection, mock_query_model, mock_query_result):
         # Setup mock connector
         mock_connector = AsyncMock()
@@ -82,7 +82,7 @@ class TestQueryService:
         assert result.sql is not None
     
     @pytest.mark.asyncio
-    @patch('app.database.connector_factory.DatabaseConnectorFactory.create_connector')
+    @patch('database.connector_factory.DatabaseConnectorFactory.create_connector')
     async def test_execute_query_error(self, mock_create_connector, mock_connection, mock_query_model):
         # Setup mock connector to raise an exception
         mock_connector = AsyncMock()
@@ -104,7 +104,7 @@ class TestQueryService:
         assert len(result.suggestions) > 0
     
     @pytest.mark.asyncio
-    @patch('app.database.connector_factory.DatabaseConnectorFactory.create_connector')
+    @patch('database.connector_factory.DatabaseConnectorFactory.create_connector')
     async def test_validate_query(self, mock_create_connector, mock_connection, mock_query_model):
         # Setup mock connector
         mock_connector = AsyncMock()

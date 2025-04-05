@@ -2,6 +2,19 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { AppStateProvider, useAppState } from './AppStateContext';
 
+// Setup proper DOM mocks for tests
+beforeAll(() => {
+  // Mock getComputedStyle
+  Object.defineProperty(window, 'getComputedStyle', {
+    value: () => ({
+      getPropertyValue: () => '',
+    }),
+  });
+
+  // Setup DOM element
+  document.body.innerHTML = '<div id="root"></div>';
+});
+
 // Test component that uses the AppState context
 const TestComponent = () => {
   const { state, actions } = useAppState();

@@ -8,7 +8,7 @@ repos:
         language_version: python3
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         types: [python]
@@ -35,3 +35,14 @@ repos:
       - id: prettier
         types_or: [javascript, jsx, ts, tsx, json, css, scss, yaml]
         exclude: ^frontend/node_modules/
+
+  # JavaScript/React linting
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: bash -c 'cd frontend && bun run lint'
+        language: system
+        files: \.(js|jsx|ts|tsx)$
+        exclude: ^frontend/node_modules/
+        pass_filenames: false

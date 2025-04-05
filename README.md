@@ -112,11 +112,11 @@ uvicorn main:app --reload
 
 ### Code Formatting and Linting
 
-The project uses standardized formatting and linting tools:
+The project uses both pre-commit hooks and manual commands for code quality:
 
 #### Pre-commit Hooks
 
-The project uses pre-commit hooks to automatically format and lint code before committing. To set up pre-commit:
+Pre-commit hooks automatically check code before each commit:
 
 ```bash
 # Install pre-commit
@@ -131,40 +131,35 @@ The pre-commit hooks will automatically run on `git commit` and will:
 - Lint Python code with Flake8
 - Type check Python code with MyPy
 - Format JavaScript/React code with Prettier
+- Lint JavaScript/React code with ESLint
 
-#### Backend
+To run all pre-commit checks manually:
+```bash
+pre-commit run --all-files
+```
+
+#### Additional Quality Checks
+
+Some tools require manual execution:
+
+##### Backend
 
 ```bash
 # Install development dependencies
 pip install -r backend/requirements-dev.txt
 
-# Format code
-cd backend && make format  # Runs black and isort on Python code
+# Run tests
+cd backend && make test  # Runs pytest
 
-# Lint code
-cd backend && make lint  # Runs flake8 on Python code
-
-# Type checking
-cd backend && make typecheck  # Runs mypy on Python code
-
-# Run all checks
-cd backend && make ci-check  # Runs format, lint, typecheck, and tests
-
-# Install development tools
-cd backend && make install-dev  # Installs development dependencies
+# Run all checks (format, lint, typecheck, and tests)
+cd backend && make ci-check
 ```
 
-#### Frontend
+##### Frontend
 
 ```bash
-# Format code
-cd frontend && bun run format  # Runs prettier on JS, JSX, TS, TSX, JSON, and CSS files
-
-# Check formatting without changing files
-cd frontend && bun run format:check
-
-# Lint code
-cd frontend && bun run lint  # Runs ESLint on JS/TS files
+# Run tests
+cd frontend && bun test
 ```
 
 ## Testing

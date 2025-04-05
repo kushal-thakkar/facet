@@ -2,7 +2,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Dict, Any, Optional
 import logging
-from datetime import datetime
 
 from models.metadata import (
     TableMetadata,

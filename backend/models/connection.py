@@ -1,5 +1,5 @@
 # app/models/connection.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from datetime import datetime
 

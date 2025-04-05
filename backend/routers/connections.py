@@ -1,6 +1,6 @@
 # app/routers/connections.py
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Dict, Any, Optional
+from typing import List
 import logging
 import uuid
 from datetime import datetime

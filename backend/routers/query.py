@@ -1,8 +1,7 @@
 # app/routers/query.py
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Dict, Any, Optional
 import logging
-from datetime import datetime
 
 from models.query import (
     QueryRequest,

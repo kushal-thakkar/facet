@@ -1,5 +1,5 @@
 # app/models/query.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 

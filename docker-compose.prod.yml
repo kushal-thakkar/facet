@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    restart: always
+    ports:
+      - "80:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - facet-network
+  
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - POSTGRES_USER=facet
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-facetpass}
+      - POSTGRES_DB=facet
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:-}
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_DB=default
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SECRET_KEY=${SECRET_KEY:-default_secret_key_replace_in_production}
+      - ALLOWED_ORIGINS=http://localhost,http://frontend
+    depends_on:
+      - postgres
+      - clickhouse
+      - redis
+    networks:
+      - facet-network
+  
+  # PostgreSQL database
+  postgres:
+    image: postgres:14
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_USER=facet
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-facetpass}
+      - POSTGRES_DB=facet
+    networks:
+      - facet-network
+  
+  # ClickHouse database
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    restart: always
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./backend/scripts/init-clickhouse.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - facet-network
+  
+  # Redis for caching
+  redis:
+    image: redis:alpine
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - facet-network
+  
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - facet-network
+  
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    restart: always
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - facet-network
+
+networks:
+  facet-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:

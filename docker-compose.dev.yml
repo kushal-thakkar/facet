@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - facet-network
+  
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - POSTGRES_USER=facet
+      - POSTGRES_PASSWORD=facetpass
+      - POSTGRES_DB=facet
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_DB=default
+    depends_on:
+      - postgres
+      - clickhouse
+      - redis
+    networks:
+      - facet-network
+  
+  # PostgreSQL database
+  postgres:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_USER=facet
+      - POSTGRES_PASSWORD=facetpass
+      - POSTGRES_DB=facet
+    ports:
+      - "5432:5432"
+    networks:
+      - facet-network
+  
+  # ClickHouse database
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./backend/scripts/init-clickhouse.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    networks:
+      - facet-network
+  
+  # Redis for caching
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - facet-network
+  
+  # Mock database service for testing
+  mockdb:
+    build:
+      context: ./backend/mockdb
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - MOCK_DATA_PATH=/data
+    volumes:
+      - ./backend/mockdb/data:/data
+    networks:
+      - facet-network
+
+networks:
+  facet-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  clickhouse_data:

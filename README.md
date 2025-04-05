@@ -114,9 +114,30 @@ uvicorn main:app --reload
 
 The project uses standardized formatting and linting tools:
 
+#### Pre-commit Hooks
+
+The project uses pre-commit hooks to automatically format and lint code before committing. To set up pre-commit:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install pre-commit hooks
+pre-commit install
+```
+
+The pre-commit hooks will automatically run on `git commit` and will:
+- Format Python code with Black and isort
+- Lint Python code with Flake8
+- Type check Python code with MyPy
+- Format JavaScript/React code with Prettier
+
 #### Backend
 
 ```bash
+# Install development dependencies
+pip install -r backend/requirements-dev.txt
+
 # Format code
 cd backend && make format  # Runs black and isort on Python code
 

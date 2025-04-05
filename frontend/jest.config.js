@@ -15,7 +15,7 @@ const customJestConfig = {
     '^@/context/(.*)$': '<rootDir>/context/$1',
     '^@/pages/(.*)$': '<rootDir>/pages/$1',
   },
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/', '<rootDir>/.bun/'],
   transform: {
     // Use babel-jest to transpile tests with the next/babel preset
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
@@ -23,6 +23,7 @@ const customJestConfig = {
   coveragePathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/.next/',
+    '<rootDir>/.bun/',
     '<rootDir>/coverage/',
   ],
 };

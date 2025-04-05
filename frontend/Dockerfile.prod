@@ -1,22 +1,22 @@
 # Stage 1: Build the application
-FROM node:18-alpine AS builder
+FROM oven/bun:latest AS builder
 
 WORKDIR /app
 
-# Copy package.json
-COPY package.json ./
+# Copy package.json and bun.lock
+COPY package.json bun.lock ./
 
 # Install dependencies
-RUN npm install
+RUN bun install
 
 # Copy the rest of the code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN bun run build
 
 # Stage 2: Create the production image
-FROM node:18-alpine AS runner
+FROM oven/bun:latest AS runner
 
 WORKDIR /app
 
@@ -28,11 +28,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/bun.lock ./bun.lock
 
 # Create a non-root user and switch to it
-RUN addgroup --system --gid 1001 nodejs && \
+RUN addgroup --system --gid 1001 bunjs && \
     adduser --system --uid 1001 nextjs && \
-    chown -R nextjs:nodejs /app
+    chown -R nextjs:bunjs /app
 
 USER nextjs
 
@@ -40,4 +41,4 @@ USER nextjs
 EXPOSE 3000
 
 # Start the Next.js application
-CMD ["npm", "start"]
+CMD ["bun", "run", "start"]

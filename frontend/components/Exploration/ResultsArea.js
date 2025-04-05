@@ -188,7 +188,7 @@ function ResultsArea({ results, isLoading }) {
           <div className="h-full flex items-center justify-center">
             <div className="text-center p-8">
               <p className="text-gray-500">
-                Configure your exploration and click "Run Query" to see results
+                Configure your exploration and click &quot;Run Query&quot; to see results
               </p>
             </div>
           </div>

@@ -14,16 +14,16 @@ From the `frontend` directory:
 
 ```bash
 # Run all tests
-npm test
+bun test
 
 # Run tests in watch mode
-npm test -- --watch
+bun test --watch
 
 # Run tests with coverage report
-npm test -- --coverage
+bun test --coverage
 
 # Run a specific test file
-npm test -- -t "FilterBar"
+bun test -t "FilterBar"
 ```
 
 #### Writing Frontend Tests
@@ -158,15 +158,15 @@ Cypress is used for end-to-end testing of the Facet application. Note: Cypress s
 1. Install Cypress:
 ```bash
 cd frontend
-npm install --save-dev cypress
+bun add -d cypress
 ```
 
 2. Add Cypress scripts to package.json:
 ```json
 {
   "scripts": {
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:open": "bun cypress open",
+    "cypress:run": "bun cypress run"
   }
 }
 ```
@@ -177,10 +177,10 @@ From the `frontend` directory:
 
 ```bash
 # Open Cypress test runner
-npm run cypress:open
+bun run cypress:open
 
 # Run Cypress tests headlessly
-npm run cypress:run
+bun run cypress:run
 ```
 
 #### Writing Cypress Tests
@@ -301,8 +301,8 @@ You can run the same CI checks locally:
 ```bash
 # Frontend checks
 cd frontend
-npm run lint
-npm test
+bun run lint
+bun test
 
 # Backend checks
 cd backend

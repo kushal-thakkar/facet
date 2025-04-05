@@ -1,0 +1,9 @@
+[test]
+preload = "./jest.setup.js"
+
+[install]
+registry = "https://registry.npmjs.org/"
+cache = "./.bun/install/cache"
+
+[dev]
+port = 3000

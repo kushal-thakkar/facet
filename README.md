@@ -40,7 +40,7 @@ facet/
 ### Prerequisites
 
 - Docker and Docker Compose
-- Node.js 16+ (for local development outside Docker)
+- Bun (for local development outside Docker)
 - Python 3.13+ (for local development outside Docker)
 
 ### Quick Start with Docker
@@ -70,12 +70,12 @@ docker-compose -f docker-compose.dev.yml up
 1. Install dependencies:
 ```bash
 cd frontend
-npm install
+bun install
 ```
 
 2. Start the development server:
 ```bash
-npm run dev
+bun dev
 ```
 
 3. Access the frontend at http://localhost:3000
@@ -108,12 +108,12 @@ uvicorn main:app --reload
 Run the frontend tests:
 ```bash
 cd frontend
-npm test
+bun test
 ```
 
 Run tests with coverage:
 ```bash
-npm test -- --coverage
+bun test --coverage
 ```
 
 ### Backend Tests
@@ -172,5 +172,5 @@ Facet supports connecting to PostgreSQL and ClickHouse databases. To connect to 
 ## Acknowledgments
 
 - Inspired by Facebook/Meta's Scuba tool
-- Built with Next.js, React, FastAPI, and SQLAlchemy
+- Built with Next.js, React, Bun, FastAPI, and SQLAlchemy
 - UI components based on Tailwind CSS

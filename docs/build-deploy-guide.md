@@ -10,8 +10,8 @@ To build the frontend for local development:
 
 ```bash
 cd frontend
-npm install
-npm run dev
+bun install
+bun dev
 ```
 
 The development server will be available at http://localhost:3000 with hot reloading enabled.
@@ -76,14 +76,14 @@ To create an optimized production build:
 
 ```bash
 cd frontend
-npm install
-npm run build
+bun install
+bun build
 ```
 
 The build output will be in the `.next` directory. To start the production server:
 
 ```bash
-npm start
+bun start
 ```
 
 ### Backend Production Build
@@ -125,6 +125,7 @@ Set these environment variables for production:
 **Frontend:**
 - `NEXT_PUBLIC_API_URL` - Backend API URL
 - `NODE_ENV=production`
+- `BUN_ENV=production`
 
 **Backend:**
 - `ENVIRONMENT=production`
@@ -476,7 +477,7 @@ Enable debug mode for more detailed logs:
 
 **Frontend:**
 ```bash
-NODE_ENV=development npm run dev
+BUN_ENV=development bun dev
 ```
 
 **Backend:**

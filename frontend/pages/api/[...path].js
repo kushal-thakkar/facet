@@ -3,9 +3,10 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 // Create proxy instance outside of the handler to reuse it
-const apiUrl = process.env.NODE_ENV === 'production' 
-  ? 'http://backend:8000'  // Docker service name in production
-  : 'http://localhost:8000'; // Local development
+const apiUrl =
+  process.env.NODE_ENV === 'production'
+    ? 'http://backend:8000' // Docker service name in production
+    : 'http://localhost:8000'; // Local development
 
 console.log(`API proxy targeting: ${apiUrl}`);
 
@@ -21,10 +22,10 @@ const proxy = createProxyMiddleware({
   },
   onError: (err, req, res) => {
     console.error(`Proxy error for ${req.method} ${req.url}:`, err);
-    res.status(500).json({ 
-      error: 'Proxy error', 
+    res.status(500).json({
+      error: 'Proxy error',
       details: err.message,
-      url: `${apiUrl}${req.url}`
+      url: `${apiUrl}${req.url}`,
     });
   },
 });

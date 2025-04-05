@@ -13,7 +13,7 @@ const OPERATORS_BY_TYPE = {
     { id: 'starts_with', label: 'starts with' },
     { id: 'ends_with', label: 'ends with' },
     { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' }
+    { id: 'is_not_null', label: 'is not empty' },
   ],
   number: [
     { id: '=', label: 'equals' },
@@ -25,12 +25,12 @@ const OPERATORS_BY_TYPE = {
     { id: 'in', label: 'in list' },
     { id: 'not_in', label: 'not in list' },
     { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' }
+    { id: 'is_not_null', label: 'is not empty' },
   ],
   boolean: [
     { id: '=', label: 'equals' },
     { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' }
+    { id: 'is_not_null', label: 'is not empty' },
   ],
   date: [
     { id: '=', label: 'equals' },
@@ -40,7 +40,7 @@ const OPERATORS_BY_TYPE = {
     { id: '<', label: 'before' },
     { id: '<=', label: 'on or before' },
     { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' }
+    { id: 'is_not_null', label: 'is not empty' },
   ],
   timestamp: [
     { id: '=', label: 'equals' },
@@ -50,8 +50,8 @@ const OPERATORS_BY_TYPE = {
     { id: '<', label: 'before' },
     { id: '<=', label: 'on or before' },
     { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' }
-  ]
+    { id: 'is_not_null', label: 'is not empty' },
+  ],
 };
 
 // Default to string operators if type not found
@@ -62,99 +62,100 @@ const getOperatorsForType = (type) => {
 function FilterBar() {
   const { state, actions } = useAppState();
   const { currentExploration, metadata } = state;
-  
+
   const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [newFilter, setNewFilter] = useState({
     column: '',
     operator: '=',
-    value: ''
+    value: '',
   });
-  
+
   // Get current filters or default to empty array
   const filters = currentExploration.filters || [];
-  
+
   // Get available columns for current table
-  const availableColumns = currentExploration.source?.table 
+  const availableColumns = currentExploration.source?.table
     ? Object.keys(metadata.columns || {})
-        .filter(key => key.startsWith(`${currentExploration.source.table}.`))
-        .map(key => {
+        .filter((key) => key.startsWith(`${currentExploration.source.table}.`))
+        .map((key) => {
           const [table, column] = key.split('.');
           return {
             id: column,
             name: metadata.columns[key]?.displayName || column,
-            type: metadata.columns[key]?.dataType || 'string'
+            type: metadata.columns[key]?.dataType || 'string',
           };
         })
     : [];
-  
+
   // Handler for removing a filter
   const removeFilter = (index) => {
     const updatedFilters = [...filters];
     updatedFilters.splice(index, 1);
-    
+
     actions.updateCurrentExploration({
-      filters: updatedFilters
+      filters: updatedFilters,
     });
   };
-  
+
   // Handler for adding a new filter
   const addFilter = () => {
     if (!newFilter.column) return;
-    
+
     // Get column type for validation
-    const columnMeta = availableColumns.find(col => col.id === newFilter.column);
+    const columnMeta = availableColumns.find((col) => col.id === newFilter.column);
     const columnType = columnMeta?.type || 'string';
-    
+
     // Skip value validation for null operators
     const requiresValue = !['is_null', 'is_not_null'].includes(newFilter.operator);
-    
+
     // Validate value based on type
     if (requiresValue && !newFilter.value && columnType !== 'boolean') {
       alert('Please enter a value for the filter');
       return;
     }
-    
+
     // Create the filter object
     const filter = {
       column: newFilter.column,
       operator: newFilter.operator,
-      value: requiresValue ? newFilter.value : null
+      value: requiresValue ? newFilter.value : null,
     };
-    
+
     // Add to filters
     actions.updateCurrentExploration({
-      filters: [...filters, filter]
+      filters: [...filters, filter],
     });
-    
+
     // Reset new filter form
     setNewFilter({
       column: '',
       operator: '=',
-      value: ''
+      value: '',
     });
-    
+
     // Close dialog
     setShowFilterDialog(false);
   };
-  
+
   // Get the column's data type
   const getSelectedColumnType = () => {
     if (!newFilter.column) return 'string';
-    const column = availableColumns.find(col => col.id === newFilter.column);
+    const column = availableColumns.find((col) => col.id === newFilter.column);
     return column?.type || 'string';
   };
-  
+
   // Get operators for selected column type
   const availableOperators = getOperatorsForType(getSelectedColumnType());
-  
+
   // Format filter for display
   const formatFilterText = (filter) => {
-    const column = availableColumns.find(col => col.id === filter.column);
+    const column = availableColumns.find((col) => col.id === filter.column);
     const columnName = column?.name || filter.column;
-    
-    const operator = getOperatorsForType(column?.type || 'string')
-      .find(op => op.id === filter.operator)?.label || filter.operator;
-    
+
+    const operator =
+      getOperatorsForType(column?.type || 'string').find((op) => op.id === filter.operator)
+        ?.label || filter.operator;
+
     // Format value based on type and operator
     let valueDisplay = '';
     if (['is_null', 'is_not_null'].includes(filter.operator)) {
@@ -168,7 +169,7 @@ function FilterBar() {
     } else {
       valueDisplay = String(filter.value);
     }
-    
+
     return `${columnName} ${operator} ${valueDisplay}`.trim();
   };
 
@@ -176,7 +177,7 @@ function FilterBar() {
     <div>
       <div className="flex justify-between items-center mb-2">
         <label className="block text-sm font-medium text-gray-700">Filters</label>
-        
+
         <button
           type="button"
           className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
@@ -185,12 +186,12 @@ function FilterBar() {
           + Add Filter
         </button>
       </div>
-      
+
       {/* Filter Pills */}
       <div className="flex flex-wrap gap-2">
         {filters.length > 0 ? (
           filters.map((filter, index) => (
-            <div 
+            <div
               key={index}
               className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm"
             >
@@ -208,107 +209,133 @@ function FilterBar() {
           <div className="text-sm text-gray-500 italic">No filters applied</div>
         )}
       </div>
-      
+
       {/* Filter Dialog */}
       {showFilterDialog && (
         <div className="fixed inset-0 z-10 overflow-y-auto" aria-labelledby="filter-dialog-title">
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             {/* Background overlay */}
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              aria-hidden="true"
+            ></div>
+
             {/* Dialog */}
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900" id="filter-dialog-title">
+                <h3
+                  className="text-lg leading-6 font-medium text-gray-900"
+                  id="filter-dialog-title"
+                >
                   Add Filter
                 </h3>
-                
+
                 <div className="mt-4 space-y-4">
                   {/* Column Select */}
                   <div>
-                    <label htmlFor="filter-field" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="filter-field"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Field
                     </label>
                     <select
                       id="filter-field"
                       value={newFilter.column}
-                      onChange={(e) => setNewFilter({
-                        ...newFilter,
-                        column: e.target.value
-                      })}
+                      onChange={(e) =>
+                        setNewFilter({
+                          ...newFilter,
+                          column: e.target.value,
+                        })
+                      }
                       className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                     >
                       <option value="">Select a field</option>
-                      {availableColumns.map(column => (
+                      {availableColumns.map((column) => (
                         <option key={column.id} value={column.id}>
                           {column.name}
                         </option>
                       ))}
                     </select>
                   </div>
-                  
+
                   {/* Operator Select */}
                   <div>
-                    <label htmlFor="filter-operator" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="filter-operator"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Operator
                     </label>
                     <select
                       id="filter-operator"
                       value={newFilter.operator}
-                      onChange={(e) => setNewFilter({
-                        ...newFilter,
-                        operator: e.target.value
-                      })}
+                      onChange={(e) =>
+                        setNewFilter({
+                          ...newFilter,
+                          operator: e.target.value,
+                        })
+                      }
                       className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                       disabled={!newFilter.column}
                     >
-                      {availableOperators.map(operator => (
+                      {availableOperators.map((operator) => (
                         <option key={operator.id} value={operator.id}>
                           {operator.label}
                         </option>
                       ))}
                     </select>
                   </div>
-                  
+
                   {/* Value Input */}
                   {!['is_null', 'is_not_null'].includes(newFilter.operator) && (
                     <div>
-                      <label htmlFor="filter-value" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="filter-value"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
                         Value
                       </label>
-                      
+
                       {getSelectedColumnType() === 'boolean' ? (
                         <select
                           id="filter-value"
                           value={newFilter.value}
-                          onChange={(e) => setNewFilter({
-                            ...newFilter,
-                            value: e.target.value === 'true'
-                          })}
+                          onChange={(e) =>
+                            setNewFilter({
+                              ...newFilter,
+                              value: e.target.value === 'true',
+                            })
+                          }
                           className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                         >
                           <option value="true">True</option>
                           <option value="false">False</option>
                         </select>
-                      ) : getSelectedColumnType() === 'date' || getSelectedColumnType() === 'timestamp' ? (
+                      ) : getSelectedColumnType() === 'date' ||
+                        getSelectedColumnType() === 'timestamp' ? (
                         <input
                           id="filter-value"
                           type="date"
                           value={newFilter.value}
-                          onChange={(e) => setNewFilter({
-                            ...newFilter,
-                            value: e.target.value
-                          })}
+                          onChange={(e) =>
+                            setNewFilter({
+                              ...newFilter,
+                              value: e.target.value,
+                            })
+                          }
                           className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                         />
                       ) : newFilter.operator === 'in' || newFilter.operator === 'not_in' ? (
                         <textarea
                           id="filter-value"
                           value={newFilter.value}
-                          onChange={(e) => setNewFilter({
-                            ...newFilter,
-                            value: e.target.value
-                          })}
+                          onChange={(e) =>
+                            setNewFilter({
+                              ...newFilter,
+                              value: e.target.value,
+                            })
+                          }
                           placeholder="Enter comma-separated values"
                           className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                           rows={3}
@@ -318,18 +345,21 @@ function FilterBar() {
                           id="filter-value"
                           type={getSelectedColumnType() === 'number' ? 'number' : 'text'}
                           value={newFilter.value}
-                          onChange={(e) => setNewFilter({
-                            ...newFilter,
-                            value: getSelectedColumnType() === 'number' 
-                              ? parseFloat(e.target.value) 
-                              : e.target.value
-                          })}
+                          onChange={(e) =>
+                            setNewFilter({
+                              ...newFilter,
+                              value:
+                                getSelectedColumnType() === 'number'
+                                  ? parseFloat(e.target.value)
+                                  : e.target.value,
+                            })
+                          }
                           className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                         />
                       )}
                     </div>
                   )}
-                  
+
                   {/* Dialog Actions */}
                   <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                     <button

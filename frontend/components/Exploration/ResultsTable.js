@@ -5,24 +5,24 @@ import { useAppState } from '../../context/AppStateContext';
 function ResultsTable({ results }) {
   const { state } = useAppState();
   const { preferences } = state;
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(preferences.tablePageSize || 50);
-  
+
   // Sorting state
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
-  
+
   // Calculate pagination values
   const totalRows = results?.data?.length || 0;
   const totalPages = Math.ceil(totalRows / pageSize);
   const startRow = (currentPage - 1) * pageSize;
   const endRow = Math.min(startRow + pageSize, totalRows);
-  
+
   // Get current page of data
   const currentData = results?.data?.slice(startRow, endRow) || [];
-  
+
   // Handle sort click
   const handleSort = (columnName) => {
     if (sortColumn === columnName) {
@@ -34,37 +34,35 @@ function ResultsTable({ results }) {
       setSortDirection('asc');
     }
   };
-  
+
   // Sort the data
   const sortedData = () => {
     if (!sortColumn || !results?.data) return currentData;
-    
+
     return [...currentData].sort((a, b) => {
       const valueA = a[sortColumn];
       const valueB = b[sortColumn];
-      
+
       // Handle null/undefined values
       if (valueA === null || valueA === undefined) return sortDirection === 'asc' ? -1 : 1;
       if (valueB === null || valueB === undefined) return sortDirection === 'asc' ? 1 : -1;
-      
+
       // Compare based on data type
       if (typeof valueA === 'number' && typeof valueB === 'number') {
         return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
       }
-      
+
       // Default string comparison
       const strA = String(valueA);
       const strB = String(valueB);
-      return sortDirection === 'asc' 
-        ? strA.localeCompare(strB) 
-        : strB.localeCompare(strA);
+      return sortDirection === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
     });
   };
-  
+
   // Format cell value for display
   const formatCellValue = (value, columnType) => {
     if (value === null || value === undefined) return '-';
-    
+
     if (columnType === 'date' || columnType === 'timestamp') {
       // Format dates in a user-friendly way
       try {
@@ -73,25 +71,25 @@ function ResultsTable({ results }) {
         return value;
       }
     }
-    
+
     if (typeof value === 'boolean') {
       return value ? 'Yes' : 'No';
     }
-    
+
     if (typeof value === 'number') {
       // Format numbers with thousands separators
       return value.toLocaleString();
     }
-    
+
     return String(value);
   };
-  
+
   // Get column type from metadata or infer from value
   const getColumnType = (columnName, sampleValue) => {
     // Try to find in metadata
-    const columnMeta = results?.columns?.find(col => col.name === columnName);
+    const columnMeta = results?.columns?.find((col) => col.name === columnName);
     if (columnMeta?.type) return columnMeta.type;
-    
+
     // Infer from value
     if (sampleValue === null || sampleValue === undefined) return 'string';
     if (typeof sampleValue === 'number') return 'number';
@@ -100,16 +98,16 @@ function ResultsTable({ results }) {
       // Check if it looks like a date
       if (/^\d{4}-\d{2}-\d{2}/.test(sampleValue)) return 'date';
     }
-    
+
     return 'string';
   };
-  
+
   // Handle page change
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
-  
+
   // Change page size
   const changePageSize = (size) => {
     setPageSize(size);
@@ -123,7 +121,7 @@ function ResultsTable({ results }) {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 sticky top-0">
             <tr>
-              {results?.columns?.map(column => (
+              {results?.columns?.map((column) => (
                 <th
                   key={column.name}
                   scope="col"
@@ -133,9 +131,7 @@ function ResultsTable({ results }) {
                   <div className="flex items-center">
                     <span>{column.displayName || column.name}</span>
                     {sortColumn === column.name && (
-                      <span className="ml-1">
-                        {sortDirection === 'asc' ? '↑' : '↓'}
-                      </span>
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </div>
                 </th>
@@ -145,12 +141,15 @@ function ResultsTable({ results }) {
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedData().map((row, rowIndex) => (
               <tr key={rowIndex} className="hover:bg-gray-50">
-                {results.columns.map(column => {
+                {results.columns.map((column) => {
                   const value = row[column.name];
                   const columnType = getColumnType(column.name, value);
-                  
+
                   return (
-                    <td key={column.name} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td
+                      key={column.name}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
                       {formatCellValue(value, columnType)}
                     </td>
                   );
@@ -160,7 +159,7 @@ function ResultsTable({ results }) {
           </tbody>
         </table>
       </div>
-      
+
       {/* Pagination controls */}
       <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex-1 flex justify-between sm:hidden">
@@ -190,8 +189,8 @@ function ResultsTable({ results }) {
         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-gray-700">
-              Showing <span className="font-medium">{startRow + 1}</span> to{" "}
-              <span className="font-medium">{endRow}</span> of{" "}
+              Showing <span className="font-medium">{startRow + 1}</span> to{' '}
+              <span className="font-medium">{endRow}</span> of{' '}
               <span className="font-medium">{totalRows}</span> results
             </p>
           </div>
@@ -203,7 +202,7 @@ function ResultsTable({ results }) {
                 name="pageSize"
                 className="mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 value={pageSize}
-                onChange={e => changePageSize(Number(e.target.value))}
+                onChange={(e) => changePageSize(Number(e.target.value))}
               >
                 <option value={10}>10 per page</option>
                 <option value={50}>50 per page</option>
@@ -211,9 +210,12 @@ function ResultsTable({ results }) {
                 <option value={250}>250 per page</option>
               </select>
             </div>
-            
+
             {/* Pagination buttons */}
-            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <nav
+              className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+              aria-label="Pagination"
+            >
               <button
                 onClick={() => goToPage(1)}
                 disabled={currentPage === 1}
@@ -223,8 +225,7 @@ function ResultsTable({ results }) {
                     : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <span className="sr-only">First</span>
-                ⟪
+                <span className="sr-only">First</span>⟪
               </button>
               <button
                 onClick={() => goToPage(currentPage - 1)}
@@ -235,10 +236,9 @@ function ResultsTable({ results }) {
                     : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <span className="sr-only">Previous</span>
-                ←
+                <span className="sr-only">Previous</span>←
               </button>
-              
+
               {/* Page number buttons - show 5 pages around current page */}
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum;
@@ -252,7 +252,7 @@ function ResultsTable({ results }) {
                 } else {
                   pageNum = currentPage - 2 + i;
                 }
-                
+
                 return (
                   <button
                     key={pageNum}
@@ -267,7 +267,7 @@ function ResultsTable({ results }) {
                   </button>
                 );
               })}
-              
+
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -277,8 +277,7 @@ function ResultsTable({ results }) {
                     : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <span className="sr-only">Next</span>
-                →
+                <span className="sr-only">Next</span>→
               </button>
               <button
                 onClick={() => goToPage(totalPages)}
@@ -289,8 +288,7 @@ function ResultsTable({ results }) {
                     : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <span className="sr-only">Last</span>
-                ⟫
+                <span className="sr-only">Last</span>⟫
               </button>
             </nav>
           </div>

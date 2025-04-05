@@ -33,10 +33,10 @@ export default function Home() {
 
     try {
       // Execute query using API client
-      console.log("Executing query for connection:", currentConnection.id);
+      console.log('Executing query for connection:', currentConnection.id);
       const data = await api.post('/api/v1/query/execute', {
         connectionId: currentConnection.id,
-        query: currentExploration
+        query: currentExploration,
       });
       setQueryResults(data);
     } catch (err) {
@@ -51,11 +51,9 @@ export default function Home() {
     <MainLayout>
       {showConnectionForm ? (
         <div className="max-w-2xl mx-auto py-8">
-          <h2 className="text-xl font-medium text-gray-900 mb-6">
-            Create Your First Connection
-          </h2>
-          <ConnectionForm 
-            onSave={() => setShowConnectionForm(false)} 
+          <h2 className="text-xl font-medium text-gray-900 mb-6">Create Your First Connection</h2>
+          <ConnectionForm
+            onSave={() => setShowConnectionForm(false)}
             onCancel={() => {
               if (connections.length > 0) {
                 setShowConnectionForm(false);
@@ -66,24 +64,18 @@ export default function Home() {
       ) : (
         <div className="h-full flex flex-col">
           {/* Exploration Controls */}
-          <ExplorationControls 
-            onRunQuery={handleRunQuery} 
-            isLoading={isLoading} 
-          />
-          
+          <ExplorationControls onRunQuery={handleRunQuery} isLoading={isLoading} />
+
           {/* Error message if any */}
           {error && (
             <div className="bg-red-50 text-red-700 p-3 mb-4 rounded-md">
               <p className="text-sm">{error}</p>
             </div>
           )}
-          
+
           {/* Results Area */}
           <div className="flex-1 overflow-hidden">
-            <ResultsArea 
-              results={queryResults} 
-              isLoading={isLoading} 
-            />
+            <ResultsArea results={queryResults} isLoading={isLoading} />
           </div>
         </div>
       )}

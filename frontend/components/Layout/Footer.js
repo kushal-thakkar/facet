@@ -6,30 +6,24 @@ function Footer({ queryStats }) {
   const stats = queryStats || {
     executionTime: null,
     rowCount: null,
-    cacheStatus: null
+    cacheStatus: null,
   };
 
   return (
     <footer className="border-t border-gray-200 py-2 px-4 text-sm text-gray-600 bg-white flex items-center justify-between">
       <div className="flex items-center space-x-4">
         {/* Query execution time */}
-        {stats.executionTime && (
-          <span>Query completed in {stats.executionTime}s</span>
-        )}
-        
+        {stats.executionTime && <span>Query completed in {stats.executionTime}s</span>}
+
         {/* Row count */}
-        {stats.rowCount && (
-          <span>{stats.rowCount.toLocaleString()} rows</span>
-        )}
-        
+        {stats.rowCount && <span>{stats.rowCount.toLocaleString()} rows</span>}
+
         {/* Cache status */}
-        {stats.cacheStatus && (
-          <span>Cache: {stats.cacheStatus}</span>
-        )}
+        {stats.cacheStatus && <span>Cache: {stats.cacheStatus}</span>}
       </div>
-      
+
       <div>
-        <button 
+        <button
           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
           onClick={() => console.log('View query details')}
         >

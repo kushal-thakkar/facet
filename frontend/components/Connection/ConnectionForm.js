@@ -5,8 +5,8 @@ import api from '../../utils/apiClient';
 
 // Database types with their configurations
 const DATABASE_TYPES = [
-  { 
-    id: 'postgres', 
+  {
+    id: 'postgres',
     name: 'PostgreSQL',
     fields: [
       { id: 'host', label: 'Host', type: 'text', required: true },
@@ -14,11 +14,11 @@ const DATABASE_TYPES = [
       { id: 'database', label: 'Database', type: 'text', required: true },
       { id: 'user', label: 'Username', type: 'text', required: true },
       { id: 'password', label: 'Password', type: 'password', required: true },
-      { id: 'ssl', label: 'Use SSL', type: 'checkbox', defaultValue: true }
-    ]
+      { id: 'ssl', label: 'Use SSL', type: 'checkbox', defaultValue: true },
+    ],
   },
-  { 
-    id: 'clickhouse', 
+  {
+    id: 'clickhouse',
     name: 'ClickHouse',
     fields: [
       { id: 'host', label: 'Host', type: 'text', required: true },
@@ -26,14 +26,14 @@ const DATABASE_TYPES = [
       { id: 'database', label: 'Database', type: 'text', required: true },
       { id: 'user', label: 'Username', type: 'text', required: true },
       { id: 'password', label: 'Password', type: 'password', required: true },
-      { id: 'https', label: 'Use HTTPS', type: 'checkbox', defaultValue: true }
-    ]
-  }
+      { id: 'https', label: 'Use HTTPS', type: 'checkbox', defaultValue: true },
+    ],
+  },
 ];
 
 function ConnectionForm({ connection, onSave, onCancel }) {
   const { state, actions } = useAppState();
-  
+
   // Initialize form state from connection or defaults
   const [formState, setFormState] = useState(() => {
     if (connection) {
@@ -41,36 +41,36 @@ function ConnectionForm({ connection, onSave, onCancel }) {
         id: connection.id,
         name: connection.name,
         type: connection.type,
-        config: { ...connection.config }
+        config: { ...connection.config },
       };
     } else {
       return {
         id: '',
         name: '',
         type: DATABASE_TYPES[0].id,
-        config: {}
+        config: {},
       };
     }
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [testResult, setTestResult] = useState(null);
-  
+
   // Get fields for the selected database type
   const getDbFields = () => {
-    const dbType = DATABASE_TYPES.find(type => type.id === formState.type);
+    const dbType = DATABASE_TYPES.find((type) => type.id === formState.type);
     return dbType ? dbType.fields : [];
   };
-  
+
   // Handle form field changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (name === 'name' || name === 'type') {
       setFormState({
         ...formState,
-        [name]: value
+        [name]: value,
       });
     } else {
       // It's a config field
@@ -78,119 +78,121 @@ function ConnectionForm({ connection, onSave, onCancel }) {
         ...formState,
         config: {
           ...formState.config,
-          [name]: type === 'checkbox' ? checked : value
-        }
+          [name]: type === 'checkbox' ? checked : value,
+        },
       });
     }
   };
-  
+
   // Test the connection
   const testConnection = async () => {
     setIsLoading(true);
     setError(null);
     setTestResult(null);
-    
+
     try {
       // Test the connection using the API client
       console.log('Testing connection with:', formState.type, formState.config);
-      
+
       const data = await api.post('/api/v1/connections/test', {
         type: formState.type,
-        config: formState.config
+        config: formState.config,
       });
-      
+
       setTestResult({
         success: true,
-        message: 'Connection successful!'
+        message: 'Connection successful!',
       });
     } catch (err) {
       console.error('Error testing connection:', err);
       setTestResult({
         success: false,
-        message: err.message || 'Connection failed. Please check your settings.'
+        message: err.message || 'Connection failed. Please check your settings.',
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   // Save the connection
   const saveConnection = async (e) => {
     e.preventDefault();
-    
+
     if (!formState.name.trim()) {
       setError('Please provide a connection name');
       return;
     }
-    
+
     // Validate required fields
-    const requiredFields = getDbFields().filter(field => field.required);
+    const requiredFields = getDbFields().filter((field) => field.required);
     for (const field of requiredFields) {
       if (!formState.config[field.id]) {
         setError(`Please provide a value for ${field.label}`);
         return;
       }
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Prepare connection data
       const connectionData = {
         name: formState.name,
         type: formState.type,
-        config: { ...formState.config }
+        config: { ...formState.config },
       };
-      
-      console.log("Saving connection:", connectionData);
-      
+
+      console.log('Saving connection:', connectionData);
+
       // Create connection using API client
-      console.log("Creating connection via API client:", connectionData);
+      console.log('Creating connection via API client:', connectionData);
       const newConnection = await api.post('/api/v1/connections', connectionData);
-      console.log("Connection created:", newConnection);
-      
+      console.log('Connection created:', newConnection);
+
       // Update connections in state
       const updatedConnections = [
-        ...state.connections.filter(c => c.id !== newConnection.id),
-        newConnection
+        ...state.connections.filter((c) => c.id !== newConnection.id),
+        newConnection,
       ];
-      
+
       actions.setConnections(updatedConnections);
-      
+
       // Set as current connection if it's new or was already current
       if (!formState.id || state.currentConnection?.id === formState.id) {
         actions.setCurrentConnection(newConnection);
-        
+
         // Fetch metadata after a short delay to allow the backend to process the new connection
         try {
           setTimeout(async () => {
-            console.log("Fetching metadata for connection:", newConnection.id);
-            
+            console.log('Fetching metadata for connection:', newConnection.id);
+
             try {
-              console.log("Fetching tables via API client");
-              const tables = await api.get(`/api/v1/metadata/connections/${newConnection.id}/tables`);
-              console.log("Fetched tables:", tables);
-              
+              console.log('Fetching tables via API client');
+              const tables = await api.get(
+                `/api/v1/metadata/connections/${newConnection.id}/tables`
+              );
+              console.log('Fetched tables:', tables);
+
               // Convert array to object with table name as key
               const tablesObject = {};
-              tables.forEach(table => {
+              tables.forEach((table) => {
                 tablesObject[table.name] = table;
               });
-              
+
               // Update metadata in app state
               actions.updateMetadata({
-                tables: tablesObject
+                tables: tablesObject,
               });
             } catch (error) {
-              console.error("Error fetching tables:", error);
+              console.error('Error fetching tables:', error);
             }
           }, 1000); // Give the backend a moment to recognize the new connection
         } catch (error) {
           console.error('Error setting up metadata fetch:', error);
         }
       }
-      
+
       // Call onSave callback
       if (onSave) {
         onSave(newConnection);
@@ -216,29 +218,29 @@ function ConnectionForm({ connection, onSave, onCancel }) {
               Configure your database connection details.
             </p>
           </div>
-          
+
           {/* Error message */}
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="flex">
-                <div className="text-sm text-red-700">
-                  {error}
-                </div>
+                <div className="text-sm text-red-700">{error}</div>
               </div>
             </div>
           )}
-          
+
           {/* Test result message */}
           {testResult && (
             <div className={`rounded-md ${testResult.success ? 'bg-green-50' : 'bg-red-50'} p-4`}>
               <div className="flex">
-                <div className={`text-sm ${testResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                <div
+                  className={`text-sm ${testResult.success ? 'text-green-700' : 'text-red-700'}`}
+                >
                   {testResult.message}
                 </div>
               </div>
             </div>
           )}
-          
+
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
             {/* Connection Name */}
             <div className="sm:col-span-3">
@@ -258,7 +260,7 @@ function ConnectionForm({ connection, onSave, onCancel }) {
                 />
               </div>
             </div>
-            
+
             {/* Database Type */}
             <div className="sm:col-span-3">
               <label htmlFor="type" className="block text-sm font-medium text-gray-700">
@@ -272,7 +274,7 @@ function ConnectionForm({ connection, onSave, onCancel }) {
                   onChange={handleChange}
                   className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 >
-                  {DATABASE_TYPES.map(type => (
+                  {DATABASE_TYPES.map((type) => (
                     <option key={type.id} value={type.id}>
                       {type.name}
                     </option>
@@ -280,11 +282,11 @@ function ConnectionForm({ connection, onSave, onCancel }) {
                 </select>
               </div>
             </div>
-            
+
             {/* Database-specific fields */}
-            {getDbFields().map(field => (
-              <div 
-                key={field.id} 
+            {getDbFields().map((field) => (
+              <div
+                key={field.id}
                 className={field.type === 'checkbox' ? 'sm:col-span-6' : 'sm:col-span-3'}
               >
                 {field.type === 'checkbox' ? (
@@ -324,7 +326,7 @@ function ConnectionForm({ connection, onSave, onCancel }) {
             ))}
           </div>
         </div>
-        
+
         {/* Form actions */}
         <div className="mt-6 flex justify-end space-x-3">
           <button
@@ -335,7 +337,7 @@ function ConnectionForm({ connection, onSave, onCancel }) {
           >
             {isLoading ? 'Testing...' : 'Test Connection'}
           </button>
-          
+
           {onCancel && (
             <button
               type="button"
@@ -346,7 +348,7 @@ function ConnectionForm({ connection, onSave, onCancel }) {
               Cancel
             </button>
           )}
-          
+
           <button
             type="submit"
             disabled={isLoading}

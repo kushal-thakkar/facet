@@ -14,30 +14,30 @@ function ExplorationControls({ onRunQuery, isLoading }) {
   const handleSave = () => {
     // Generate a unique ID if this is a new exploration
     const id = currentExploration.id || `exp_${Date.now()}`;
-    
+
     // Prompt for a name if it doesn't have one
     let name = currentExploration.name;
     if (!name) {
       name = prompt('Enter a name for this exploration:');
       if (!name) return; // User cancelled
     }
-    
+
     const savedExploration = {
       ...currentExploration,
       id,
       name,
-      lastRun: new Date().toISOString()
+      lastRun: new Date().toISOString(),
     };
-    
+
     // Update the current exploration with ID and name
     actions.setCurrentExploration(savedExploration);
-    
+
     // Add to saved explorations
     const updatedExplorations = [
-      ...state.explorations.filter(exp => exp.id !== id),
-      savedExploration
+      ...state.explorations.filter((exp) => exp.id !== id),
+      savedExploration,
     ];
-    
+
     actions.setExplorations(updatedExplorations);
   };
 
@@ -48,7 +48,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         <h2 className="text-lg font-medium text-gray-800">
           {currentExploration.name || 'New Exploration'}
         </h2>
-        
+
         <div className="flex space-x-2">
           <button
             className="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -56,7 +56,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           >
             Save
           </button>
-          
+
           <button
             className={`px-3 py-1 rounded-md text-sm font-medium ${
               isLoading
@@ -70,22 +70,22 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           </button>
         </div>
       </div>
-      
+
       {/* Time Range */}
       <div className="pb-3 border-b border-gray-200">
         <TimeRangeSelector />
       </div>
-      
+
       {/* Filters */}
       <div className="pb-3 border-b border-gray-200">
         <FilterBar />
       </div>
-      
+
       {/* Group By */}
       <div className="pb-3 border-b border-gray-200">
         <GroupBySelector />
       </div>
-      
+
       {/* Metrics */}
       <div>
         <MetricSelector />

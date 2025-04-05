@@ -14,19 +14,19 @@ const initialState = {
     comparison: null,
     visualization: {
       type: 'table',
-      config: {}
-    }
+      config: {},
+    },
   },
   metadata: {
     tables: {},
     columns: {},
-    relationships: {}
+    relationships: {},
   },
   preferences: {
     theme: 'light',
     defaultTimeRange: 'last_7_days',
-    tablePageSize: 50
-  }
+    tablePageSize: 50,
+  },
 };
 
 // Action types
@@ -39,7 +39,7 @@ const actionTypes = {
   SET_METADATA: 'SET_METADATA',
   UPDATE_METADATA: 'UPDATE_METADATA',
   SET_PREFERENCES: 'SET_PREFERENCES',
-  UPDATE_PREFERENCES: 'UPDATE_PREFERENCES'
+  UPDATE_PREFERENCES: 'UPDATE_PREFERENCES',
 };
 
 // Reducer function
@@ -54,32 +54,32 @@ function appStateReducer(state, action) {
     case actionTypes.SET_CURRENT_EXPLORATION:
       return { ...state, currentExploration: action.payload };
     case actionTypes.UPDATE_CURRENT_EXPLORATION:
-      return { 
-        ...state, 
-        currentExploration: { 
-          ...state.currentExploration, 
-          ...action.payload 
-        } 
+      return {
+        ...state,
+        currentExploration: {
+          ...state.currentExploration,
+          ...action.payload,
+        },
       };
     case actionTypes.SET_METADATA:
       return { ...state, metadata: action.payload };
     case actionTypes.UPDATE_METADATA:
-      return { 
-        ...state, 
-        metadata: { 
-          ...state.metadata, 
-          ...action.payload 
-        } 
+      return {
+        ...state,
+        metadata: {
+          ...state.metadata,
+          ...action.payload,
+        },
       };
     case actionTypes.SET_PREFERENCES:
       return { ...state, preferences: action.payload };
     case actionTypes.UPDATE_PREFERENCES:
-      return { 
-        ...state, 
-        preferences: { 
-          ...state.preferences, 
-          ...action.payload 
-        } 
+      return {
+        ...state,
+        preferences: {
+          ...state.preferences,
+          ...action.payload,
+        },
       };
     default:
       return state;
@@ -98,9 +98,9 @@ export function AppStateProvider({ children }) {
     try {
       const savedPreferences = localStorage.getItem('facet_preferences');
       if (savedPreferences) {
-        dispatch({ 
-          type: actionTypes.SET_PREFERENCES, 
-          payload: JSON.parse(savedPreferences) 
+        dispatch({
+          type: actionTypes.SET_PREFERENCES,
+          payload: JSON.parse(savedPreferences),
         });
       }
     } catch (error) {
@@ -122,50 +122,55 @@ export function AppStateProvider({ children }) {
     state,
     dispatch,
     actions: {
-      setConnections: (connections) => dispatch({ 
-        type: actionTypes.SET_CONNECTIONS, 
-        payload: connections 
-      }),
-      setCurrentConnection: (connection) => dispatch({ 
-        type: actionTypes.SET_CURRENT_CONNECTION, 
-        payload: connection 
-      }),
-      setExplorations: (explorations) => dispatch({ 
-        type: actionTypes.SET_EXPLORATIONS, 
-        payload: explorations 
-      }),
-      setCurrentExploration: (exploration) => dispatch({ 
-        type: actionTypes.SET_CURRENT_EXPLORATION, 
-        payload: exploration 
-      }),
-      updateCurrentExploration: (updates) => dispatch({ 
-        type: actionTypes.UPDATE_CURRENT_EXPLORATION, 
-        payload: updates 
-      }),
-      setMetadata: (metadata) => dispatch({ 
-        type: actionTypes.SET_METADATA, 
-        payload: metadata 
-      }),
-      updateMetadata: (updates) => dispatch({ 
-        type: actionTypes.UPDATE_METADATA, 
-        payload: updates 
-      }),
-      setPreferences: (preferences) => dispatch({ 
-        type: actionTypes.SET_PREFERENCES, 
-        payload: preferences 
-      }),
-      updatePreferences: (updates) => dispatch({ 
-        type: actionTypes.UPDATE_PREFERENCES, 
-        payload: updates 
-      }),
-    }
+      setConnections: (connections) =>
+        dispatch({
+          type: actionTypes.SET_CONNECTIONS,
+          payload: connections,
+        }),
+      setCurrentConnection: (connection) =>
+        dispatch({
+          type: actionTypes.SET_CURRENT_CONNECTION,
+          payload: connection,
+        }),
+      setExplorations: (explorations) =>
+        dispatch({
+          type: actionTypes.SET_EXPLORATIONS,
+          payload: explorations,
+        }),
+      setCurrentExploration: (exploration) =>
+        dispatch({
+          type: actionTypes.SET_CURRENT_EXPLORATION,
+          payload: exploration,
+        }),
+      updateCurrentExploration: (updates) =>
+        dispatch({
+          type: actionTypes.UPDATE_CURRENT_EXPLORATION,
+          payload: updates,
+        }),
+      setMetadata: (metadata) =>
+        dispatch({
+          type: actionTypes.SET_METADATA,
+          payload: metadata,
+        }),
+      updateMetadata: (updates) =>
+        dispatch({
+          type: actionTypes.UPDATE_METADATA,
+          payload: updates,
+        }),
+      setPreferences: (preferences) =>
+        dispatch({
+          type: actionTypes.SET_PREFERENCES,
+          payload: preferences,
+        }),
+      updatePreferences: (updates) =>
+        dispatch({
+          type: actionTypes.UPDATE_PREFERENCES,
+          payload: updates,
+        }),
+    },
   };
 
-  return (
-    <AppStateContext.Provider value={value}>
-      {children}
-    </AppStateContext.Provider>
-  );
+  return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }
 
 // Custom hook for using the context

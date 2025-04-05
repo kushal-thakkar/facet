@@ -7,32 +7,32 @@ import { useAppState } from '../../context/AppStateContext';
 function ResultsArea({ results, isLoading }) {
   const { state, actions } = useAppState();
   const { currentExploration } = state;
-  
+
   // Available visualization types
   const visualizationTypes = [
     { id: 'table', label: 'Table', icon: '🔢' },
     { id: 'line', label: 'Line Chart', icon: '📈' },
     { id: 'bar', label: 'Bar Chart', icon: '📊' },
-    { id: 'pie', label: 'Pie Chart', icon: '🥧' }
+    { id: 'pie', label: 'Pie Chart', icon: '🥧' },
   ];
-  
+
   // Get current visualization type or default to table
   const visualizationType = currentExploration.visualization?.type || 'table';
-  
+
   // Handler for changing visualization type
   const changeVisualizationType = (type) => {
     actions.updateCurrentExploration({
       visualization: {
         ...currentExploration.visualization,
-        type
-      }
+        type,
+      },
     });
   };
-  
+
   // Handler for export button
   const handleExport = (format) => {
     if (!results) return;
-    
+
     switch (format) {
       case 'csv':
         exportCSV();
@@ -47,30 +47,32 @@ function ResultsArea({ results, isLoading }) {
         break;
     }
   };
-  
+
   // Export data as CSV
   const exportCSV = () => {
     if (!results || !results.data) return;
-    
+
     // Get headers
-    const headers = results.columns.map(col => col.name);
-    
+    const headers = results.columns.map((col) => col.name);
+
     // Create CSV rows
     const csvRows = [
       headers.join(','), // Headers row
-      ...results.data.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          // Handle values that might contain commas, quotes, etc.
-          if (value === null || value === undefined) return '';
-          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        }).join(',')
-      )
+      ...results.data.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header];
+            // Handle values that might contain commas, quotes, etc.
+            if (value === null || value === undefined) return '';
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          })
+          .join(',')
+      ),
     ];
-    
+
     // Create and download the CSV file
     const csvContent = csvRows.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -82,11 +84,11 @@ function ResultsArea({ results, isLoading }) {
     link.click();
     document.body.removeChild(link);
   };
-  
+
   // Export data as JSON
   const exportJSON = () => {
     if (!results || !results.data) return;
-    
+
     const jsonContent = JSON.stringify(results.data, null, 2);
     const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -97,11 +99,11 @@ function ResultsArea({ results, isLoading }) {
     link.click();
     document.body.removeChild(link);
   };
-  
+
   // Export query as SQL
   const exportSQL = () => {
     if (!results || !results.sql) return;
-    
+
     const blob = new Blob([results.sql], { type: 'text/plain;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -117,7 +119,7 @@ function ResultsArea({ results, isLoading }) {
       {/* Results header with visualization toggle and export options */}
       <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
         <div className="flex space-x-2">
-          {visualizationTypes.map(type => (
+          {visualizationTypes.map((type) => (
             <button
               key={type.id}
               className={`px-3 py-1 text-sm font-medium rounded ${
@@ -132,7 +134,7 @@ function ResultsArea({ results, isLoading }) {
             </button>
           ))}
         </div>
-        
+
         <div className="relative">
           <button
             className="px-3 py-1 text-sm font-medium rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100"
@@ -140,9 +142,9 @@ function ResultsArea({ results, isLoading }) {
           >
             Export ▾
           </button>
-          
+
           {/* Export dropdown menu */}
-          <div 
+          <div
             id="export-menu"
             className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10 hidden"
           >
@@ -172,7 +174,7 @@ function ResultsArea({ results, isLoading }) {
           </div>
         </div>
       </div>
-      
+
       {/* Results content area */}
       <div className="flex-1 overflow-auto">
         {isLoading ? (
@@ -216,10 +218,7 @@ function ResultsArea({ results, isLoading }) {
           <ResultsTable results={results} />
         ) : (
           // Chart view
-          <ResultsChart 
-            results={results}
-            type={visualizationType}
-          />
+          <ResultsChart results={results} type={visualizationType} />
         )}
       </div>
     </div>

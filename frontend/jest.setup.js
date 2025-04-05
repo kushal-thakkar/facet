@@ -39,7 +39,7 @@ document.createRange = () => {
 // Fix React 18 rendering in tests
 jest.mock('react-dom/client', () => {
   const original = jest.requireActual('react-dom/client');
-  
+
   return {
     ...original,
     createRoot: (container) => {
@@ -49,7 +49,7 @@ jest.mock('react-dom/client', () => {
         },
         unmount() {
           require('react-dom').unmountComponentAtNode(container);
-        }
+        },
       };
     },
   };

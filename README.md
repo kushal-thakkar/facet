@@ -114,6 +114,8 @@ uvicorn main:app --reload
 
 The project uses standardized formatting and linting tools:
 
+#### Backend
+
 ```bash
 # Format code
 cd backend && make format  # Runs black and isort on Python code
@@ -129,6 +131,19 @@ cd backend && make ci-check  # Runs format, lint, typecheck, and tests
 
 # Install development tools
 cd backend && make install-dev  # Installs development dependencies
+```
+
+#### Frontend
+
+```bash
+# Format code
+cd frontend && bun run format  # Runs prettier on JS, JSX, TS, TSX, JSON, and CSS files
+
+# Check formatting without changing files
+cd frontend && bun run format:check
+
+# Lint code
+cd frontend && bun run lint  # Runs ESLint on JS/TS files
 ```
 
 ## Testing

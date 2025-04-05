@@ -6,16 +6,16 @@ function InfoPanel() {
   const { state } = useAppState();
   const { currentExploration, metadata } = state;
   const [activeTab, setActiveTab] = useState('details');
-  
+
   // Get the current table metadata if a table is selected
-  const currentTable = currentExploration?.source?.table 
-    ? metadata.tables[currentExploration.source.table] 
+  const currentTable = currentExploration?.source?.table
+    ? metadata.tables[currentExploration.source.table]
     : null;
-  
+
   // Get columns for the current table
-  const currentTableColumns = currentExploration?.source?.table 
+  const currentTableColumns = currentExploration?.source?.table
     ? Object.keys(metadata.columns || {})
-        .filter(key => key.startsWith(`${currentExploration.source.table}.`))
+        .filter((key) => key.startsWith(`${currentExploration.source.table}.`))
         .reduce((acc, key) => {
           acc[key.split('.')[1]] = metadata.columns[key];
           return acc;
@@ -59,7 +59,7 @@ function InfoPanel() {
           </button>
         </nav>
       </div>
-      
+
       {/* Panel content based on active tab */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'details' && (
@@ -86,8 +86,8 @@ function InfoPanel() {
                 <div>
                   <p className="text-sm text-gray-500">Last Updated</p>
                   <p className="text-sm">
-                    {currentTable.refreshedAt 
-                      ? new Date(currentTable.refreshedAt).toLocaleString() 
+                    {currentTable.refreshedAt
+                      ? new Date(currentTable.refreshedAt).toLocaleString()
                       : 'Unknown'}
                   </p>
                 </div>
@@ -97,13 +97,13 @@ function InfoPanel() {
             )}
           </div>
         )}
-        
+
         {activeTab === 'fields' && (
           <div>
             <h3 className="font-medium text-gray-700 mb-2">Table Fields</h3>
             {Object.keys(currentTableColumns).length > 0 ? (
               <div className="space-y-3">
-                {Object.keys(currentTableColumns).map(columnName => {
+                {Object.keys(currentTableColumns).map((columnName) => {
                   const column = currentTableColumns[columnName];
                   return (
                     <div key={columnName} className="border-b border-gray-100 pb-2">
@@ -121,19 +121,15 @@ function InfoPanel() {
             )}
           </div>
         )}
-        
+
         {activeTab === 'help' && (
           <div>
             <h3 className="font-medium text-gray-700 mb-2">Help & Tips</h3>
             <div className="space-y-3">
               <div>
                 <p className="text-sm font-medium">Getting Started</p>
-                <p className="text-xs text-gray-600">
-                  1. Select a connection from the dropdown
-                </p>
-                <p className="text-xs text-gray-600">
-                  2. Choose a table from the side panel
-                </p>
+                <p className="text-xs text-gray-600">1. Select a connection from the dropdown</p>
+                <p className="text-xs text-gray-600">2. Choose a table from the side panel</p>
                 <p className="text-xs text-gray-600">
                   3. Add filters, group by dimensions, and metrics
                 </p>
@@ -141,7 +137,7 @@ function InfoPanel() {
                   4. Explore your data with different visualizations
                 </p>
               </div>
-              
+
               <div>
                 <p className="text-sm font-medium">Keyboard Shortcuts</p>
                 <p className="text-xs text-gray-600">

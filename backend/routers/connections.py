@@ -5,12 +5,12 @@ import logging
 import uuid
 from datetime import datetime
 
-from app.models.connection import (
+from models.connection import (
     Connection, ConnectionConfig, ConnectionCreate, 
     ConnectionUpdate, ConnectionTestRequest, ConnectionTestResult
 )
-from app.database.connector_factory import DatabaseConnectorFactory
-from app.services.connection_service import ConnectionService
+from database.connector_factory import DatabaseConnectorFactory
+from services.connection_service import ConnectionService
 
 # Create router
 router = APIRouter()

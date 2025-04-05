@@ -2,7 +2,7 @@
 import logging
 from typing import Dict, Any, List, Optional, Union
 
-from app.models.query import QueryModel, FilterCondition, LogicalFilterGroup, TimeRange, Comparison, Metric, SortOrder
+from models.query import QueryModel, FilterCondition, LogicalFilterGroup, TimeRange, Comparison, Metric, SortOrder
 
 logger = logging.getLogger(__name__)
 

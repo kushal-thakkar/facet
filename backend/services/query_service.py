@@ -5,8 +5,8 @@ import json
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 
-from app.models.connection import Connection
-from app.models.query import (
+from models.connection import Connection
+from models.query import (
     QueryModel, 
     QueryResult, 
     QueryValidationResult, 
@@ -14,8 +14,8 @@ from app.models.query import (
     QueryHistoryEntry,
     ColumnInfo
 )
-from app.database.connector_factory import DatabaseConnectorFactory
-from app.services.query_translator import SQLTranslator
+from database.connector_factory import DatabaseConnectorFactory
+from services.query_translator import SQLTranslator
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 import pytest
-from app.services.query_translator import SQLTranslator
-from app.models.query import (
+from services.query_translator import SQLTranslator
+from models.query import (
     QueryModel, 
     FilterCondition, 
     LogicalFilterGroup, 

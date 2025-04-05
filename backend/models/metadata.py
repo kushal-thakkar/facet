@@ -10,7 +10,7 @@ class TableMetadata(BaseModel):
     name: str
     displayName: Optional[str] = None
     description: Optional[str] = None
-    schema: Optional[str] = None
+    schema_name: Optional[str] = Field(None, alias="schema")
     type: str = "table"  # table, view, etc.
     rowCount: Optional[int] = None
     category: Optional[str] = None

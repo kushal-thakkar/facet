@@ -89,23 +89,46 @@ INSERT INTO products (id, name, price, category, created_at) VALUES
 (9, 'Digital Camera', 599.99, 'Electronics', '2025-02-25 12:00:00'),
 (10, 'Wireless Mouse', 29.99, 'Accessories', '2025-03-01 09:45:00');
 
--- Create aggregate views for faster queries
-CREATE MATERIALIZED VIEW IF NOT EXISTS events_by_page
+-- Create aggregate views for faster queries (create table first, then add data)
+CREATE TABLE IF NOT EXISTS events_by_page
+(
+    page String,
+    event_type String,
+    date Date,
+    timestamp DateTime DEFAULT now(),
+    count UInt64,
+    avg_duration Float64
+)
 ENGINE = SummingMergeTree()
-PARTITION BY toYYYYMMDD(timestamp)
-ORDER BY (page, event_type)
+PARTITION BY toYYYYMMDD(date)
+ORDER BY (page, event_type, date);
+
+-- Now create the view to populate it
+CREATE MATERIALIZED VIEW IF NOT EXISTS events_by_page_mv
+TO events_by_page
 AS SELECT
     page,
     event_type,
     toDate(timestamp) AS date,
+    timestamp,
     count() AS count,
     avg(duration) AS avg_duration
 FROM events
-GROUP BY page, event_type, date;
+GROUP BY page, event_type, date, timestamp;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_country
+-- Create users_by_country table
+CREATE TABLE IF NOT EXISTS users_by_country
+(
+    country String,
+    status String,
+    count UInt64
+)
 ENGINE = SummingMergeTree()
-ORDER BY (country, status)
+ORDER BY (country, status);
+
+-- Create view to populate it
+CREATE MATERIALIZED VIEW IF NOT EXISTS users_by_country_mv
+TO users_by_country
 AS SELECT
     country,
     status,

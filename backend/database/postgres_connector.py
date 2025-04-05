@@ -4,9 +4,9 @@ import logging
 import time
 from typing import List, Dict, Any, Optional, Tuple, AsyncGenerator
 
-from app.models.connection import Connection
-from app.models.metadata import TableMetadata, ColumnMetadata, RelationshipMetadata
-from app.database.base_connector import DatabaseConnector
+from models.connection import Connection
+from models.metadata import TableMetadata, ColumnMetadata, RelationshipMetadata
+from database.base_connector import DatabaseConnector
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +114,7 @@ class PostgresConnector(DatabaseConnector):
                 for record in table_records:
                     tables.append(TableMetadata(
                         name=record['name'],
-                        schema=record['schema'],
+                        schema_name=record['schema'],
                         description=record['description'],
                         type=record['type'],
                         rowCount=record['row_count'],

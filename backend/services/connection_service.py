@@ -4,12 +4,12 @@ from typing import List, Dict, Any, Optional, Tuple
 import os
 import json
 
-from app.models.connection import (
+from models.connection import (
     Connection,
     ConnectionConfig,
     ConnectionTestResult
 )
-from app.database.connector_factory import DatabaseConnectorFactory
+from database.connector_factory import DatabaseConnectorFactory
 
 logger = logging.getLogger(__name__)
 

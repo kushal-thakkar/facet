@@ -5,14 +5,14 @@ import logging
 import uuid
 from datetime import datetime
 
-from app.models.exploration import (
+from models.explorations import (
     Exploration,
     ExplorationCreate,
     ExplorationUpdate
 )
-from app.services.exploration_service import ExplorationService
-from app.services.query_service import QueryService
-from app.services.connection_service import ConnectionService
+from services.exploration_service import ExplorationService
+from services.query_service import QueryService
+from services.connection_service import ConnectionService
 
 # Create router
 router = APIRouter()

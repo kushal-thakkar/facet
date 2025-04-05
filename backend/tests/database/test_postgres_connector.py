@@ -3,8 +3,8 @@ import asyncpg
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
 
-from app.database.postgres_connector import PostgresConnector
-from app.models.connection import Connection, ConnectionConfig
+from database.postgres_connector import PostgresConnector
+from models.connection import Connection, ConnectionConfig
 
 @pytest.fixture
 def mock_connection():

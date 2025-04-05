@@ -1,4 +1,4 @@
-# app/models/exploration.py
+# models/explorations.py
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 from datetime import datetime

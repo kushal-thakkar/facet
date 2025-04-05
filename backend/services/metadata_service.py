@@ -5,14 +5,14 @@ from datetime import datetime
 import os
 import json
 
-from app.models.connection import Connection
-from app.models.metadata import (
+from models.connection import Connection
+from models.metadata import (
     TableMetadata,
     ColumnMetadata,
     RelationshipMetadata,
     MetadataUpdateRequest
 )
-from app.database.connector_factory import DatabaseConnectorFactory
+from database.connector_factory import DatabaseConnectorFactory
 
 logger = logging.getLogger(__name__)
 

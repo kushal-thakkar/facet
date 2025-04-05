@@ -52,12 +52,14 @@ git clone https://github.com/yourusername/facet.git
 cd facet
 ```
 
-2. Start the development environment:
+2. Install docker and docker-compose
+
+3. Start the development environment:
 ```bash
-docker-compose up
+docker-compose -f docker-compose.dev.yml up
 ```
 
-3. Access the application:
+4. Access the application:
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000
    - API Documentation: http://localhost:8000/docs

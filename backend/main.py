@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 # Import routers
-from app.routers import connections, metadata, query, explorations
+from routers import connections, metadata, query, explorations
 
 # Setup logging
 logging.basicConfig(

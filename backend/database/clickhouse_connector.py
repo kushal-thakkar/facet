@@ -6,9 +6,9 @@ import aiochclient
 import aiohttp
 import json
 
-from app.models.connection import Connection
-from app.models.metadata import TableMetadata, ColumnMetadata, RelationshipMetadata
-from app.database.base_connector import DatabaseConnector
+from models.connection import Connection
+from models.metadata import TableMetadata, ColumnMetadata, RelationshipMetadata
+from database.base_connector import DatabaseConnector
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ class ClickHouseConnector(DatabaseConnector):
             for record in table_records:
                 tables.append(TableMetadata(
                     name=record['name'],
-                    schema=record['schema'],
+                    schema_name=record['schema'],
                     description=None,
                     type="table",
                     rowCount=record['row_count'],

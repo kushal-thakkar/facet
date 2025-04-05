@@ -2,8 +2,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Tuple
 
-from app.models.connection import Connection
-from app.models.metadata import TableMetadata, ColumnMetadata, RelationshipMetadata
+from models.connection import Connection
+from models.metadata import TableMetadata, ColumnMetadata, RelationshipMetadata
 
 class DatabaseConnector(ABC):
     """

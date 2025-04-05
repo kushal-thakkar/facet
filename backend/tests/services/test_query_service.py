@@ -2,9 +2,9 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
 
-from app.services.query_service import QueryService
-from app.models.connection import Connection, ConnectionConfig
-from app.models.query import QueryModel, QueryResult, QuerySource
+from services.query_service import QueryService
+from models.connection import Connection, ConnectionConfig
+from models.query import QueryModel, QueryResult, QuerySource
 
 @pytest.fixture
 def mock_connection():

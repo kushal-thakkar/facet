@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 import os
 import json
 
-from app.models.exploration import Exploration
+from models.explorations import Exploration
 
 logger = logging.getLogger(__name__)
 

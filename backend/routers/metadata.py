@@ -4,14 +4,14 @@ from typing import List, Dict, Any, Optional
 import logging
 from datetime import datetime
 
-from app.models.metadata import (
+from models.metadata import (
     TableMetadata,
     ColumnMetadata,
     RelationshipMetadata,
     MetadataUpdateRequest
 )
-from app.services.metadata_service import MetadataService
-from app.services.connection_service import ConnectionService
+from services.metadata_service import MetadataService
+from services.connection_service import ConnectionService
 
 # Create router
 router = APIRouter()

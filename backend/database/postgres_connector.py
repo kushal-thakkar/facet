@@ -1,4 +1,5 @@
 # app/database/postgres_connector.py
+"""PostgreSQL database connector implementation."""
 import logging
 import time
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
@@ -8,18 +9,16 @@ import asyncpg
 from database.base_connector import DatabaseConnector
 from models.connection import Connection
 from models.metadata import ColumnMetadata, RelationshipMetadata, TableMetadata
+from models.query import ColumnInfo
 
 logger = logging.getLogger(__name__)
 
 
 class PostgresConnector(DatabaseConnector):
-    """
-    Connector for PostgreSQL databases
-    """
+    """Connector for PostgreSQL databases."""
 
     def __init__(self, connection: Connection):
-        """
-        Initialize the connector with connection details
+        """Initialize the connector with connection details.
 
         Args:
             connection: The connection configuration
@@ -28,9 +27,7 @@ class PostgresConnector(DatabaseConnector):
         self.pool = None
 
     async def connect(self) -> None:
-        """
-        Establish connection to the database
-        """
+        """Establish connection to the database."""
         if self.pool:
             return
 
@@ -53,22 +50,21 @@ class PostgresConnector(DatabaseConnector):
             raise
 
     async def close(self) -> None:
-        """
-        Close the connection pool
-        """
+        """Close the connection pool."""
         if self.pool:
             await self.pool.close()
             self.pool = None
 
     async def test_connection(self) -> Tuple[bool, str]:
-        """
-        Test if the connection is valid
+        """Test if the connection is valid.
 
         Returns:
             Tuple of (success, message)
         """
         try:
             await self.connect()
+            if self.pool is None:
+                raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
                 # Execute a simple query
                 version = await conn.fetchval("SELECT version()")
@@ -80,27 +76,28 @@ class PostgresConnector(DatabaseConnector):
     async def get_metadata(
         self,
     ) -> Tuple[List[TableMetadata], List[ColumnMetadata], List[RelationshipMetadata]]:
-        """
-        Extract metadata from the database
+        """Extract metadata from the database.
 
         Returns:
             Tuple of (tables, columns, relationships)
         """
         await self.connect()
 
-        tables = []
-        columns = []
-        relationships = []
+        tables: List[TableMetadata] = []
+        columns: List[ColumnMetadata] = []
+        relationships: List[RelationshipMetadata] = []
 
         try:
+            if self.pool is None:
+                raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
                 # Get tables
                 tables_query = """
-                SELECT 
+                SELECT
                     t.table_name as name,
                     t.table_schema as schema,
                     obj_description(pgc.oid) as description,
-                    CASE 
+                    CASE
                         WHEN t.table_type = 'VIEW' THEN 'view'
                         ELSE 'table'
                     END as type,
@@ -129,25 +126,26 @@ class PostgresConnector(DatabaseConnector):
 
                 # Get columns
                 columns_query = """
-                SELECT 
+                SELECT
                     c.table_name,
                     c.column_name as name,
                     c.data_type,
                     c.is_nullable = 'YES' as nullable,
                     pg_catalog.col_description(pgc.oid, c.ordinal_position::int) as description,
-                    CASE 
+                    CASE
                         WHEN pk.constraint_name IS NOT NULL THEN true
                         ELSE false
                     END as primary_key,
-                    CASE 
-                        WHEN fk.constraint_name IS NOT NULL THEN fk.referenced_table_name || '.' || fk.referenced_column_name
+                    CASE
+                        WHEN fk.constraint_name IS NOT NULL THEN
+                            fk.referenced_table_name || '.' || fk.referenced_column_name
                         ELSE null
                     END as foreign_key
                 FROM information_schema.columns c
                 JOIN pg_class pgc ON pgc.relname = c.table_name
                 JOIN pg_namespace n ON pgc.relnamespace = n.oid AND n.nspname = c.table_schema
                 LEFT JOIN (
-                    SELECT 
+                    SELECT
                         tc.constraint_name,
                         kcu.table_name,
                         kcu.column_name
@@ -158,7 +156,7 @@ class PostgresConnector(DatabaseConnector):
                     WHERE tc.constraint_type = 'PRIMARY KEY'
                 ) pk ON pk.table_name = c.table_name AND pk.column_name = c.column_name
                 LEFT JOIN (
-                    SELECT 
+                    SELECT
                         tc.constraint_name,
                         kcu.table_name,
                         kcu.column_name,
@@ -214,7 +212,7 @@ class PostgresConnector(DatabaseConnector):
 
                 # Get relationships
                 relationships_query = """
-                SELECT 
+                SELECT
                     tc.constraint_name,
                     kcu.table_name as source_table,
                     kcu.column_name as source_column,
@@ -256,16 +254,16 @@ class PostgresConnector(DatabaseConnector):
 
     async def execute_query(
         self, sql: str, params: Optional[Dict[str, Any]] = None
-    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], float]:
-        """
-        Execute a SQL query and return results
+    ) -> Tuple[List[Dict[str, Any]], List[ColumnInfo], float]:
+        """Execute a SQL query and return results.
 
         Args:
             sql: The SQL query to execute
             params: Query parameters
 
         Returns:
-            Tuple of (results, columns, execution_time)
+            Tuple of (results, column_info, execution_time)
+            where column_info is a list of ColumnInfo Pydantic models
         """
         await self.connect()
 
@@ -273,15 +271,17 @@ class PostgresConnector(DatabaseConnector):
             start_time = time.time()
             param_values = list(params.values()) if params else []
 
+            if self.pool is None:
+                raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
                 # Execute query
                 statement = await conn.prepare(sql)
                 records = await statement.fetch(*param_values)
 
-                # Get column information
+                # Get column information and convert to ColumnInfo Pydantic models
                 columns = [
-                    {"name": key, "type": statement.get_attributes()[i].type.name}
-                    for i, key in enumerate(statement.get_attributes())
+                    ColumnInfo(name=attr.name, type=attr.type.name)
+                    for attr in statement.get_attributes()
                 ]
 
                 # Convert records to dictionaries
@@ -298,8 +298,7 @@ class PostgresConnector(DatabaseConnector):
     async def execute_with_streaming(
         self, sql: str, params: Optional[Dict[str, Any]] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Execute a SQL query with streaming results
+        """Execute a SQL query with streaming results.
 
         Args:
             sql: The SQL query to execute
@@ -313,6 +312,8 @@ class PostgresConnector(DatabaseConnector):
         try:
             param_values = list(params.values()) if params else []
 
+            if self.pool is None:
+                raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
                 # Start a transaction
                 async with conn.transaction():
@@ -330,8 +331,7 @@ class PostgresConnector(DatabaseConnector):
     async def get_query_explanation(
         self, sql: str, params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """
-        Get execution plan for a query
+        """Get execution plan for a query.
 
         Args:
             sql: The SQL query to explain
@@ -346,6 +346,8 @@ class PostgresConnector(DatabaseConnector):
             param_values = list(params.values()) if params else []
             explain_sql = f"EXPLAIN (FORMAT JSON, ANALYZE, VERBOSE) {sql}"
 
+            if self.pool is None:
+                raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
                 # Execute EXPLAIN
                 plan = await conn.fetchval(explain_sql, *param_values)
@@ -358,8 +360,7 @@ class PostgresConnector(DatabaseConnector):
             raise
 
     def get_dialect(self) -> str:
-        """
-        Get SQL dialect information
+        """Get SQL dialect information.
 
         Returns:
             String identifying the SQL dialect

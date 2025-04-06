@@ -1,14 +1,14 @@
 # app/services/query_service.py
+"""Service for handling database queries and query history."""
 import json
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional
 
 from database.connector_factory import DatabaseConnectorFactory
 from models.connection import Connection
 from models.query import (
-    ColumnInfo,
     QueryExplainResult,
     QueryHistoryEntry,
     QueryModel,
@@ -21,20 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 class QueryService:
-    """
-    Service for handling queries
-    """
+    """Service for handling queries."""
 
     def __init__(self):
-        """
-        Initialize the query service
-        """
+        """Initialize the query service."""
         # In-memory storage for query history (would be replaced with a database in production)
         self.query_history = []
 
     async def execute_query(self, connection: Connection, query_model: QueryModel) -> QueryResult:
-        """
-        Execute a query
+        """Execute a query.
 
         Args:
             connection: The database connection
@@ -59,12 +54,7 @@ class QueryService:
             sql = translator.translate(query_model)
 
             # Execute query
-            results, column_info, execution_time = await connector.execute_query(sql)
-
-            # Convert column info to ColumnInfo model
-            columns = []
-            for col in column_info:
-                columns.append(ColumnInfo(name=col["name"], type=col["type"]))
+            results, columns, execution_time = await connector.execute_query(sql)
 
             # Create query result
             result = QueryResult(
@@ -101,8 +91,7 @@ class QueryService:
     async def validate_query(
         self, connection: Connection, query_model: QueryModel
     ) -> QueryValidationResult:
-        """
-        Validate a query without executing it
+        """Validate a query without executing it.
 
         Args:
             connection: The database connection
@@ -152,8 +141,7 @@ class QueryService:
     async def explain_query(
         self, connection: Connection, query_model: QueryModel
     ) -> QueryExplainResult:
-        """
-        Get the execution plan for a query
+        """Get the execution plan for a query.
 
         Args:
             connection: The database connection
@@ -182,9 +170,11 @@ class QueryService:
 
             # Create explain result
             result = QueryExplainResult(
-                plan=json.dumps(explanation["plan"], indent=2)
-                if isinstance(explanation["plan"], dict)
-                else explanation["plan"],
+                plan=(
+                    json.dumps(explanation["plan"], indent=2)
+                    if isinstance(explanation["plan"], dict)
+                    else explanation["plan"]
+                ),
                 cost=explanation.get("cost"),
                 details=explanation,
             )
@@ -200,8 +190,7 @@ class QueryService:
     async def save_to_history(
         self, connection_id: str, query_model: QueryModel, result: QueryResult
     ) -> None:
-        """
-        Save a query to history
+        """Save a query to history.
 
         Args:
             connection_id: The connection ID
@@ -230,8 +219,7 @@ class QueryService:
     async def get_history(
         self, limit: int = 10, offset: int = 0, connection_id: Optional[str] = None
     ) -> List[QueryHistoryEntry]:
-        """
-        Get query history
+        """Get query history.
 
         Args:
             limit: Maximum number of entries to return
@@ -265,8 +253,7 @@ class QueryService:
             return []
 
     async def get_query_by_id(self, query_id: str) -> Optional[QueryHistoryEntry]:
-        """
-        Get a specific query from history
+        """Get a specific query from history.
 
         Args:
             query_id: The query ID

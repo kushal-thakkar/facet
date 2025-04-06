@@ -1,9 +1,9 @@
 # app/services/query_translator.py
+"""Translator for converting query models to SQL statements."""
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from models.query import (
-    Comparison,
     FilterCondition,
     LogicalFilterGroup,
     Metric,
@@ -16,13 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class SQLTranslator:
-    """
-    Translates JSON query model to SQL
-    """
+    """Translates JSON query model to SQL."""
 
     def __init__(self, dialect: str):
-        """
-        Initialize the translator with a specific SQL dialect
+        """Initialize the translator with a specific SQL dialect.
 
         Args:
             dialect: The SQL dialect to use (postgresql, clickhouse, etc.)
@@ -30,8 +27,7 @@ class SQLTranslator:
         self.dialect = dialect
 
     def translate(self, query_model: QueryModel) -> str:
-        """
-        Convert JSON query model to SQL string
+        """Convert JSON query model to SQL string.
 
         Args:
             query_model: The query model to translate
@@ -59,7 +55,10 @@ class SQLTranslator:
             limit_clause = self._build_limit(query_model.limit)
 
             # Combine all clauses
-            sql = f"{select_clause}\n{from_clause}\n{where_clause}\n{group_by_clause}\n{order_by_clause}\n{limit_clause}"
+            sql = (
+                f"{select_clause}\n{from_clause}\n{where_clause}\n"
+                f"{group_by_clause}\n{order_by_clause}\n{limit_clause}"
+            )
 
             return sql
         except Exception as e:
@@ -67,8 +66,7 @@ class SQLTranslator:
             raise
 
     def _build_select(self, metrics: List[Metric], group_by: List[str]) -> str:
-        """
-        Build the SELECT clause
+        """Build the SELECT clause.
 
         Args:
             metrics: List of metrics to include
@@ -100,20 +98,22 @@ class SQLTranslator:
 
         return f"SELECT {', '.join(select_items)}"
 
-    def _build_from(self, source: Dict[str, Any]) -> str:
-        """
-        Build the FROM clause
+    def _build_from(self, source) -> str:
+        """Build the FROM clause.
 
         Args:
-            source: Source table information
+            source: Source table information (QuerySource Pydantic model)
 
         Returns:
             FROM clause string
         """
-        if not source or not source.get("table"):
+        if not source:
             raise ValueError("Query must specify a source table")
 
-        table_name = source.get("table")
+        if not hasattr(source, "table"):
+            raise ValueError("QuerySource must have a table attribute")
+
+        table_name = source.table
 
         # Add schema if needed (dialect-specific)
         if self.dialect == "postgresql" and "." not in table_name:
@@ -126,8 +126,7 @@ class SQLTranslator:
         filters: List[Union[FilterCondition, LogicalFilterGroup]],
         time_range: Optional[TimeRange],
     ) -> str:
-        """
-        Build the WHERE clause
+        """Build the WHERE clause.
 
         Args:
             filters: List of filter conditions
@@ -164,8 +163,7 @@ class SQLTranslator:
         return f"WHERE {' AND '.join(conditions)}"
 
     def _build_filter_group(self, filter_group: LogicalFilterGroup) -> str:
-        """
-        Build a filter group condition
+        """Build a filter group condition.
 
         Args:
             filter_group: The logical filter group
@@ -194,8 +192,7 @@ class SQLTranslator:
         return f"({' ' + logic_op + ' '.join(group_conditions)})"
 
     def _build_filter_condition(self, condition: FilterCondition) -> str:
-        """
-        Build a single filter condition
+        """Build a single filter condition.
 
         Args:
             condition: The filter condition
@@ -281,8 +278,7 @@ class SQLTranslator:
         return ""
 
     def _build_time_range_condition(self, time_range: TimeRange) -> str:
-        """
-        Build a time range condition
+        """Build a time range condition.
 
         Args:
             time_range: The time range specification
@@ -343,8 +339,7 @@ class SQLTranslator:
         return ""
 
     def _build_group_by(self, group_by: List[str]) -> str:
-        """
-        Build the GROUP BY clause
+        """Build the GROUP BY clause.
 
         Args:
             group_by: List of dimensions to group by
@@ -358,8 +353,7 @@ class SQLTranslator:
         return f"GROUP BY {', '.join(group_by)}"
 
     def _build_order_by(self, sort: List[SortOrder]) -> str:
-        """
-        Build the ORDER BY clause
+        """Build the ORDER BY clause.
 
         Args:
             sort: List of sort specifications
@@ -378,8 +372,7 @@ class SQLTranslator:
         return f"ORDER BY {', '.join(sort_items)}"
 
     def _build_limit(self, limit: Optional[int]) -> str:
-        """
-        Build the LIMIT clause
+        """Build the LIMIT clause.
 
         Args:
             limit: Maximum number of rows to return

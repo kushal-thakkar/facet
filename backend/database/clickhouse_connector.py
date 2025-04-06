@@ -10,6 +10,7 @@ import aiohttp
 from database.base_connector import DatabaseConnector
 from models.connection import Connection
 from models.metadata import ColumnMetadata, RelationshipMetadata, TableMetadata
+from models.query import ColumnInfo
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +215,7 @@ class ClickHouseConnector(DatabaseConnector):
 
     async def execute_query(
         self, sql: str, params: Optional[Dict[str, Any]] = None
-    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], float]:
+    ) -> Tuple[List[Dict[str, Any]], List[ColumnInfo], float]:
         """
         Execute a SQL query and return results.
 
@@ -223,7 +224,8 @@ class ClickHouseConnector(DatabaseConnector):
             params: Query parameters
 
         Returns:
-            Tuple of (results, columns, execution_time)
+            Tuple of (results, column_info, execution_time)
+            where column_info is a list of ColumnInfo Pydantic models
         """
         await self.connect()
 
@@ -246,12 +248,13 @@ class ClickHouseConnector(DatabaseConnector):
                 raise RuntimeError("Client is not initialized")
             results = await self.client.fetch(sql)
 
-            # Get column information from first row
+            # Get column information from first row and convert to ColumnInfo Pydantic models
             columns = []
             if results and len(results) > 0:
                 first_row = results[0]
                 columns = [
-                    {"name": key, "type": type(value).__name__} for key, value in first_row.items()
+                    ColumnInfo(name=key, type=type(value).__name__)
+                    for key, value in first_row.items()
                 ]
 
             execution_time = time.time() - start_time

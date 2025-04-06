@@ -7,39 +7,8 @@ import MetricSelector from './MetricSelector';
 import { useAppState } from '../../context/AppStateContext';
 
 function ExplorationControls({ onRunQuery, isLoading }) {
-  const { state, actions } = useAppState();
+  const { state } = useAppState();
   const { currentExploration } = state;
-
-  // Handler for saving the current exploration
-  const handleSave = () => {
-    // Generate a unique ID if this is a new exploration
-    const id = currentExploration.id || `exp_${Date.now()}`;
-
-    // Prompt for a name if it doesn't have one
-    let name = currentExploration.name;
-    if (!name) {
-      name = prompt('Enter a name for this exploration:');
-      if (!name) return; // User cancelled
-    }
-
-    const savedExploration = {
-      ...currentExploration,
-      id,
-      name,
-      lastRun: new Date().toISOString(),
-    };
-
-    // Update the current exploration with ID and name
-    actions.setCurrentExploration(savedExploration);
-
-    // Add to saved explorations
-    const updatedExplorations = [
-      ...state.explorations.filter((exp) => exp.id !== id),
-      savedExploration,
-    ];
-
-    actions.setExplorations(updatedExplorations);
-  };
 
   return (
     <div className="mb-4 bg-white p-4 border border-gray-200 rounded-md space-y-4">
@@ -50,13 +19,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         </h2>
 
         <div className="flex space-x-2">
-          <button
-            className="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-            onClick={handleSave}
-          >
-            Save
-          </button>
-
           <button
             className={`px-3 py-1 rounded-md text-sm font-medium ${
               isLoading

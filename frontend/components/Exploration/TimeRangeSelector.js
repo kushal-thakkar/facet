@@ -50,7 +50,7 @@ function TimeRangeSelector() {
   // Get current comparison or default
   const comparison = currentExploration.comparison || {
     enabled: false,
-    range: 'previous_period',
+    range: 'none',
   };
 
   // Find the labels for current selections

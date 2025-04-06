@@ -8,7 +8,7 @@ import { useAppState } from '../../context/AppStateContext';
 
 function ExplorationControls({ onRunQuery, isLoading }) {
   const { state, actions } = useAppState();
-  const { currentExploration, metadata } = state;
+  const { currentExploration, currentConnection, metadata } = state;
   const [filterText, setFilterText] = useState('');
   const [showTableDropdown, setShowTableDropdown] = useState(false);
   const dropdownRef = useRef(null);
@@ -23,8 +23,13 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
   // Handle table selection
   const handleTableSelect = (tableName) => {
+    const connectionId = currentConnection?.id;
+
     actions.updateCurrentExploration({
-      source: { table: tableName },
+      source: {
+        table: tableName,
+        connectionId: connectionId,
+      },
       filters: [],
       groupBy: [],
       metrics: [],

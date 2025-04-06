@@ -11,7 +11,10 @@ const initialState = {
     groupBy: [],
     metrics: [],
     timeRange: null,
-    comparison: null,
+    comparison: {
+      enabled: false,
+      range: 'none',
+    },
     visualization: {
       type: 'table',
       config: {},

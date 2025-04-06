@@ -21,11 +21,20 @@ function SidePanel() {
     setError(null);
 
     try {
+      // Make sure the query has the connectionId in the source
+      const queryWithConnectionId = {
+        ...currentExploration,
+        source: {
+          ...currentExploration.source,
+          connectionId: currentConnection.id,
+        },
+      };
+
       // Execute query using API client
       console.log('Executing query for connection:', currentConnection.id);
       const data = await api.post('/api/v1/query/execute', {
         connectionId: currentConnection.id,
-        query: currentExploration,
+        query: queryWithConnectionId,
       });
       setQueryResults(data);
 

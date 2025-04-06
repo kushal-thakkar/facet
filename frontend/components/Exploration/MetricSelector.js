@@ -9,17 +9,17 @@ const AGGREGATION_FUNCTIONS = [
   { id: 'sum', label: 'Sum', applicableTypes: ['number', 'integer', 'float', 'double', 'decimal'] },
   {
     id: 'avg',
-    label: 'Average',
+    label: 'Avg',
     applicableTypes: ['number', 'integer', 'float', 'double', 'decimal'],
   },
   {
     id: 'min',
-    label: 'Minimum',
+    label: 'Min',
     applicableTypes: ['number', 'integer', 'float', 'double', 'decimal', 'date', 'timestamp'],
   },
   {
     id: 'max',
-    label: 'Maximum',
+    label: 'Max',
     applicableTypes: ['number', 'integer', 'float', 'double', 'decimal', 'date', 'timestamp'],
   },
 ];

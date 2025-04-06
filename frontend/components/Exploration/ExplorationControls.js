@@ -544,30 +544,23 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           <Dropdown
             label="Aggregate"
             options={[
-              { id: 'none', label: 'None' },
               { id: 'count', label: 'Count' },
               { id: 'sum', label: 'Sum' },
-              { id: 'avg', label: 'Average' },
-              { id: 'min', label: 'Minimum' },
-              { id: 'max', label: 'Maximum' },
+              { id: 'avg', label: 'Avg' },
+              { id: 'min', label: 'Min' },
+              { id: 'max', label: 'Max' },
             ]}
-            value={
-              (currentExploration.metrics && currentExploration.metrics[0]?.function) || 'none'
-            }
+            value={(currentExploration.metrics && currentExploration.metrics[0]?.function) || 'avg'}
             onChange={(value) => {
-              if (value === 'none') {
-                actions.updateCurrentExploration({ metrics: [] });
-              } else {
-                actions.updateCurrentExploration({
-                  metrics: [
-                    {
-                      function: value,
-                      column: null,
-                      alias: value,
-                    },
-                  ],
-                });
-              }
+              actions.updateCurrentExploration({
+                metrics: [
+                  {
+                    function: value,
+                    column: null,
+                    alias: value,
+                  },
+                ],
+              });
             }}
             icon={
               <svg
@@ -619,7 +612,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           <Dropdown
             label="Granularity"
             options={[
-              { id: 'none', label: 'None' },
+              { id: 'auto', label: 'Auto' },
               { id: 'second', label: 'Second' },
               { id: 'minute', label: 'Minute' },
               { id: 'hour', label: 'Hour' },
@@ -629,7 +622,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               { id: 'quarter', label: 'Quarter' },
               { id: 'year', label: 'Year' },
             ]}
-            value={'none'} // This would use a value from state in a real implementation
+            value={'auto'} // This would use a value from state in a real implementation
             onChange={(value) => {
               // Granularity implementation
               console.log('Granularity:', value);

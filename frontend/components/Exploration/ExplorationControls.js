@@ -53,18 +53,33 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     setFilterText('');
   };
 
-  // Handle click outside dropdown
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setShowTableDropdown(false);
-    }
-  };
-
-  // Set up event listener for click outside
+  // Create a global ESC key handler for all dropdowns/expandable areas
   React.useEffect(() => {
+    function handleEscapeKey(event) {
+      if (event.key === 'Escape') {
+        // Close table dropdown
+        setShowTableDropdown(false);
+
+        // Fields selector is self-contained and we need to access its state
+        document.querySelectorAll('.fields-selector-expanded').forEach((el) => {
+          // Trigger a click on the header to collapse it
+          const header = el.querySelector('.fields-selector-header');
+          if (header) header.click();
+        });
+      }
+    }
+
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowTableDropdown(false);
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, []);
 
@@ -104,10 +119,14 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     );
 
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm overflow-hidden">
+      <div
+        className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm overflow-hidden ${
+          isExpanded ? 'fields-selector-expanded' : ''
+        }`}
+      >
         {/* Header */}
         <div
-          className="px-4 py-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          className="fields-selector-header px-4 py-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center">
@@ -570,10 +589,8 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           <Dropdown
             label="Limit"
             options={[
-              { id: '10', label: '10 rows' },
               { id: '50', label: '50 rows' },
               { id: '100', label: '100 rows' },
-              { id: '500', label: '500 rows' },
               { id: '1000', label: '1000 rows' },
               { id: 'none', label: 'No limit' },
             ]}

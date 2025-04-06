@@ -13,7 +13,7 @@ const Dropdown = ({ label, options, value, onChange, icon, enableTypeahead = fal
     ? options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()))
     : options;
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside or pressing Escape key
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -22,9 +22,19 @@ const Dropdown = ({ label, options, value, onChange, icon, enableTypeahead = fal
       }
     }
 
+    function handleEscapeKey(event) {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [wrapperRef]);
 

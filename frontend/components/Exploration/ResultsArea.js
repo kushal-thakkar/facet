@@ -1,5 +1,5 @@
 // components/Exploration/ResultsArea.js
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ResultsTable from './ResultsTable';
 import ResultsChart from './ResultsChart';
 import { useAppState } from '../../context/AppStateContext';
@@ -7,6 +7,8 @@ import { useAppState } from '../../context/AppStateContext';
 function ResultsArea({ results, isLoading }) {
   const { state, actions } = useAppState();
   const { currentExploration } = state;
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef(null);
 
   // Get current visualization type or default to table
   const visualizationType = currentExploration.visualization?.type || 'table';
@@ -96,16 +98,39 @@ function ResultsArea({ results, isLoading }) {
     document.body.removeChild(link);
   };
 
+  // Close export menu when clicking outside or pressing ESC
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    }
+
+    function handleEscapeKey(event) {
+      if (event.key === 'Escape') {
+        setShowExportMenu(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, []);
+
   return (
     <div className="h-full flex flex-col bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-card overflow-hidden">
       {/* Header with export options - reduced height */}
       <div className="px-6 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <div className="text-sm font-medium text-gray-700 dark:text-gray-300"></div>
 
-        <div className="relative">
+        <div className="relative" ref={exportMenuRef}>
           <button
             className="px-3 py-1 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center"
-            onClick={() => document.getElementById('export-menu').classList.toggle('hidden')}
+            onClick={() => setShowExportMenu(!showExportMenu)}
           >
             <svg
               className="w-4 h-4 mr-2"
@@ -140,8 +165,9 @@ function ResultsArea({ results, isLoading }) {
 
           {/* Export dropdown menu */}
           <div
-            id="export-menu"
-            className="absolute right-0 mt-2 w-40 bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 hidden"
+            className={`absolute right-0 mt-2 w-40 bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 ${
+              showExportMenu ? '' : 'hidden'
+            }`}
           >
             <div className="py-1">
               <button

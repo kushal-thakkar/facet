@@ -6,6 +6,7 @@ import GroupBySelector from './GroupBySelector';
 import MetricSelector from './MetricSelector';
 import Dropdown from './Dropdown';
 import { useAppState } from '../../context/AppStateContext';
+import api from '../../utils/apiClient';
 
 function ExplorationControls({ onRunQuery, isLoading }) {
   const { state, actions } = useAppState();
@@ -37,9 +38,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
   );
 
   // Handle table selection
-  const handleTableSelect = (tableName) => {
+  const handleTableSelect = async (tableName) => {
     const connectionId = currentConnection?.id;
 
+    // Update the current exploration with the selected table
     actions.updateCurrentExploration({
       source: {
         table: tableName,
@@ -49,6 +51,34 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       groupBy: [],
       metrics: [],
     });
+
+    // Fetch columns for the selected table
+    try {
+      const columns = await api.get(
+        `/api/v1/metadata/connections/${connectionId}/tables/${tableName}/columns`
+      );
+      console.log('Fetched columns for table:', columns);
+
+      // Convert array of columns to object with keys formatted as "tableName.columnName"
+      const columnsObject = {};
+      columns.forEach((column) => {
+        const key = `${tableName}.${column.name}`;
+        columnsObject[key] = {
+          name: column.name,
+          displayName: column.displayName || column.name,
+          dataType: column.dataType || 'string',
+          description: column.description || '',
+        };
+      });
+
+      // Update metadata with the columns
+      actions.updateMetadata({
+        columns: { ...metadata.columns, ...columnsObject },
+      });
+    } catch (error) {
+      console.error(`Error fetching columns for table ${tableName}:`, error);
+    }
+
     setShowTableDropdown(false);
     setFilterText('');
   };
@@ -88,11 +118,24 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedFields, setSelectedFields] = useState(currentSelection || []);
     const [searchTerm, setSearchTerm] = useState('');
+    const isInitialRender = useRef(true);
 
-    // Update parent component when selection changes
+    // Update local state when parent's currentSelection changes
     useEffect(() => {
+      setSelectedFields(currentSelection || []);
+    }, [currentSelection]);
+
+    // Update parent component when selection changes, but only after the initial render
+    useEffect(() => {
+      // Skip the first render to avoid the initial update
+      if (isInitialRender.current) {
+        isInitialRender.current = false;
+        return;
+      }
+
+      // Only call the parent's callback if this isn't from the parent's state change
       onSelectionChange(selectedFields);
-    }, [selectedFields, onSelectionChange]);
+    }, [selectedFields]); // Intentionally omitting onSelectionChange to prevent infinite loops
 
     // Toggle a single field selection
     const toggleField = (columnId) => {
@@ -619,8 +662,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               { id: 'day', label: 'Day' },
               { id: 'week', label: 'Week' },
               { id: 'month', label: 'Month' },
-              { id: 'quarter', label: 'Quarter' },
-              { id: 'year', label: 'Year' },
             ]}
             value={'auto'} // This would use a value from state in a real implementation
             onChange={(value) => {
@@ -649,9 +690,18 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           columns={availableColumns}
           currentSelection={currentExploration.selectedFields || []}
           onSelectionChange={(selectedFields) => {
-            actions.updateCurrentExploration({
-              selectedFields,
-            });
+            // Only update if the selection actually changed
+            const current = currentExploration.selectedFields || [];
+            const hasChanged =
+              current.length !== selectedFields.length ||
+              current.some((field) => !selectedFields.includes(field)) ||
+              selectedFields.some((field) => !current.includes(field));
+
+            if (hasChanged) {
+              actions.updateCurrentExploration({
+                selectedFields,
+              });
+            }
           }}
         />
 

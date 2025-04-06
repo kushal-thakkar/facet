@@ -163,7 +163,7 @@ function ResultsArea({ results, isLoading }) {
                 onClick={() => handleExport('sql')}
                 disabled={!results}
               >
-                Copy SQL
+                Export SQL
               </button>
             </div>
           </div>

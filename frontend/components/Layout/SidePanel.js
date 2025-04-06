@@ -123,39 +123,43 @@ function SidePanel({ toggleDarkMode, darkMode }) {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto">
-      {/* Facet logo and name */}
+    <div className="h-full flex flex-col">
+      {/* Facet logo and name - fixed */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
         <span className="text-primary dark:text-indigo-400 font-bold text-2xl mr-2">🧩</span>
         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Facet</h1>
       </div>
-      {!currentConnection ? (
-        <div className="p-4 text-center">
-          <p className="text-gray-500 dark:text-gray-400">Please select a connection first</p>
-        </div>
-      ) : loadingMetadata ? (
-        <div className="p-4 flex flex-col items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-3 border-primary border-t-transparent rounded-full mb-3"></div>
-          <p className="text-gray-500 dark:text-gray-400">
-            Loading tables from {currentConnection.name}...
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Exploration Controls */}
-          <ExplorationControls onRunQuery={handleRunQuery} isLoading={isLoading} />
 
-          {/* Error message if any */}
-          {error && (
-            <div className="mx-4 mb-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-3 text-sm rounded-lg border border-red-200 dark:border-red-800">
-              {error}
-            </div>
-          )}
-        </>
-      )}
+      {/* Middle scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        {!currentConnection ? (
+          <div className="p-4 text-center">
+            <p className="text-gray-500 dark:text-gray-400">Please select a connection first</p>
+          </div>
+        ) : loadingMetadata ? (
+          <div className="p-4 flex flex-col items-center justify-center">
+            <div className="animate-spin h-8 w-8 border-3 border-primary border-t-transparent rounded-full mb-3"></div>
+            <p className="text-gray-500 dark:text-gray-400">
+              Loading tables from {currentConnection.name}...
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Exploration Controls */}
+            <ExplorationControls onRunQuery={handleRunQuery} isLoading={isLoading} />
 
-      {/* Bottom controls panel */}
-      <div className="mt-auto pt-3 px-3 pb-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            {/* Error message if any */}
+            {error && (
+              <div className="mx-4 mb-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-3 text-sm rounded-lg border border-red-200 dark:border-red-800">
+                {error}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Bottom controls panel - fixed */}
+      <div className="pt-3 px-3 pb-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
         {/* Connection selector */}
         <div className="flex-grow mr-2 relative">
           <select

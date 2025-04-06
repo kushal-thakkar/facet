@@ -124,43 +124,95 @@ function MetricSelector() {
     const columnName =
       availableColumns.find((col) => col.id === metric.column)?.name || metric.column;
 
-    return `${functionName}(${columnName})${metric.alias !== `${metric.function}_${metric.column}` ? ` as ${metric.alias}` : ''}`;
+    return `${functionName}(${columnName})${
+      metric.alias !== `${metric.function}_${metric.column}` ? ` as ${metric.alias}` : ''
+    }`;
   };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
-        <label className="block text-sm font-medium text-gray-700">Metrics</label>
+        <div className="flex items-center">
+          <label className="block text-sm font-medium text-gray-700 mr-2">Metrics</label>
+          <div className="text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded-full">
+            {metrics.length}
+          </div>
+        </div>
 
         <button
           type="button"
-          className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+          className="inline-flex items-center px-3 py-1.5 border border-purple-500 text-sm font-medium rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors shadow-sm"
           onClick={() => setShowDialog(true)}
         >
-          + Add Metric
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Add Metric
         </button>
       </div>
 
-      {/* Metrics Pills */}
+      {/* Metrics Pills - Enhanced Scuba-like style */}
       <div className="flex flex-wrap gap-2">
         {metrics.length > 0 ? (
           metrics.map((metric, index) => (
             <div
               key={index}
-              className="inline-flex items-center px-2 py-1 rounded-md bg-purple-100 text-purple-800 text-sm"
+              className="inline-flex items-center px-3 py-1.5 rounded-md bg-purple-50 border border-purple-200 text-purple-800 text-sm shadow-sm hover:bg-purple-100 transition-colors"
             >
-              <span>{formatMetric(metric)}</span>
+              <div className="mr-2 p-1 bg-purple-200 rounded-md">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3 w-3 text-purple-700"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span className="font-medium">{formatMetric(metric)}</span>
               <button
                 type="button"
-                className="ml-1 text-purple-600 hover:text-purple-800"
+                className="ml-2 text-purple-600 hover:text-purple-800 focus:outline-none"
                 onClick={() => removeMetric(index)}
+                aria-label="Remove metric"
               >
-                ×
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
             </div>
           ))
         ) : (
-          <div className="text-sm text-gray-500 italic">No metrics defined</div>
+          <div className="p-3 text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-md w-full italic">
+            No metrics defined. Metrics are aggregations like count, sum, or average applied to your
+            data.
+          </div>
         )}
       </div>
 

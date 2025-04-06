@@ -88,17 +88,15 @@ bun dev
 
 #### Backend
 
-1. Create a virtual environment:
+1. Create a virtual environment at the project root:
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
 2. Install dependencies:
 ```bash
-pip install -r requirements.txt  # For production dependencies only
-pip install -r requirements-dev.txt  # For development and testing
+pip install -r backend/requirements.txt  # For production dependencies only
 ```
 
 3. Start the development server:
@@ -119,7 +117,10 @@ The project uses both pre-commit hooks and manual commands for code quality:
 Pre-commit hooks automatically check code before each commit:
 
 ```bash
-# Install pre-commit
+# Activate the virtual environment first
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install pre-commit in the virtual environment
 pip install pre-commit
 
 # Install pre-commit hooks
@@ -209,15 +210,45 @@ docker-compose -f docker-compose.dev.yml up
 
 The `-v` flag ensures that volumes are removed, allowing the initialization scripts to run when the containers are recreated.
 
-## Database Connection
+## Database Connections
 
-Facet supports connecting to PostgreSQL and ClickHouse databases. To connect to a database:
+Facet supports connecting to PostgreSQL and ClickHouse databases. Database connections are configured through a YAML configuration file.
 
-1. Go to the application and click "Add Connection"
-2. Select the database type
-3. Enter the connection details (host, port, database name, username, password)
-4. Test the connection
-5. Save the connection
+### Configuration Setup
+
+1. Copy the example configuration file:
+   ```bash
+   cp backend/config/db_connections.yaml.example backend/config/db_connections.yaml
+   ```
+
+2. Edit the `db_connections.yaml` file to add your database connections:
+   ```yaml
+   connections:
+     - name: "PostgreSQL (Local)"
+       type: "postgres"
+       config:
+         host: "postgres"
+         port: 5432
+         database: "facet"
+         user: "facet"
+         password: "facetpass"
+         ssl: false
+     
+     - name: "Production Database"
+       type: "postgres"
+       config:
+         host: "production-db.example.com"
+         port: 5432
+         database: "analytics"
+         user: "analyst"
+         password: "your-password"
+         ssl: true
+   ```
+
+3. Restart the backend service to load the new connections:
+   ```bash
+   docker-compose -f docker-compose.dev.yml restart backend
+   ```
 
 ## Usage Guide
 

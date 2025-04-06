@@ -1,5 +1,5 @@
 # app/database/clickhouse_connector.py
-import json
+"""Connector implementation for ClickHouse databases."""
 import logging
 import time
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
@@ -15,59 +15,57 @@ logger = logging.getLogger(__name__)
 
 
 class ClickHouseConnector(DatabaseConnector):
-    """
-    Connector for ClickHouse databases
-    """
+    """Connector for ClickHouse databases."""
 
     def __init__(self, connection: Connection):
-        """
-        Initialize the connector with connection details
+        """Initialize the connector with connection details.
 
         Args:
             connection: The connection configuration
         """
         super().__init__(connection)
         self.client = None
-        self.session = None
+        self.session: Optional[aiohttp.ClientSession] = None
 
     async def connect(self) -> None:
-        """
-        Establish connection to the database
-        """
+        """Establish connection to the database."""
         if self.client:
             return
 
         try:
+            # Log connection attempt
+            logger.info(
+                f"Connecting to ClickHouse at {self.connection.config.host}:"
+                f"{self.connection.config.port} with database {self.connection.config.database}"
+            )
+
             # Setup HTTP session
-            self.session = aiohttp.ClientSession()
+            session = aiohttp.ClientSession()
+            self.session = session
 
             # Create protocol prefix based on https setting
             protocol = "https" if self.connection.config.https else "http"
 
             # Build connection URL
             url = f"{protocol}://{self.connection.config.host}:{self.connection.config.port}"
-
-            # Setup auth
-            auth = {
-                "user": self.connection.config.user,
-                "password": self.connection.config.password,
-            }
+            logger.info(f"Using connection URL: {url}")
 
             # Create client
             self.client = aiochclient.ChClient(
                 self.session,
                 url=url,
-                user=auth["user"],
-                password=auth["password"],
+                user=self.connection.config.user,
+                password=self.connection.config.password,
                 database=self.connection.config.database,
             )
+
         except Exception as e:
             logger.error(f"Error connecting to ClickHouse: {str(e)}")
             raise
 
     async def test_connection(self) -> Tuple[bool, str]:
         """
-        Test if the connection is valid
+        Test if the connection is valid.
 
         Returns:
             Tuple of (success, message)
@@ -102,90 +100,111 @@ class ClickHouseConnector(DatabaseConnector):
         self,
     ) -> Tuple[List[TableMetadata], List[ColumnMetadata], List[RelationshipMetadata]]:
         """
-        Extract metadata from the database
+        Extract metadata from the database.
 
         Returns:
             Tuple of (tables, columns, relationships)
         """
         await self.connect()
 
-        tables = []
-        columns = []
-        relationships = []
+        tables: List[TableMetadata] = []
+        columns: List[ColumnMetadata] = []
+        relationships: List[RelationshipMetadata] = []
 
         try:
-            # Get tables
-            tables_query = f"""
-            SELECT 
-                name,
-                database as schema,
-                engine,
-                total_rows as row_count
-            FROM system.tables
-            WHERE database = '{self.connection.config.database}'
-            ORDER BY name
-            """
+            logger.info(
+                f"Fetching metadata for ClickHouse database: {self.connection.config.database}"
+            )
 
-            table_records = await self.client.fetch(tables_query)
+            # Use the SHOW TABLES query which is reliable and works well
+            # Get tables using SHOW TABLES command
+            table_names: List[str] = []
+            query = f"SHOW TABLES FROM {self.connection.config.database}"
 
-            for record in table_records:
+            if self.client is None:
+                raise RuntimeError("Client is not initialized")
+            result = await self.client.fetch(query)
+
+            if result:
+                for row in result:
+                    table_name = None
+                    if isinstance(row, dict) and "name" in row:
+                        table_name = row["name"]
+                    elif hasattr(row, "__getitem__"):
+                        try:
+                            # In ClickHouse SHOW TABLES, the result might be a single value
+                            if len(row) == 1:
+                                table_name = row[0]
+                            # Simple string result
+                            elif isinstance(row, str):
+                                table_name = row
+                        except Exception as e:
+                            logger.error(f"Error parsing row: {str(e)}")
+                            pass
+                    # Simple string result
+                    elif isinstance(row, str):
+                        table_name = row
+
+                    if table_name:
+                        table_names.append(table_name)
+
+            logger.info(
+                f"Found {len(table_names)} tables in {self.connection.config.database} database"
+            )
+
+            # Create table metadata objects
+            for table_name in table_names:
                 tables.append(
                     TableMetadata(
-                        name=record["name"],
-                        schema_name=record["schema"],
+                        name=table_name,
+                        schema_name=self.connection.config.database,
                         description=None,
                         type="table",
-                        rowCount=record["row_count"],
+                        rowCount=0,
                         explorable=True,
                     )
                 )
 
-            # Get columns
-            columns_query = f"""
-            SELECT 
-                table,
-                name,
-                type,
-                is_in_primary_key,
-                default_kind
-            FROM system.columns
-            WHERE database = '{self.connection.config.database}'
-            ORDER BY table, position
-            """
+            # Get columns for tables we found
+            for table_name in table_names:
+                try:
+                    column_query = f"DESCRIBE TABLE {self.connection.config.database}.{table_name}"
+                    if self.client is None:
+                        raise RuntimeError("Client is not initialized")
+                    desc_result = await self.client.fetch(column_query)
 
-            column_records = await self.client.fetch(columns_query)
+                    for col in desc_result:
+                        col_name = col.get("name")
+                        col_type = col.get("type", "").lower()
 
-            for record in column_records:
-                # Map ClickHouse types to normalized types
-                ch_type = record["type"].lower()
-                normalized_type = ch_type
+                        # Simple type normalization
+                        normalized_type = col_type
+                        if "int" in col_type:
+                            normalized_type = "integer"
+                        elif any(
+                            float_type in col_type for float_type in ["float", "double", "decimal"]
+                        ):
+                            normalized_type = "number"
+                        elif any(str_type in col_type for str_type in ["string", "fixedstring"]):
+                            normalized_type = "string"
+                        elif "date" in col_type:
+                            normalized_type = "date" if "datetime" not in col_type else "timestamp"
+                        elif "array" in col_type:
+                            normalized_type = "array"
 
-                if "int" in ch_type:
-                    normalized_type = "integer"
-                elif any(float_type in ch_type for float_type in ["float", "double", "decimal"]):
-                    normalized_type = "number"
-                elif any(str_type in ch_type for str_type in ["string", "fixedstring"]):
-                    normalized_type = "string"
-                elif "date" in ch_type:
-                    normalized_type = "date" if "datetime" not in ch_type else "timestamp"
-                elif ch_type == "array":
-                    normalized_type = "array"
-
-                columns.append(
-                    ColumnMetadata(
-                        name=record["name"],
-                        tableName=record["table"],
-                        dataType=normalized_type,
-                        nullable=True,  # ClickHouse doesn't have NOT NULL constraint
-                        description=None,
-                        primaryKey=record["is_in_primary_key"],
-                        explorable=True,
-                    )
-                )
-
-            # ClickHouse doesn't have foreign key constraints like traditional RDBMS
-            # For relationships, we would need to infer them from naming conventions
-            # or use additional metadata
+                        columns.append(
+                            ColumnMetadata(
+                                name=col_name,
+                                tableName=table_name,
+                                dataType=normalized_type,
+                                nullable=True,
+                                description=None,
+                                primaryKey=False,
+                                explorable=True,
+                            )
+                        )
+                except Exception as col_error:
+                    logger.error(f"Error getting columns for {table_name}: {str(col_error)}")
 
         except Exception as e:
             logger.error(f"Error getting metadata: {str(e)}")
@@ -197,7 +216,7 @@ class ClickHouseConnector(DatabaseConnector):
         self, sql: str, params: Optional[Dict[str, Any]] = None
     ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], float]:
         """
-        Execute a SQL query and return results
+        Execute a SQL query and return results.
 
         Args:
             sql: The SQL query to execute
@@ -223,6 +242,8 @@ class ClickHouseConnector(DatabaseConnector):
                             sql = sql.replace(placeholder, str(value))
 
             # Execute query
+            if self.client is None:
+                raise RuntimeError("Client is not initialized")
             results = await self.client.fetch(sql)
 
             # Get column information from first row
@@ -245,7 +266,7 @@ class ClickHouseConnector(DatabaseConnector):
         self, sql: str, params: Optional[Dict[str, Any]] = None
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        Execute a SQL query with streaming results
+        Execute a SQL query with streaming results.
 
         Args:
             sql: The SQL query to execute
@@ -269,6 +290,8 @@ class ClickHouseConnector(DatabaseConnector):
                             sql = sql.replace(placeholder, str(value))
 
             # Execute query with iterate
+            if self.client is None:
+                raise RuntimeError("Client is not initialized")
             async for row in self.client.iterate(sql):
                 yield row
 
@@ -280,7 +303,7 @@ class ClickHouseConnector(DatabaseConnector):
         self, sql: str, params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Get execution plan for a query
+        Get execution plan for a query.
 
         Args:
             sql: The SQL query to explain
@@ -307,6 +330,8 @@ class ClickHouseConnector(DatabaseConnector):
             # We can use EXPLAIN SYNTAX or EXPLAIN PLAN
             explain_sql = f"EXPLAIN PLAN {sql}"
 
+            if self.client is None:
+                raise RuntimeError("Client is not initialized")
             plan = await self.client.fetchone(explain_sql)
 
             return {
@@ -321,7 +346,7 @@ class ClickHouseConnector(DatabaseConnector):
 
     def get_dialect(self) -> str:
         """
-        Get SQL dialect information
+        Get SQL dialect information.
 
         Returns:
             String identifying the SQL dialect
@@ -329,10 +354,21 @@ class ClickHouseConnector(DatabaseConnector):
         return "clickhouse"
 
     async def close(self) -> None:
-        """
-        Close the connection
-        """
+        """Close the connection."""
         if self.session:
-            await self.session.close()
-            self.session = None
-            self.client = None
+            try:
+                await self.session.close()
+            except Exception as e:
+                logger.error(f"Error closing session: {str(e)}")
+            finally:
+                self.session = None
+                self.client = None
+
+    async def __aenter__(self) -> "ClickHouseConnector":
+        """Async context manager support."""
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Ensure connection is closed when exiting context."""
+        await self.close()

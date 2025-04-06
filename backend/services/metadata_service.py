@@ -1,9 +1,8 @@
 # app/services/metadata_service.py
-import json
+"""Service for managing database metadata."""
 import logging
-import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional
 
 from database.connector_factory import DatabaseConnectorFactory
 from models.connection import Connection
@@ -18,23 +17,16 @@ logger = logging.getLogger(__name__)
 
 
 class MetadataService:
-    """
-    Service for managing database metadata
-    """
+    """Service for managing database metadata."""
 
     def __init__(self):
-        """
-        Initialize the metadata service
-        """
+        """Initialize the metadata service."""
         # In-memory storage for metadata (would be replaced with a database in production)
         self.metadata = {}
 
-        # Try to load metadata from file (for development/testing)
-        self._load_metadata()
-
     async def get_tables(self, connection: Connection) -> List[TableMetadata]:
         """
-        Get tables for a connection
+        Get tables for a connection.
 
         Args:
             connection: The database connection
@@ -63,7 +55,7 @@ class MetadataService:
 
     async def get_table(self, connection: Connection, table_id: str) -> Optional[TableMetadata]:
         """
-        Get metadata for a specific table
+        Get metadata for a specific table.
 
         Args:
             connection: The database connection
@@ -89,7 +81,7 @@ class MetadataService:
 
     async def get_columns(self, connection: Connection, table_id: str) -> List[ColumnMetadata]:
         """
-        Get columns for a specific table
+        Get columns for a specific table.
 
         Args:
             connection: The database connection
@@ -128,7 +120,7 @@ class MetadataService:
 
     async def get_relationships(self, connection: Connection) -> List[RelationshipMetadata]:
         """
-        Get relationships for a connection
+        Get relationships for a connection.
 
         Args:
             connection: The database connection
@@ -159,7 +151,7 @@ class MetadataService:
         self, connection: Connection, table_id: str, metadata_update: MetadataUpdateRequest
     ) -> Optional[TableMetadata]:
         """
-        Update metadata for a table
+        Update metadata for a table.
 
         Args:
             connection: The database connection
@@ -197,9 +189,6 @@ class MetadataService:
                         self.metadata[connection_id]["tables"][i] = table
                         break
 
-            # Save metadata to file (for development/testing)
-            self._save_metadata()
-
             return table
 
         except Exception as e:
@@ -208,7 +197,7 @@ class MetadataService:
 
     async def refresh_metadata(self, connection: Connection) -> None:
         """
-        Refresh metadata for a connection
+        Refresh metadata for a connection.
 
         Args:
             connection: The database connection
@@ -219,75 +208,25 @@ class MetadataService:
             if not connector:
                 raise ValueError(f"Unsupported database type: {connection.type}")
 
-            # Extract metadata from database
-            tables, columns, relationships = await connector.get_metadata()
+            try:
+                # Extract metadata from database
+                tables, columns, relationships = await connector.get_metadata()
 
-            # Update tables with refreshed timestamp
-            for table in tables:
-                table.refreshedAt = datetime.now()
+                # Update tables with refreshed timestamp
+                for table in tables:
+                    table.refreshedAt = datetime.now()
 
-            # Store metadata
-            connection_id = connection.id
-            self.metadata[connection_id] = {
-                "tables": tables,
-                "columns": columns,
-                "relationships": relationships,
-            }
-
-            # Save metadata to file (for development/testing)
-            self._save_metadata()
+                # Store metadata
+                connection_id = connection.id
+                self.metadata[connection_id] = {
+                    "tables": tables,
+                    "columns": columns,
+                    "relationships": relationships,
+                }
+            finally:
+                # Ensure connector is properly closed
+                await connector.close()
 
         except Exception as e:
             logger.error(f"Error refreshing metadata: {str(e)}")
             raise
-
-    def _load_metadata(self) -> None:
-        """
-        Load metadata from file (for development/testing)
-        """
-        try:
-            # Check if metadata file exists
-            if os.path.exists("metadata.json"):
-                with open("metadata.json", "r") as f:
-                    metadata_data = json.load(f)
-
-                # Convert to metadata objects
-                for connection_id, connection_metadata in metadata_data.items():
-                    self.metadata[connection_id] = {
-                        "tables": [
-                            TableMetadata(**table)
-                            for table in connection_metadata.get("tables", [])
-                        ],
-                        "columns": [
-                            ColumnMetadata(**column)
-                            for column in connection_metadata.get("columns", [])
-                        ],
-                        "relationships": [
-                            RelationshipMetadata(**rel)
-                            for rel in connection_metadata.get("relationships", [])
-                        ],
-                    }
-        except Exception as e:
-            logger.error(f"Error loading metadata: {str(e)}")
-
-    def _save_metadata(self) -> None:
-        """
-        Save metadata to file (for development/testing)
-        """
-        try:
-            # Convert metadata objects to dictionaries
-            metadata_data = {}
-            for connection_id, connection_metadata in self.metadata.items():
-                metadata_data[connection_id] = {
-                    "tables": [table.dict() for table in connection_metadata.get("tables", [])],
-                    "columns": [column.dict() for column in connection_metadata.get("columns", [])],
-                    "relationships": [
-                        rel.dict() for rel in connection_metadata.get("relationships", [])
-                    ],
-                }
-
-            # Save to file
-            with open("metadata.json", "w") as f:
-                json.dump(metadata_data, f, default=str, indent=2)
-        except Exception as e:
-            logger.error(f"Error saving metadata: {str(e)}")

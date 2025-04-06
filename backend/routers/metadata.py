@@ -1,6 +1,7 @@
 # app/routers/metadata.py
+"""Router for metadata-related API endpoints."""
 import logging
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -22,10 +23,12 @@ logger = logging.getLogger(__name__)
 
 # Dependencies
 def get_metadata_service():
+    """Dependency injection for metadata service."""
     return MetadataService()
 
 
 def get_connection_service():
+    """Dependency injection for connection service."""
     return ConnectionService()
 
 
@@ -35,11 +38,9 @@ async def list_tables(
     metadata_service: MetadataService = Depends(get_metadata_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    List tables for a connection
-    """
+    """List all tables for a connection."""
     try:
-        # Get connection
+        logger.info(f"Getting connection for fetching tables: {conn_id}")
         connection = await connection_service.get_connection(conn_id)
         if not connection:
             raise HTTPException(
@@ -47,8 +48,9 @@ async def list_tables(
                 detail=f"Connection with ID {conn_id} not found",
             )
 
-        # Get tables
+        # Get tables using the metadata service
         tables = await metadata_service.get_tables(connection)
+        logger.info(f"Tables returned for connection {conn_id}: {len(tables)}")
         return tables
     except HTTPException:
         raise
@@ -67,9 +69,7 @@ async def get_table_metadata(
     metadata_service: MetadataService = Depends(get_metadata_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Get metadata for a specific table
-    """
+    """Get metadata for a specific table."""
     try:
         # Get connection
         connection = await connection_service.get_connection(conn_id)
@@ -104,9 +104,7 @@ async def get_table_columns(
     metadata_service: MetadataService = Depends(get_metadata_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Get columns for a specific table
-    """
+    """Get columns for a specific table."""
     try:
         # Get connection
         connection = await connection_service.get_connection(conn_id)
@@ -137,9 +135,7 @@ async def update_table_metadata(
     metadata_service: MetadataService = Depends(get_metadata_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Update metadata for a table
-    """
+    """Update metadata for a table."""
     try:
         # Get connection
         connection = await connection_service.get_connection(conn_id)
@@ -176,9 +172,7 @@ async def refresh_metadata(
     metadata_service: MetadataService = Depends(get_metadata_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Refresh metadata for a connection
-    """
+    """Refresh metadata for a connection."""
     try:
         # Get connection
         connection = await connection_service.get_connection(conn_id)
@@ -208,9 +202,7 @@ async def get_relationships(
     metadata_service: MetadataService = Depends(get_metadata_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Get relationships for a connection
-    """
+    """Get relationships for a connection."""
     try:
         # Get connection
         connection = await connection_service.get_connection(conn_id)

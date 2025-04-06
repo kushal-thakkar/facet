@@ -1,0 +1,20 @@
+connections:
+  - name: 'PostgreSQL (Local)'
+    type: 'postgres'
+    config:
+      host: 'postgres'
+      port: 5432
+      database: 'facet'
+      user: 'facet'
+      password: 'facetpass'
+      ssl: false
+
+  - name: 'ClickHouse (Local)'
+    type: 'clickhouse'
+    config:
+      host: 'clickhouse'
+      port: 8123
+      database: 'facet'
+      user: 'default'
+      password: 'clickhouse_pass'
+      https: false

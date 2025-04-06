@@ -1,8 +1,11 @@
 # app/services/connection_service.py
-import json
+"""Service for managing database connections."""
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 from database.connector_factory import DatabaseConnectorFactory
 from models.connection import Connection, ConnectionConfig, ConnectionTestResult
@@ -11,32 +14,36 @@ logger = logging.getLogger(__name__)
 
 
 class ConnectionService:
-    """
-    Service for managing database connections
-    """
+    """Service for managing database connections."""
+
+    # Class variable to store active user sessions and their connections
+    # In a production system, this could be a proper database or Redis store
+    _active_connections: Dict[str, Any] = {}
 
     def __init__(self):
-        """
-        Initialize the connection service
-        """
-        # In-memory storage for connections (would be replaced with a database in production)
-        self.connections = []
+        """Initialize the connection service."""
+        # Predefined connections from config
+        self.predefined_connections = []
 
-        # Try to load connections from file (for development/testing)
-        self._load_connections()
+        # User session connections (in-memory storage)
+        self.session_connections = []
+
+        # Load predefined connections from YAML config
+        self._load_predefined_connections()
 
     async def get_all_connections(self) -> List[Connection]:
         """
-        Get all connections
+        Get all connections (predefined + session).
 
         Returns:
             List of connections
         """
-        return self.connections
+        # Return both predefined and session connections
+        return self.predefined_connections + self.session_connections
 
     async def get_connection(self, connection_id: str) -> Optional[Connection]:
         """
-        Get a connection by ID
+        Get a connection by ID.
 
         Args:
             connection_id: The connection ID
@@ -44,7 +51,13 @@ class ConnectionService:
         Returns:
             Connection or None if not found
         """
-        for connection in self.connections:
+        # Check predefined connections first
+        for connection in self.predefined_connections:
+            if connection.id == connection_id:
+                return connection
+
+        # Then check session connections
+        for connection in self.session_connections:
             if connection.id == connection_id:
                 return connection
 
@@ -52,7 +65,7 @@ class ConnectionService:
 
     async def create_connection(self, connection: Connection) -> Connection:
         """
-        Create a new connection
+        Create a new temporary session connection.
 
         Args:
             connection: The connection to create
@@ -60,17 +73,13 @@ class ConnectionService:
         Returns:
             The created connection
         """
-        # Add to connections list
-        self.connections.append(connection)
-
-        # Save connections to file (for development/testing)
-        self._save_connections()
-
+        # Add to session connections list
+        self.session_connections.append(connection)
         return connection
 
     async def update_connection(self, connection: Connection) -> Connection:
         """
-        Update an existing connection
+        Update an existing session connection.
 
         Args:
             connection: The connection to update
@@ -78,35 +87,43 @@ class ConnectionService:
         Returns:
             The updated connection
         """
-        # Find and update the connection
-        for i, existing_connection in enumerate(self.connections):
-            if existing_connection.id == connection.id:
-                self.connections[i] = connection
-                break
+        # Predefined connections cannot be modified
+        for predefined in self.predefined_connections:
+            if predefined.id == connection.id:
+                logger.warning(f"Attempted to update predefined connection: {connection.id}")
+                return predefined
 
-        # Save connections to file (for development/testing)
-        self._save_connections()
+        # Update session connection
+        for i, existing_connection in enumerate(self.session_connections):
+            if existing_connection.id == connection.id:
+                self.session_connections[i] = connection
+                break
 
         return connection
 
     async def delete_connection(self, connection_id: str) -> None:
         """
-        Delete a connection
+        Delete a session connection.
 
         Args:
             connection_id: The connection ID to delete
         """
-        # Find and remove the connection
-        self.connections = [conn for conn in self.connections if conn.id != connection_id]
+        # Check if it's a predefined connection (which can't be deleted)
+        for predefined in self.predefined_connections:
+            if predefined.id == connection_id:
+                logger.warning(f"Attempted to delete predefined connection: {connection_id}")
+                return
 
-        # Save connections to file (for development/testing)
-        self._save_connections()
+        # Remove from session connections
+        self.session_connections = [
+            conn for conn in self.session_connections if conn.id != connection_id
+        ]
 
     async def test_connection(
         self, connection_type: str, connection_config: ConnectionConfig
     ) -> ConnectionTestResult:
         """
-        Test a connection
+        Test a connection.
 
         Args:
             connection_type: The connection type
@@ -144,38 +161,62 @@ class ConnectionService:
                 success=False, message=f"Error testing connection: {str(e)}"
             )
 
-    def _load_connections(self) -> None:
-        """
-        Load connections from file (for development/testing)
-        """
+    def _load_predefined_connections(self) -> None:
+        """Load predefined connections from YAML config file."""
         try:
-            # Check if connections file exists
-            connections_file = "/app/connections.json"
-            if os.path.exists(connections_file):
-                with open(connections_file, "r") as f:
-                    connections_data = json.load(f)
+            # Path to the config file
+            config_file = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "config", "db_connections.yaml"
+            )
 
-                # Convert to Connection objects
-                self.connections = [Connection(**conn) for conn in connections_data]
-                logger.info(f"Loaded {len(self.connections)} connections from connections.json")
+            logger.info(f"Attempting to load connections from: {config_file}")
+
+            if os.path.exists(config_file):
+                with open(config_file, "r") as f:
+                    config_data = yaml.safe_load(f)
+
+                logger.info(f"Loaded YAML: {config_data}")
+
+                # Process connections from the YAML
+                if config_data and "connections" in config_data:
+                    for i, conn_data in enumerate(config_data["connections"]):
+                        # Generate a stable ID for each predefined connection
+                        conn_id = f"predef_{i}_{conn_data['type']}"
+
+                        logger.info(
+                            f"Creating connection: {conn_data['name']} ({conn_data['type']})"
+                        )
+
+                        connection = Connection(
+                            id=conn_id,
+                            name=conn_data["name"],
+                            type=conn_data["type"],
+                            config=ConnectionConfig(**conn_data["config"]),
+                            created_at=datetime.now(),
+                            updated_at=datetime.now(),
+                        )
+
+                        self.predefined_connections.append(connection)
+
+                    logger.info(
+                        f"Loaded {len(self.predefined_connections)} "
+                        f"predefined connections from config"
+                    )
+                else:
+                    logger.warning(
+                        "Invalid config format: 'connections' key missing or config is empty"
+                    )
             else:
-                logger.info(f"No connections file found at {connections_file}")
+                logger.warning(f"No connection config file found at {config_file}")
+                # Check current directory for debugging
+                current_dir = os.path.dirname(os.path.dirname(__file__))
+                logger.info(f"Current directory: {current_dir}")
+
+                # List files in config dir if it exists
+                config_dir = os.path.join(current_dir, "config")
+                if os.path.exists(config_dir):
+                    logger.info(f"Files in config directory: {os.listdir(config_dir)}")
+                else:
+                    logger.warning(f"Config directory does not exist: {config_dir}")
         except Exception as e:
-            logger.error(f"Error loading connections: {str(e)}")
-
-    def _save_connections(self) -> None:
-        """
-        Save connections to file (for development/testing)
-        """
-        try:
-            # Convert Connection objects to dictionaries
-            connections_data = [conn.dict() for conn in self.connections]
-
-            # Save to file with absolute path
-            with open("/app/connections.json", "w") as f:
-                json.dump(connections_data, f, default=str, indent=2)
-
-            # Log success
-            logger.info(f"Saved {len(connections_data)} connections to connections.json")
-        except Exception as e:
-            logger.error(f"Error saving connections: {str(e)}")
+            logger.error(f"Error loading predefined connections: {str(e)}")

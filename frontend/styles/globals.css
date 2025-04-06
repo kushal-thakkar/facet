@@ -90,3 +90,8 @@ a {
     opacity: 1;
   }
 }
+
+/* Add transition support for height */
+.transition-height {
+  transition-property: height;
+}

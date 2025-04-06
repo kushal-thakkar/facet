@@ -10,7 +10,7 @@ function Footer({ queryStats }) {
   };
 
   return (
-    <footer className="border-t border-gray-200 py-2 px-4 text-sm text-gray-600 bg-white flex items-center justify-between">
+    <footer className="border-t border-gray-200 py-2 px-4 text-sm text-gray-600 bg-white flex items-center">
       <div className="flex items-center space-x-4">
         {/* Query execution time */}
         {stats.executionTime && <span>Query completed in {stats.executionTime}s</span>}
@@ -20,15 +20,6 @@ function Footer({ queryStats }) {
 
         {/* Cache status */}
         {stats.cacheStatus && <span>Cache: {stats.cacheStatus}</span>}
-      </div>
-
-      <div>
-        <button
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-          onClick={() => console.log('View query details')}
-        >
-          View Query Details
-        </button>
       </div>
     </footer>
   );

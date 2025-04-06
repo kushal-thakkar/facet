@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const Dropdown = ({ label, options, value, onChange, icon, enableTypeahead = false }) => {
+const Dropdown = ({
+  label,
+  options,
+  value,
+  onChange,
+  icon,
+  enableTypeahead = false,
+  disabled = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef(null);
@@ -60,8 +68,11 @@ const Dropdown = ({ label, options, value, onChange, icon, enableTypeahead = fal
       {/* Dropdown trigger */}
       <button
         type="button"
-        className="w-full flex items-center justify-between px-3 py-2 h-10 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md shadow-sm text-sm hover:border-blue-500 focus:outline-none"
-        onClick={handleOpen}
+        className={`w-full flex items-center justify-between px-3 py-2 h-10 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md shadow-sm text-sm ${
+          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-500'
+        } focus:outline-none`}
+        onClick={() => !disabled && handleOpen()}
+        disabled={disabled}
       >
         <div className="flex items-center">
           {icon && <span className="mr-2">{icon}</span>}

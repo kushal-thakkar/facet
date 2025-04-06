@@ -59,7 +59,7 @@ const getOperatorsForType = (type) => {
   return OPERATORS_BY_TYPE[type] || OPERATORS_BY_TYPE.string;
 };
 
-function FilterBar() {
+function FilterBar({ disabled }) {
   const { state, actions } = useAppState();
   const { currentExploration, metadata } = state;
 
@@ -347,13 +347,17 @@ function FilterBar() {
 
         <button
           type="button"
-          className="inline-flex items-center px-3 h-10 border text-sm font-medium rounded-md shadow-sm transition-colors
+          className={`inline-flex items-center px-3 h-10 border text-sm font-medium rounded-md shadow-sm transition-colors
             border-blue-500 dark:border-blue-600 
             text-blue-700 dark:text-blue-400 
             bg-blue-50 dark:bg-blue-900/30 
-            hover:bg-blue-100 dark:hover:bg-blue-800/50"
-          onClick={() => setShowNewFilter(true)}
-          disabled={showNewFilter}
+            ${
+              disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-blue-100 dark:hover:bg-blue-800/50'
+            }`}
+          onClick={() => !disabled && setShowNewFilter(true)}
+          disabled={disabled || showNewFilter}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

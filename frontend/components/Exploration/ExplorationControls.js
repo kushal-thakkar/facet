@@ -15,6 +15,9 @@ function ExplorationControls({ onRunQuery, isLoading }) {
   const [showTableDropdown, setShowTableDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Check if a table is selected
+  const isTableSelected = Boolean(currentExploration.source?.table);
+
   // Get available columns for current table - used for fields selector and dropdowns
   const availableColumns = currentExploration.source?.table
     ? Object.keys(metadata.columns || {})
@@ -462,12 +465,19 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           <div>
             <button
               className={`inline-flex items-center px-4 py-2 h-10 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                isLoading
+                isLoading || !isTableSelected
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
               }`}
               onClick={onRunQuery}
-              disabled={isLoading}
+              disabled={isLoading || !isTableSelected}
+              title={
+                !isTableSelected
+                  ? 'Select a table first'
+                  : isLoading
+                    ? 'Query is running...'
+                    : 'Run query'
+              }
             >
               {isLoading ? (
                 <span className="flex items-center">
@@ -524,6 +534,30 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       </div>
 
       <div className="overflow-y-auto flex-1 p-4 space-y-4 bg-gray-50 dark:bg-dark-bg">
+        {!isTableSelected && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-4">
+            <div className="flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-yellow-600 dark:text-yellow-500 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400 font-medium">
+                Please select a table first to configure your query.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Visualization Type Selection */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1.5">
@@ -551,10 +585,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               });
             }}
             enableTypeahead={true}
+            disabled={!isTableSelected}
             icon={
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-blue-600"
+                className={`h-4 w-4 ${isTableSelected ? 'text-blue-600' : 'text-gray-400'}`}
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -567,7 +602,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
         {/* Time Range Selector */}
         <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <TimeRangeSelector />
+          <TimeRangeSelector disabled={!isTableSelected} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -598,10 +633,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 }
               }}
               enableTypeahead={true}
+              disabled={!isTableSelected}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-green-600"
+                  className={`h-4 w-4 ${isTableSelected ? 'text-green-600' : 'text-gray-400'}`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -623,13 +659,13 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               <button
                 type="button"
                 className={`ml-1 px-1 py-0.5 h-6 text-xs border rounded focus:outline-none ${
-                  (currentExploration.orderBy || 'none') === 'none'
+                  !isTableSelected || (currentExploration.orderBy || 'none') === 'none'
                     ? 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                     : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 onClick={() => {
-                  // Only proceed if not "none"
-                  if ((currentExploration.orderBy || 'none') === 'none') return;
+                  // Only proceed if table is selected and orderBy is not "none"
+                  if (!isTableSelected || (currentExploration.orderBy || 'none') === 'none') return;
 
                   const currentOrderBy = currentExploration.orderBy || '';
 
@@ -666,22 +702,24 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   }
                 }}
                 title={
-                  (currentExploration.orderBy || 'none') === 'none'
-                    ? 'Select a column to sort'
-                    : currentExploration.orderBy?.endsWith('_desc')
-                      ? 'Descending order'
-                      : currentExploration.orderBy?.endsWith('_asc')
-                        ? 'Ascending order'
-                        : 'Default order (click to sort descending)'
+                  !isTableSelected
+                    ? 'Select a table first'
+                    : (currentExploration.orderBy || 'none') === 'none'
+                      ? 'Select a column to sort'
+                      : currentExploration.orderBy?.endsWith('_desc')
+                        ? 'Descending order'
+                        : currentExploration.orderBy?.endsWith('_asc')
+                          ? 'Ascending order'
+                          : 'Default order (click to sort descending)'
                 }
-                disabled={(currentExploration.orderBy || 'none') === 'none'}
+                disabled={!isTableSelected || (currentExploration.orderBy || 'none') === 'none'}
               >
                 <div className="flex items-center">
                   <span>{currentExploration.orderBy?.endsWith('_desc') ? 'Desc' : 'Asc'}</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className={`h-3 w-3 ml-1 ${
-                      (currentExploration.orderBy || 'none') === 'none'
+                      !isTableSelected || (currentExploration.orderBy || 'none') === 'none'
                         ? 'text-gray-400 dark:text-gray-600'
                         : 'text-blue-600'
                     }`}
@@ -739,10 +777,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 }
               }}
               enableTypeahead={true}
+              disabled={!isTableSelected}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-blue-600"
+                  className={`h-4 w-4 ${isTableSelected ? 'text-blue-600' : 'text-gray-400'}`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -784,10 +823,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   ],
                 });
               }}
+              disabled={!isTableSelected}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-purple-600"
+                  className={`h-4 w-4 ${isTableSelected ? 'text-purple-600' : 'text-gray-400'}`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -824,10 +864,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   limit: value,
                 });
               }}
+              disabled={!isTableSelected}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-yellow-600"
+                  className={`h-4 w-4 ${isTableSelected ? 'text-yellow-600' : 'text-gray-400'}`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -866,10 +907,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   granularity: value,
                 });
               }}
+              disabled={!isTableSelected}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-indigo-600"
+                  className={`h-4 w-4 ${isTableSelected ? 'text-indigo-600' : 'text-gray-400'}`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -885,28 +927,38 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         </div>
 
         {/* Fields Selector (Collapsible) */}
-        <FieldsSelector
-          columns={availableColumns}
-          currentSelection={currentExploration.selectedFields || []}
-          onSelectionChange={(selectedFields) => {
-            // Only update if the selection actually changed
-            const current = currentExploration.selectedFields || [];
-            const hasChanged =
-              current.length !== selectedFields.length ||
-              current.some((field) => !selectedFields.includes(field)) ||
-              selectedFields.some((field) => !current.includes(field));
+        <div className={!isTableSelected ? 'opacity-50 cursor-not-allowed' : ''}>
+          <div className={!isTableSelected ? 'pointer-events-none' : ''}>
+            <FieldsSelector
+              columns={availableColumns}
+              currentSelection={currentExploration.selectedFields || []}
+              onSelectionChange={(selectedFields) => {
+                // Only update if the selection actually changed
+                const current = currentExploration.selectedFields || [];
+                const hasChanged =
+                  current.length !== selectedFields.length ||
+                  current.some((field) => !selectedFields.includes(field)) ||
+                  selectedFields.some((field) => !current.includes(field));
 
-            if (hasChanged) {
-              actions.updateCurrentExploration({
-                selectedFields,
-              });
-            }
-          }}
-        />
+                if (hasChanged) {
+                  actions.updateCurrentExploration({
+                    selectedFields,
+                  });
+                }
+              }}
+            />
+          </div>
+        </div>
 
         {/* Filters Section */}
-        <div className="mt-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm p-4">
-          <FilterBar />
+        <div
+          className={`mt-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm p-4 ${
+            !isTableSelected ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <div className={!isTableSelected ? 'pointer-events-none' : ''}>
+            <FilterBar disabled={!isTableSelected} />
+          </div>
         </div>
       </div>
     </div>

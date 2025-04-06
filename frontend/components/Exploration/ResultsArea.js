@@ -115,21 +115,21 @@ function ResultsArea({ results, isLoading }) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white border border-gray-200 rounded-md overflow-hidden">
+    <div className="h-full flex flex-col bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-card overflow-hidden">
       {/* Results header with visualization toggle and export options */}
-      <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <div className="flex space-x-2">
           {visualizationTypes.map((type) => (
             <button
               key={type.id}
-              className={`px-3 py-1 text-sm font-medium rounded ${
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 visualizationType === type.id
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  ? 'bg-primary bg-opacity-10 text-primary dark:bg-opacity-20'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
               }`}
               onClick={() => changeVisualizationType(type.id)}
             >
-              <span className="mr-1">{type.icon}</span>
+              <span className="mr-2">{type.icon}</span>
               {type.label}
             </button>
           ))}
@@ -137,34 +137,62 @@ function ResultsArea({ results, isLoading }) {
 
         <div className="relative">
           <button
-            className="px-3 py-1 text-sm font-medium rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            className="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center"
             onClick={() => document.getElementById('export-menu').classList.toggle('hidden')}
           >
-            Export ▾
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+              ></path>
+            </svg>
+            Export
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
           </button>
 
           {/* Export dropdown menu */}
           <div
             id="export-menu"
-            className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10 hidden"
+            className="absolute right-0 mt-2 w-40 bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 hidden"
           >
             <div className="py-1">
               <button
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => handleExport('csv')}
                 disabled={!results}
               >
                 Export as CSV
               </button>
               <button
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => handleExport('json')}
                 disabled={!results}
               >
                 Export as JSON
               </button>
               <button
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => handleExport('sql')}
                 disabled={!results}
               >
@@ -181,16 +209,21 @@ function ResultsArea({ results, isLoading }) {
           // Loading state
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-3 text-gray-600">Loading results...</p>
+              <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading results...</p>
             </div>
           </div>
         ) : !results ? (
           // No results yet state
           <div className="h-full flex items-center justify-center">
             <div className="text-center p-8">
-              <p className="text-gray-500">
-                Configure your exploration and click &quot;Run Query&quot; to see results
+              <div className="text-5xl mb-5">📋</div>
+              <h3 className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Ready to Explore Data
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                Configure your exploration in the side panel and click &quot;Run Query&quot; to see
+                results
               </p>
             </div>
           </div>
@@ -198,13 +231,15 @@ function ResultsArea({ results, isLoading }) {
           // Error state
           <div className="h-full flex items-center justify-center">
             <div className="text-center max-w-md p-8">
-              <div className="text-red-500 text-3xl mb-3">⚠️</div>
-              <h3 className="text-lg font-medium text-red-800 mb-2">Query Error</h3>
-              <p className="text-gray-600 mb-4">{results.error}</p>
+              <div className="text-red-500 text-4xl mb-4">⚠️</div>
+              <h3 className="text-xl font-medium text-red-600 dark:text-red-400 mb-3">
+                Query Error
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-5">{results.error}</p>
               {results.suggestions && (
-                <div className="text-left bg-gray-50 p-3 rounded text-sm">
-                  <p className="font-medium mb-1">Suggestions:</p>
-                  <ul className="list-disc pl-5 space-y-1">
+                <div className="text-left bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-sm">
+                  <p className="font-medium mb-2">Suggestions:</p>
+                  <ul className="list-disc pl-5 space-y-1.5">
                     {results.suggestions.map((suggestion, index) => (
                       <li key={index}>{suggestion}</li>
                     ))}

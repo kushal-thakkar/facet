@@ -1,5 +1,5 @@
 // components/Exploration/TimeRangeSelector.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 
 const TIME_RANGE_PRESETS = [
@@ -102,25 +102,46 @@ function TimeRangeSelector() {
     setShowComparisonDialog(false);
   };
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (event.target.closest('.time-range-dialog') === null) {
+        setShowTimeDialog(false);
+      }
+      if (event.target.closest('.comparison-dialog') === null) {
+        setShowComparisonDialog(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Time Range</label>
-      <div className="flex space-x-4">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Time Range
+      </label>
+      <div className="flex space-x-2">
         <div className="relative">
           <button
             type="button"
-            className="inline-flex justify-between items-center w-48 px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex justify-between items-center w-40 px-3 py-1.5 border border-gray-300 dark:border-gray-500 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
             onClick={() => setShowTimeDialog(true)}
           >
             <span>{timeRangeLabel}</span>
-            <span className="ml-2">▾</span>
+            <span className="ml-1">▾</span>
           </button>
 
           {/* Time Range Dialog */}
           {showTimeDialog && (
-            <div className="absolute z-10 mt-1 w-80 bg-white shadow-lg rounded-md border border-gray-200">
-              <div className="p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Select Time Range</h3>
+            <div className="time-range-dialog absolute z-10 mt-1 w-80 bg-white dark:bg-dark-card shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="p-3">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
+                  Select Time Range
+                </h3>
 
                 <div className="space-y-4">
                   {/* Radio options for relative vs absolute */}
@@ -138,7 +159,9 @@ function TimeRangeSelector() {
                         }
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                       />
-                      <span className="ml-2 text-sm text-gray-700">Relative</span>
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Relative
+                      </span>
                     </label>
 
                     {tempTimeSettings.type === 'relative' && (
@@ -154,7 +177,7 @@ function TimeRangeSelector() {
                               },
                             })
                           }
-                          className="block w-24 pl-3 pr-10 py-1 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
+                          className="block w-24 pl-3 pr-10 py-1 text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
                         >
                           <option value="last">Last</option>
                           <option value="previous">Previous</option>
@@ -174,7 +197,7 @@ function TimeRangeSelector() {
                               },
                             })
                           }
-                          className="block w-16 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          className="block w-16 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />
 
                         <select
@@ -188,7 +211,7 @@ function TimeRangeSelector() {
                               },
                             })
                           }
-                          className="block w-24 pl-3 pr-10 py-1 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
+                          className="block w-24 pl-3 pr-10 py-1 text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
                         >
                           <option value="minutes">Minutes</option>
                           <option value="hours">Hours</option>
@@ -213,13 +236,17 @@ function TimeRangeSelector() {
                         }
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                       />
-                      <span className="ml-2 text-sm text-gray-700">Absolute</span>
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Absolute
+                      </span>
                     </label>
 
                     {tempTimeSettings.type === 'absolute' && (
                       <div className="ml-6 space-y-2">
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-500 w-10">From:</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400 w-10">
+                            From:
+                          </span>
                           <input
                             type="date"
                             value={tempTimeSettings.absolute.from}
@@ -232,12 +259,12 @@ function TimeRangeSelector() {
                                 },
                               })
                             }
-                            className="block border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           />
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-500 w-10">To:</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400 w-10">To:</span>
                           <input
                             type="date"
                             value={tempTimeSettings.absolute.to}
@@ -250,7 +277,7 @@ function TimeRangeSelector() {
                                 },
                               })
                             }
-                            className="block border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className="block border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           />
                         </div>
                       </div>
@@ -260,13 +287,15 @@ function TimeRangeSelector() {
 
                 {/* Presets */}
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Presets</h4>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Presets
+                  </h4>
                   <div className="grid grid-cols-2 gap-2">
                     {TIME_RANGE_PRESETS.slice(0, 6).map((preset) => (
                       <button
                         key={preset.id}
                         type="button"
-                        className="px-3 py-1 text-xs text-gray-700 bg-gray-100 hover:bg-gray-200 rounded"
+                        className="px-3 py-1 text-xs text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
                         onClick={() => {
                           actions.updateCurrentExploration({
                             timeRange: {
@@ -287,14 +316,14 @@ function TimeRangeSelector() {
                 <div className="mt-6 flex justify-end space-x-2">
                   <button
                     type="button"
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md shadow-sm"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
                     onClick={() => setShowTimeDialog(false)}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm"
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-indigo-600 dark:hover:bg-indigo-500 rounded-md shadow-sm"
                     onClick={applyTimeRange}
                   >
                     Apply
@@ -308,25 +337,27 @@ function TimeRangeSelector() {
         <div className="relative">
           <button
             type="button"
-            className="inline-flex justify-between items-center w-48 px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex justify-between items-center w-40 px-3 py-1.5 border border-gray-300 dark:border-gray-500 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
             onClick={() => setShowComparisonDialog(true)}
           >
-            <span>Compare: {comparisonLabel}</span>
-            <span className="ml-2">▾</span>
+            <span>{comparisonLabel}</span>
+            <span className="ml-1">▾</span>
           </button>
 
           {/* Comparison Dialog */}
           {showComparisonDialog && (
-            <div className="absolute z-10 mt-1 w-64 bg-white shadow-lg rounded-md border border-gray-200">
-              <div className="p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Comparison</h3>
+            <div className="comparison-dialog absolute z-10 mt-1 w-56 bg-white dark:bg-dark-card shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="p-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
+                  Comparison
+                </h3>
 
                 <div className="space-y-2">
                   {COMPARISON_OPTIONS.map((option) => (
                     <button
                       key={option.id}
                       type="button"
-                      className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                      className="block w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
                       onClick={() => applyComparison(option.id)}
                     >
                       {option.label}

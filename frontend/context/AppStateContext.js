@@ -17,6 +17,7 @@ const initialState = {
       config: {},
     },
   },
+  queryResults: null,
   metadata: {
     tables: {},
     columns: {},
@@ -40,6 +41,7 @@ const actionTypes = {
   UPDATE_METADATA: 'UPDATE_METADATA',
   SET_PREFERENCES: 'SET_PREFERENCES',
   UPDATE_PREFERENCES: 'UPDATE_PREFERENCES',
+  UPDATE_QUERY_RESULTS: 'UPDATE_QUERY_RESULTS',
 };
 
 // Reducer function
@@ -81,6 +83,8 @@ function appStateReducer(state, action) {
           ...action.payload,
         },
       };
+    case actionTypes.UPDATE_QUERY_RESULTS:
+      return { ...state, queryResults: action.payload };
     default:
       return state;
   }
@@ -166,6 +170,11 @@ export function AppStateProvider({ children }) {
         dispatch({
           type: actionTypes.UPDATE_PREFERENCES,
           payload: updates,
+        }),
+      updateQueryResults: (results) =>
+        dispatch({
+          type: actionTypes.UPDATE_QUERY_RESULTS,
+          payload: results,
         }),
     },
   };

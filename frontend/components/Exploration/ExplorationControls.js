@@ -273,17 +273,25 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 />
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 ml-2">
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/50 border border-blue-200 dark:border-blue-800 rounded-md transition-colors"
+                  className={`px-3 py-1.5 min-w-[60px] text-sm font-medium rounded-md transition-colors ${
+                    selectedFields.length === columns.length
+                      ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'
+                      : 'text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
                   onClick={() => selectAll()}
                 >
                   All
                 </button>
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-md transition-colors"
+                  className={`px-3 py-1.5 min-w-[60px] text-sm font-medium rounded-md transition-colors ${
+                    selectedFields.length === 0
+                      ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'
+                      : 'text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
                   onClick={() => selectNone()}
                 >
                   None

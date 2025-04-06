@@ -1,15 +1,88 @@
 // components/Layout/SidePanel.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import ExplorationControls from '../Exploration/ExplorationControls';
 import api from '../../utils/apiClient';
 
 function SidePanel({ toggleDarkMode, darkMode }) {
   const { state, actions } = useAppState();
-  const { currentConnection, metadata, explorations, currentExploration } = state;
+  const { currentConnection, metadata, explorations, currentExploration, connections } = state;
   const [queryResults, setQueryResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [connectionLoading, setConnectionLoading] = useState(false);
+  const [loadingMetadata, setLoadingMetadata] = useState(false);
+
+  // Fetch connections when component mounts
+  useEffect(() => {
+    if (connections.length === 0) {
+      fetchConnections();
+    }
+  }, []);
+
+  // Fetch metadata when connection changes
+  useEffect(() => {
+    if (currentConnection) {
+      console.log('Current connection changed:', currentConnection);
+      fetchMetadata(currentConnection.id);
+    }
+  }, [currentConnection?.id]);
+
+  // Fetch connections from the API
+  const fetchConnections = async () => {
+    setConnectionLoading(true);
+    try {
+      const fetchedConnections = await api.get('/api/v1/connections');
+      actions.setConnections(fetchedConnections);
+      console.log('Fetched connections:', fetchedConnections);
+
+      // Auto-select first connection if none is selected
+      if (fetchedConnections.length > 0 && !currentConnection) {
+        actions.setCurrentConnection(fetchedConnections[0]);
+        // Fetch metadata for the auto-selected connection
+        fetchMetadata(fetchedConnections[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching connections:', error);
+      setError('Failed to fetch connections. Please try again later.');
+    } finally {
+      setConnectionLoading(false);
+    }
+  };
+
+  // Fetch metadata for a connection
+  const fetchMetadata = async (connectionId) => {
+    setLoadingMetadata(true);
+    setError(null);
+    try {
+      console.log(`Fetching metadata for connection ID: ${connectionId}`);
+
+      // Fetch tables
+      const tables = await api.get(`/api/v1/metadata/connections/${connectionId}/tables`);
+      console.log('Fetched tables:', tables);
+
+      if (!tables) {
+        throw new Error('Failed to fetch tables');
+      }
+
+      // Convert array to object with table name as key
+      const tablesObject = {};
+      tables.forEach((table) => {
+        tablesObject[table.name] = table;
+      });
+
+      // Update metadata in app state
+      actions.updateMetadata({
+        tables: tablesObject,
+      });
+    } catch (error) {
+      console.error('Error fetching metadata:', error);
+      setError(`Error loading metadata: ${error.message}`);
+      actions.updateMetadata({ tables: {} });
+    } finally {
+      setLoadingMetadata(false);
+    }
+  };
 
   const handleRunQuery = async () => {
     if (!currentConnection || !currentExploration.source) {
@@ -58,7 +131,14 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       </div>
       {!currentConnection ? (
         <div className="p-4 text-center">
-          <p className="text-gray-500 dark:text-gray-400">Please select a data source first</p>
+          <p className="text-gray-500 dark:text-gray-400">Please select a connection first</p>
+        </div>
+      ) : loadingMetadata ? (
+        <div className="p-4 flex flex-col items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-3 border-primary border-t-transparent rounded-full mb-3"></div>
+          <p className="text-gray-500 dark:text-gray-400">
+            Loading tables from {currentConnection.name}...
+          </p>
         </div>
       ) : (
         <>
@@ -77,7 +157,7 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       {/* Bottom controls panel */}
       <div className="mt-auto pt-3 px-3 pb-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
         {/* Connection selector */}
-        <div className="flex-grow mr-2">
+        <div className="flex-grow mr-2 relative">
           <select
             className="text-xs w-full p-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-dark-bg text-gray-700 dark:text-gray-300"
             value={currentConnection ? currentConnection.id : ''}
@@ -85,19 +165,38 @@ function SidePanel({ toggleDarkMode, darkMode }) {
               const selectedId = e.target.value;
               if (selectedId) {
                 const selected = state.connections.find((conn) => conn.id === selectedId);
-                if (selected) actions.setCurrentConnection(selected);
+                if (selected) {
+                  actions.setCurrentConnection(selected);
+                  console.log('Connection selected:', selected);
+                  // Force a fetch of metadata when connection changes
+                  if (selected.id) {
+                    fetchMetadata(selected.id);
+                  }
+                }
               } else {
                 actions.setCurrentConnection(null);
               }
             }}
+            disabled={connectionLoading}
           >
-            <option value="">Select connection</option>
+            <option value="">
+              {connectionLoading
+                ? 'Loading connections...'
+                : connections.length === 0
+                  ? 'No connections found'
+                  : 'Select connection'}
+            </option>
             {state.connections.map((conn) => (
               <option key={conn.id} value={conn.id}>
                 {conn.name} ({conn.type})
               </option>
             ))}
           </select>
+          {connectionLoading && (
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          )}
         </div>
 
         {/* Theme toggle button */}

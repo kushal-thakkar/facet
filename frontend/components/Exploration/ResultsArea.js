@@ -129,8 +129,14 @@ function ResultsArea({ results, isLoading }) {
 
         <div className="relative" ref={exportMenuRef}>
           <button
-            className="px-3 py-1 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center"
-            onClick={() => setShowExportMenu(!showExportMenu)}
+            className={`px-3 py-1 text-sm font-medium rounded-md flex items-center ${
+              results
+                ? 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
+                : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+            }`}
+            onClick={() => results && setShowExportMenu(!showExportMenu)}
+            disabled={!results}
+            aria-disabled={!results}
           >
             <svg
               className="w-4 h-4 mr-2"

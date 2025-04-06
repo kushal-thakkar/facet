@@ -88,23 +88,58 @@ function FilterBar() {
     : [];
 
   // Filter row component
-  const FilterRow = ({ filter, index, editable = false, onSave, onRemove, onCancel }) => {
+  const FilterRow = ({
+    filter,
+    index,
+    editable = false,
+    onSave,
+    onRemove,
+    onCancel,
+    filterType = 'new',
+  }) => {
     const columnType = filter.column
       ? availableColumns.find((col) => col.id === filter.column)?.type || 'string'
       : 'string';
+
+    // Use a ref to track the current input value
+    const inputRef = React.useRef(null);
+    const [localValue, setLocalValue] = React.useState(filter.value);
+
+    // Update local value when filter value changes externally (not from user input)
+    React.useEffect(() => {
+      if (filter.value !== localValue && document.activeElement !== inputRef.current) {
+        setLocalValue(filter.value);
+      }
+    }, [filter.value]);
+
+    // Handle local value change without immediately triggering save
+    const handleLocalValueChange = (value) => {
+      setLocalValue(value);
+    };
+
+    // Save changes when input loses focus
+    const handleBlur = () => {
+      if (filter.value !== localValue) {
+        onSave({
+          ...filter,
+          value: columnType === 'number' && localValue !== '' ? parseFloat(localValue) : localValue,
+        });
+      }
+    };
 
     const operators = getOperatorsForType(columnType);
     const requiresValue = !['is_null', 'is_not_null'].includes(filter.operator);
 
     return (
-      <div className="flex items-center bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-2 mb-2">
+      <div className="relative bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3 pt-7 mb-2">
         <div className="flex-grow flex space-x-2">
           {editable ? (
-            <>
+            <div className="w-full flex flex-col space-y-2">
+              {/* Field selector at the top */}
               <select
-                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] text-sm text-gray-800 dark:text-gray-200"
+                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 w-full text-sm text-gray-800 dark:text-gray-200"
                 value={filter.column}
-                onChange={(e) => onSave({ ...filter, column: e.target.value })}
+                onChange={(e) => handleFilterChange({ ...filter, column: e.target.value }, index)}
               >
                 <option value="">Select field</option>
                 {availableColumns.map((col) => (
@@ -114,185 +149,146 @@ function FilterBar() {
                 ))}
               </select>
 
-              <select
-                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] text-sm text-gray-800 dark:text-gray-200"
-                value={filter.operator}
-                onChange={(e) => onSave({ ...filter, operator: e.target.value })}
-                disabled={!filter.column}
-              >
-                {operators.map((op) => (
-                  <option key={op.id} value={op.id}>
-                    {op.label}
-                  </option>
-                ))}
-              </select>
+              {/* Operator and value on the same row */}
+              <div className="flex space-x-2">
+                <select
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] text-sm text-gray-800 dark:text-gray-200"
+                  value={filter.operator}
+                  onChange={(e) =>
+                    handleFilterChange({ ...filter, operator: e.target.value }, index)
+                  }
+                  disabled={!filter.column}
+                >
+                  {operators.map((op) => (
+                    <option key={op.id} value={op.id}>
+                      {op.label}
+                    </option>
+                  ))}
+                </select>
 
-              {requiresValue ? (
-                columnType === 'boolean' ? (
-                  <select
-                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-800 dark:text-gray-200"
-                    value={String(filter.value)}
-                    onChange={(e) => onSave({ ...filter, value: e.target.value === 'true' })}
-                  >
-                    <option value="true">True</option>
-                    <option value="false">False</option>
-                  </select>
-                ) : columnType === 'date' || columnType === 'timestamp' ? (
-                  <input
-                    type="date"
-                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-800 dark:text-gray-200"
-                    value={filter.value || ''}
-                    onChange={(e) => onSave({ ...filter, value: e.target.value })}
-                  />
+                {requiresValue ? (
+                  <div className="flex-grow">
+                    {columnType === 'boolean' ? (
+                      <select
+                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 w-full text-sm text-gray-800 dark:text-gray-200"
+                        value={String(filter.value)}
+                        onChange={(e) =>
+                          handleFilterChange({ ...filter, value: e.target.value === 'true' }, index)
+                        }
+                      >
+                        <option value="true">True</option>
+                        <option value="false">False</option>
+                      </select>
+                    ) : columnType === 'date' || columnType === 'timestamp' ? (
+                      <input
+                        ref={inputRef}
+                        type="date"
+                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 w-full text-sm text-gray-800 dark:text-gray-200"
+                        value={localValue || ''}
+                        onChange={(e) => handleLocalValueChange(e.target.value)}
+                        onBlur={handleBlur}
+                      />
+                    ) : (
+                      <input
+                        ref={inputRef}
+                        type={columnType === 'number' ? 'number' : 'text'}
+                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 w-full text-sm text-gray-800 dark:text-gray-200"
+                        value={localValue || ''}
+                        placeholder="Enter value"
+                        onChange={(e) => handleLocalValueChange(e.target.value)}
+                        onBlur={handleBlur}
+                      />
+                    )}
+                  </div>
                 ) : (
-                  <input
-                    type={columnType === 'number' ? 'number' : 'text'}
-                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-800 dark:text-gray-200"
-                    value={filter.value || ''}
-                    placeholder="Enter value"
-                    onChange={(e) =>
-                      onSave({
-                        ...filter,
-                        value:
-                          columnType === 'number' ? parseFloat(e.target.value) : e.target.value,
-                      })
-                    }
-                  />
-                )
-              ) : (
-                <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-400 dark:text-gray-500 flex items-center">
-                  No value needed
-                </div>
-              )}
-            </>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-400 dark:text-gray-500 flex items-center">
+                    No value needed
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
-            <>
-              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] flex items-center">
+            <div className="w-full flex flex-col space-y-2">
+              {/* Field name at the top */}
+              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 w-full flex items-center">
                 <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                   {availableColumns.find((col) => col.id === filter.column)?.name || filter.column}
                 </span>
               </div>
-              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] flex items-center">
-                <span className="text-sm text-gray-800 dark:text-gray-200">
-                  {getOperatorsForType(
-                    availableColumns.find((col) => col.id === filter.column)?.type || 'string'
-                  ).find((op) => op.id === filter.operator)?.label || filter.operator}
-                </span>
+
+              {/* Operator and value on the same row */}
+              <div className="flex space-x-2">
+                <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] flex items-center">
+                  <span className="text-sm text-gray-800 dark:text-gray-200">
+                    {getOperatorsForType(
+                      availableColumns.find((col) => col.id === filter.column)?.type || 'string'
+                    ).find((op) => op.id === filter.operator)?.label || filter.operator}
+                  </span>
+                </div>
+                <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow flex items-center">
+                  <span className="text-sm font-mono text-gray-800 dark:text-gray-200">
+                    {['is_null', 'is_not_null'].includes(filter.operator)
+                      ? '-'
+                      : typeof filter.value === 'object'
+                        ? JSON.stringify(filter.value)
+                        : String(filter.value)}
+                  </span>
+                </div>
               </div>
-              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow flex items-center">
-                <span className="text-sm font-mono text-gray-800 dark:text-gray-200">
-                  {['is_null', 'is_not_null'].includes(filter.operator)
-                    ? '-'
-                    : typeof filter.value === 'object'
-                      ? JSON.stringify(filter.value)
-                      : String(filter.value)}
-                </span>
-              </div>
-            </>
+            </div>
           )}
         </div>
 
-        <div className="ml-2 flex space-x-1">
-          {editable ? (
-            <>
-              <button
-                type="button"
-                className="text-green-600 dark:text-green-500 hover:text-green-800 dark:hover:text-green-400 focus:outline-none p-1"
-                onClick={() => {
-                  // Validate
-                  if (!filter.column) {
-                    alert('Please select a field');
-                    return;
-                  }
+        {/* Simple removal button */}
+        <button
+          type="button"
+          className="absolute z-10 top-1 right-1 cursor-pointer text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+          onMouseDown={(e) => {
+            // Use mouseDown which happens before blur events
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onClick={(e) => {
+            // Simple approach
+            e.stopPropagation();
+            e.preventDefault();
 
-                  if (requiresValue && filter.value === '' && columnType !== 'boolean') {
-                    alert('Please enter a value');
-                    return;
-                  }
-
-                  // If this is a new filter being added
-                  if (index === -1) {
-                    const updatedFilters = [...filters, filter];
-                    actions.updateCurrentExploration({ filters: updatedFilters });
-                    setShowNewFilter(false);
-                    setNewFilter({ column: '', operator: '=', value: '' });
-                  } else {
-                    // Just apply edited values
-                    onSave(filter);
-                  }
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className="text-red-600 dark:text-red-500 hover:text-red-800 dark:hover:text-red-400 focus:outline-none p-1"
-                onClick={onCancel}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 focus:outline-none"
-              onClick={() => onRemove(index)}
-              aria-label="Remove filter"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
+            if (filterType === 'new' || index === -1) {
+              // Cancel new filter creation
+              onCancel && onCancel();
+            } else {
+              // Remove existing filter
+              onRemove(index);
+            }
+          }}
+          aria-label="Remove filter"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 pointer-events-none"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
       </div>
     );
   };
 
   // Handler for removing a filter
   const removeFilter = (index) => {
-    const updatedFilters = [...filters];
-    updatedFilters.splice(index, 1);
+    const filtersCopy = [...filters];
+    filtersCopy.splice(index, 1);
 
     actions.updateCurrentExploration({
-      filters: updatedFilters,
+      filters: filtersCopy,
     });
   };
 
@@ -304,6 +300,37 @@ function FilterBar() {
     actions.updateCurrentExploration({
       filters: updatedFilters,
     });
+  };
+
+  // Helper to determine if a value is required
+  const isValueRequired = (operator) => {
+    return !['is_null', 'is_not_null'].includes(operator);
+  };
+
+  // Handler for auto-saving a filter
+  const handleFilterChange = (filter, index) => {
+    // Determine if this filter requires a value
+    const valueRequired = isValueRequired(filter.operator);
+    const columnType = filter.column
+      ? availableColumns.find((col) => col.id === filter.column)?.type || 'string'
+      : 'string';
+
+    // If this is a new filter being added
+    if (index === -1) {
+      // Only commit to filters array if all required fields are present
+      if (filter.column && (!valueRequired || filter.value !== '' || columnType === 'boolean')) {
+        const updatedFilters = [...filters, filter];
+        actions.updateCurrentExploration({ filters: updatedFilters });
+        setShowNewFilter(false);
+        setNewFilter({ column: '', operator: '=', value: '' });
+      } else {
+        // Just update the new filter state but don't save yet
+        setNewFilter(filter);
+      }
+    } else {
+      // Always update the existing filter to enable continuous editing
+      updateFilter(index, filter);
+    }
   };
 
   return (
@@ -353,7 +380,8 @@ function FilterBar() {
             filter={newFilter}
             index={-1}
             editable={true}
-            onSave={(updated) => setNewFilter(updated)}
+            filterType="new"
+            onSave={(updated) => handleFilterChange(updated, -1)}
             onCancel={() => {
               setShowNewFilter(false);
               setNewFilter({ column: '', operator: '=', value: '' });
@@ -364,12 +392,13 @@ function FilterBar() {
         {filters.length > 0 &&
           filters.map((filter, index) => (
             <FilterRow
-              key={index}
+              key={`saved-filter-${index}`}
               filter={filter}
               index={index}
-              editable={false}
-              onSave={(updated) => updateFilter(index, updated)}
+              editable={true}
+              onSave={(updated) => handleFilterChange(updated, index)}
               onRemove={removeFilter}
+              filterType="saved"
             />
           ))}
       </div>

@@ -42,6 +42,9 @@ function TimeRangeSelector() {
     range: 'none',
   };
 
+  // Get visualization type and check if it's table or pie chart
+  const isComparisonDisabled = ['table', 'pie'].includes(currentExploration.visualization?.type);
+
   // Find the labels for current selections
   const timeRangeLabel =
     TIME_RANGE_PRESETS.find((preset) => preset.id === timeRange.range)?.label ||
@@ -166,8 +169,11 @@ function TimeRangeSelector() {
         <div className="relative">
           <button
             type="button"
-            className="inline-flex justify-between items-center w-40 px-3 py-1.5 border border-gray-300 dark:border-gray-500 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
-            onClick={() => setShowComparisonDialog(true)}
+            className={`inline-flex justify-between items-center w-40 px-3 py-1.5 border border-gray-300 dark:border-gray-500 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-primary ${
+              isComparisonDisabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            onClick={() => !isComparisonDisabled && setShowComparisonDialog(true)}
+            disabled={isComparisonDisabled}
           >
             <span>{comparisonLabel}</span>
             <span className="ml-1">▾</span>

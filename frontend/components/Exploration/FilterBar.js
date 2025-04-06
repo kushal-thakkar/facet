@@ -355,22 +355,17 @@ function FilterBar() {
           />
         )}
 
-        {filters.length > 0
-          ? filters.map((filter, index) => (
-              <FilterRow
-                key={index}
-                filter={filter}
-                index={index}
-                editable={false}
-                onSave={(updated) => updateFilter(index, updated)}
-                onRemove={removeFilter}
-              />
-            ))
-          : !showNewFilter && (
-              <div className="p-3 text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-md w-full text-center">
-                No filters applied
-              </div>
-            )}
+        {filters.length > 0 &&
+          filters.map((filter, index) => (
+            <FilterRow
+              key={index}
+              filter={filter}
+              index={index}
+              editable={false}
+              onSave={(updated) => updateFilter(index, updated)}
+              onRemove={removeFilter}
+            />
+          ))}
       </div>
     </div>
   );

@@ -104,16 +104,16 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     );
 
     return (
-      <div className="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm overflow-hidden">
         {/* Header */}
         <div
-          className="px-4 py-3 bg-gray-50 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
+          className="px-4 py-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-gray-600 mr-2"
+              className="h-4 w-4 text-gray-600 dark:text-gray-400 mr-2"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -125,14 +125,14 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
               />
             </svg>
-            <span className="text-sm font-medium text-gray-700">Fields</span>
-            <div className="ml-2 text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Fields</span>
+            <div className="ml-2 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full">
               {selectedFields.length}/{columns.length}
             </div>
           </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className={`h-5 w-5 text-gray-500 transition-transform ${
+            className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform ${
               isExpanded ? 'transform rotate-180' : ''
             }`}
             viewBox="0 0 20 20"
@@ -170,7 +170,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 </div>
                 <input
                   type="text"
-                  className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Search fields..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -180,14 +180,14 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               <div className="flex space-x-2">
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/50 border border-blue-200 dark:border-blue-800 rounded-md transition-colors"
                   onClick={selectAll}
                 >
                   Select All
                 </button>
                 <button
                   type="button"
-                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-md transition-colors"
                   onClick={selectNone}
                 >
                   Select None
@@ -210,7 +210,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                       />
                       <label
                         htmlFor={`field-${column.id}`}
-                        className="ml-2 block text-sm text-gray-900 truncate"
+                        className="ml-2 block text-sm text-gray-900 dark:text-gray-200 truncate"
                         title={column.name}
                       >
                         {column.name}
@@ -218,7 +218,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-2 text-center text-sm text-gray-500 py-4">
+                  <div className="col-span-2 text-center text-sm text-gray-500 dark:text-gray-400 py-4">
                     No fields match your search
                   </div>
                 )}
@@ -234,18 +234,18 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 bg-white border-b border-gray-200 shadow-sm">
+      <div className="p-4 bg-white dark:bg-dark-card border-b border-gray-200 dark:border-gray-700 shadow-sm">
         {/* Top Controls - with table selector and run button side by side */}
         <div className="flex items-center justify-between mb-3">
           {/* Table Selector with Typeahead */}
           <div className="relative flex-grow mr-4" ref={dropdownRef}>
             <div
               onClick={() => setShowTableDropdown(!showTableDropdown)}
-              className="cursor-pointer flex items-center h-10 px-4 border border-gray-300 bg-white rounded-md hover:border-blue-500 transition-colors"
+              className="cursor-pointer flex items-center h-10 px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md hover:border-blue-500 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2 text-gray-500"
+                className="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -259,13 +259,15 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               </svg>
               <span
                 className={`text-sm ${
-                  currentExploration.source?.table ? 'text-gray-900 font-medium' : 'text-gray-500'
+                  currentExploration.source?.table
+                    ? 'text-gray-900 dark:text-gray-200 font-medium'
+                    : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 {currentExploration.source?.table || 'Select a data table'}
               </span>
               <svg
-                className="ml-auto w-4 h-4 text-gray-500"
+                className="ml-auto w-4 h-4 text-gray-500 dark:text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -281,8 +283,8 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
             {/* Dropdown for table selection */}
             {showTableDropdown && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                <div className="p-2 border-b border-gray-200">
+              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
+                <div className="p-2 border-b border-gray-200 dark:border-gray-700">
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg
@@ -303,7 +305,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                     <input
                       type="text"
                       placeholder="Search tables..."
-                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={filterText}
                       onChange={(e) => setFilterText(e.target.value)}
                       onClick={(e) => e.stopPropagation()}
@@ -315,13 +317,13 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                     filteredTables.map((table) => (
                       <div
                         key={table.name}
-                        className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-gray-800"
+                        className="px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer text-gray-800 dark:text-gray-200"
                         onClick={() => handleTableSelect(table.name)}
                       >
                         <div className="font-medium flex items-center">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 mr-2 text-blue-500"
+                            className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -336,12 +338,16 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                           {table.name}
                         </div>
                         {table.description && (
-                          <div className="text-xs text-gray-500 ml-6">{table.description}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 ml-6">
+                            {table.description}
+                          </div>
                         )}
                       </div>
                     ))
                   ) : (
-                    <div className="px-3 py-3 text-gray-500 text-center">No tables found</div>
+                    <div className="px-3 py-3 text-gray-500 dark:text-gray-400 text-center">
+                      No tables found
+                    </div>
                   )}
                 </div>
               </div>
@@ -413,7 +419,46 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         </div>
       </div>
 
-      <div className="overflow-y-auto flex-1 p-4 space-y-4 bg-gray-50">
+      <div className="overflow-y-auto flex-1 p-4 space-y-4 bg-gray-50 dark:bg-dark-bg">
+        {/* Visualization Type Selection */}
+        <div className="mb-4">
+          <Dropdown
+            label="Visualization Type"
+            options={[
+              { id: 'table', label: 'Table 🔢' },
+              { id: 'line', label: 'Line Chart 📈' },
+              { id: 'bar', label: 'Bar Chart 📊' },
+              { id: 'pie', label: 'Pie Chart 🥧' },
+            ]}
+            value={currentExploration.visualization?.type || 'table'}
+            onChange={(type) => {
+              actions.updateCurrentExploration({
+                visualization: {
+                  ...currentExploration.visualization,
+                  type,
+                },
+              });
+            }}
+            enableTypeahead={true}
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-blue-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+              </svg>
+            }
+          />
+        </div>
+
+        {/* Time Range Selector */}
+        <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <TimeRangeSelector />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Group By - Dropdown */}
           <Dropdown
@@ -601,7 +646,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         />
 
         {/* Filters Section */}
-        <div className="mt-6 bg-white border border-gray-200 rounded-md shadow-sm p-4">
+        <div className="mt-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm p-4">
           <FilterBar />
         </div>
       </div>

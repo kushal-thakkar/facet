@@ -8,26 +8,8 @@ function ResultsArea({ results, isLoading }) {
   const { state, actions } = useAppState();
   const { currentExploration } = state;
 
-  // Available visualization types
-  const visualizationTypes = [
-    { id: 'table', label: 'Table', icon: '🔢' },
-    { id: 'line', label: 'Line Chart', icon: '📈' },
-    { id: 'bar', label: 'Bar Chart', icon: '📊' },
-    { id: 'pie', label: 'Pie Chart', icon: '🥧' },
-  ];
-
   // Get current visualization type or default to table
   const visualizationType = currentExploration.visualization?.type || 'table';
-
-  // Handler for changing visualization type
-  const changeVisualizationType = (type) => {
-    actions.updateCurrentExploration({
-      visualization: {
-        ...currentExploration.visualization,
-        type,
-      },
-    });
-  };
 
   // Handler for export button
   const handleExport = (format) => {
@@ -116,24 +98,9 @@ function ResultsArea({ results, isLoading }) {
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-card overflow-hidden">
-      {/* Results header with visualization toggle and export options - reduced height */}
+      {/* Header with export options - reduced height */}
       <div className="px-6 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <div className="flex space-x-2">
-          {visualizationTypes.map((type) => (
-            <button
-              key={type.id}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                visualizationType === type.id
-                  ? 'bg-primary bg-opacity-10 text-primary dark:bg-opacity-20'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
-              onClick={() => changeVisualizationType(type.id)}
-            >
-              <span className="mr-2">{type.icon}</span>
-              {type.label}
-            </button>
-          ))}
-        </div>
+        <div className="text-sm font-medium text-gray-700 dark:text-gray-300"></div>
 
         <div className="relative">
           <button

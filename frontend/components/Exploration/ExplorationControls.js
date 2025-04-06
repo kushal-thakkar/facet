@@ -56,11 +56,80 @@ function ExplorationControls({ onRunQuery, isLoading }) {
   return (
     <div className="h-full flex flex-col">
       <div className="p-3 bg-white dark:bg-dark-card border-b border-gray-200 dark:border-gray-700">
-        {/* Top Controls */}
-        <div className="flex items-center justify-end">
+        {/* Top Controls - with table selector and run button side by side */}
+        <div className="flex items-center justify-between mb-3">
+          {/* Table Selector with Typeahead */}
+          <div className="relative flex-grow mr-3" ref={dropdownRef}>
+            <div
+              onClick={() => setShowTableDropdown(!showTableDropdown)}
+              className="cursor-pointer flex items-center h-10 px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-bg rounded-lg hover:border-primary dark:hover:border-primary transition-colors"
+            >
+              <span
+                className={`text-sm ${
+                  currentExploration.source?.table
+                    ? 'text-gray-900 dark:text-gray-100 font-medium'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {currentExploration.source?.table || 'Select a data table'}
+              </span>
+              <svg
+                className="ml-auto w-4 h-4 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </div>
+
+            {/* Dropdown for table selection */}
+            {showTableDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                  <input
+                    type="text"
+                    placeholder="Search tables..."
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-dark-bg dark:text-gray-200"
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1">
+                  {filteredTables.length > 0 ? (
+                    filteredTables.map((table) => (
+                      <div
+                        key={table.name}
+                        className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-800 dark:text-gray-100"
+                        onClick={() => handleTableSelect(table.name)}
+                      >
+                        <div className="font-medium">{table.name}</div>
+                        {table.description && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {table.description}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-3 py-3 text-gray-500 text-center">No tables found</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Run Query Button */}
           <div>
             <button
-              className={`btn ${
+              className={`btn whitespace-nowrap ${
                 isLoading
                   ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   : 'btn-primary'
@@ -114,81 +183,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                       d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     ></path>
                   </svg>
-                  Run Query
+                  Query
                 </span>
               )}
             </button>
           </div>
-        </div>
-
-        {/* Table Selector with Typeahead */}
-        <div className="relative" ref={dropdownRef}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Data Table
-          </label>
-          <div
-            onClick={() => setShowTableDropdown(!showTableDropdown)}
-            className="cursor-pointer flex items-center px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-bg rounded-lg hover:border-primary dark:hover:border-primary transition-colors"
-          >
-            <span
-              className={`text-sm ${
-                currentExploration.source?.table
-                  ? 'text-gray-900 dark:text-gray-100 font-medium'
-                  : 'text-gray-500 dark:text-gray-400'
-              }`}
-            >
-              {currentExploration.source?.table || 'Select a data table to query'}
-            </span>
-            <svg
-              className="ml-auto w-5 h-5 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 9l-7 7-7-7"
-              ></path>
-            </svg>
-          </div>
-
-          {showTableDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  type="text"
-                  placeholder="Search tables..."
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-dark-bg dark:text-gray-200"
-                  value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div className="max-h-60 overflow-y-auto py-1">
-                {filteredTables.length > 0 ? (
-                  filteredTables.map((table) => (
-                    <div
-                      key={table.name}
-                      className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-800 dark:text-gray-100"
-                      onClick={() => handleTableSelect(table.name)}
-                    >
-                      <div className="font-medium">{table.name}</div>
-                      {table.description && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {table.description}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-3 py-3 text-gray-500 text-center">No tables found</div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

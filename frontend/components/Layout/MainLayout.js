@@ -1,6 +1,5 @@
 // components/Layout/MainLayout.js
 import React, { useState } from 'react';
-import Header from './Header';
 import SidePanel from './SidePanel';
 import { useAppState } from '../../context/AppStateContext';
 
@@ -15,9 +14,6 @@ function MainLayout({ children, toggleDarkMode, darkMode }) {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-dark-bg">
-      {/* Header */}
-      <Header toggleDarkMode={toggleDarkMode} darkMode={darkMode} />
-
       <div className="flex flex-1 overflow-hidden">
         {/* Side Panel */}
         <div
@@ -25,7 +21,7 @@ function MainLayout({ children, toggleDarkMode, darkMode }) {
             sidePanelOpen ? 'w-96' : 'w-0'
           } transition-all duration-300 ease-in-out overflow-hidden border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-card`}
         >
-          <SidePanel />
+          <SidePanel toggleDarkMode={toggleDarkMode} darkMode={darkMode} />
         </div>
 
         {/* Toggle Side Panel Button */}

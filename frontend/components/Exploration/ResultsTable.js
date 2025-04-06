@@ -119,19 +119,21 @@ function ResultsTable({ results }) {
       {/* Table */}
       <div className="flex-1 overflow-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
-            <tr>
+          <thead className="bg-gray-100 dark:bg-gray-800 sticky top-0 shadow-sm">
+            <tr className="border-b-2 border-gray-200 dark:border-gray-700">
               {results?.columns?.map((column) => (
                 <th
                   key={column.name}
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => handleSort(column.name)}
                 >
                   <div className="flex items-center">
                     <span>{column.displayName || column.name}</span>
                     {sortColumn === column.name && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      <span className="ml-1 text-primary dark:text-primary">
+                        {sortDirection === 'asc' ? '↑' : '↓'}
+                      </span>
                     )}
                   </div>
                 </th>

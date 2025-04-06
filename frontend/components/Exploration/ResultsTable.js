@@ -118,14 +118,14 @@ function ResultsTable({ results }) {
     <div className="h-full flex flex-col">
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
             <tr>
               {results?.columns?.map((column) => (
                 <th
                   key={column.name}
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => handleSort(column.name)}
                 >
                   <div className="flex items-center">
@@ -138,9 +138,9 @@ function ResultsTable({ results }) {
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {sortedData().map((row, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-gray-50">
+              <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                 {results.columns.map((column) => {
                   const value = row[column.name];
                   const columnType = getColumnType(column.name, value);
@@ -148,7 +148,7 @@ function ResultsTable({ results }) {
                   return (
                     <td
                       key={column.name}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300"
                     >
                       {formatCellValue(value, columnType)}
                     </td>
@@ -161,15 +161,15 @@ function ResultsTable({ results }) {
       </div>
 
       {/* Pagination controls */}
-      <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-between">
+      <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-between">
         <div className="flex-1 flex justify-between sm:hidden">
           <button
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${
               currentPage === 1
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             Previous
@@ -177,10 +177,10 @@ function ResultsTable({ results }) {
           <button
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+            className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md ${
               currentPage === totalPages
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             Next
@@ -188,7 +188,7 @@ function ResultsTable({ results }) {
         </div>
         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               Showing <span className="font-medium">{startRow + 1}</span> to{' '}
               <span className="font-medium">{endRow}</span> of{' '}
               <span className="font-medium">{totalRows}</span> results
@@ -200,7 +200,7 @@ function ResultsTable({ results }) {
               <select
                 id="pageSize"
                 name="pageSize"
-                className="mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="mt-1 block pl-3 pr-10 py-1 text-base border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 value={pageSize}
                 onChange={(e) => changePageSize(Number(e.target.value))}
               >
@@ -219,10 +219,10 @@ function ResultsTable({ results }) {
               <button
                 onClick={() => goToPage(1)}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                className={`relative inline-flex items-center px-2 py-1 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
                   currentPage === 1
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
+                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 <span className="sr-only">First</span>⟪
@@ -230,10 +230,10 @@ function ResultsTable({ results }) {
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                className={`relative inline-flex items-center px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
                   currentPage === 1
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
+                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 <span className="sr-only">Previous</span>←
@@ -257,10 +257,10 @@ function ResultsTable({ results }) {
                   <button
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                    className={`relative inline-flex items-center px-3 py-1 border text-sm font-medium ${
                       currentPage === pageNum
-                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        ? 'z-10 bg-blue-50 dark:bg-blue-900 border-blue-500 text-blue-600 dark:text-blue-300'
+                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
                     {pageNum}
@@ -271,10 +271,10 @@ function ResultsTable({ results }) {
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                className={`relative inline-flex items-center px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
                   currentPage === totalPages
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
+                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 <span className="sr-only">Next</span>→
@@ -282,10 +282,10 @@ function ResultsTable({ results }) {
               <button
                 onClick={() => goToPage(totalPages)}
                 disabled={currentPage === totalPages}
-                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                className={`relative inline-flex items-center px-2 py-1 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
                   currentPage === totalPages
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-500 hover:bg-gray-50'
+                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 <span className="sr-only">Last</span>⟫

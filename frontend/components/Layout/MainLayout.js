@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import Header from './Header';
 import SidePanel from './SidePanel';
-import Footer from './Footer';
 import { useAppState } from '../../context/AppStateContext';
 
 function MainLayout({ children, toggleDarkMode, darkMode }) {
@@ -55,9 +54,6 @@ function MainLayout({ children, toggleDarkMode, darkMode }) {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Main content */}
           <div className="flex-1 overflow-auto p-6">{children}</div>
-
-          {/* Footer */}
-          <Footer />
         </div>
       </div>
     </div>

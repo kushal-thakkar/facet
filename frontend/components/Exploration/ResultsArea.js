@@ -116,13 +116,13 @@ function ResultsArea({ results, isLoading }) {
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 rounded-lg shadow-card overflow-hidden">
-      {/* Results header with visualization toggle and export options */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+      {/* Results header with visualization toggle and export options - reduced height */}
+      <div className="px-6 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <div className="flex space-x-2">
           {visualizationTypes.map((type) => (
             <button
               key={type.id}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
                 visualizationType === type.id
                   ? 'bg-primary bg-opacity-10 text-primary dark:bg-opacity-20'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -137,7 +137,7 @@ function ResultsArea({ results, isLoading }) {
 
         <div className="relative">
           <button
-            className="px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center"
+            className="px-3 py-1 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center"
             onClick={() => document.getElementById('export-menu').classList.toggle('hidden')}
           >
             <svg

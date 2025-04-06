@@ -36,7 +36,6 @@ function ResultsChart({ results, type }) {
   const [chartConfig, setChartConfig] = useState({
     xAxisKey: '',
     yAxisKeys: [],
-    showSettings: false,
   });
 
   // Effect to auto-select axis fields when results or type changes
@@ -102,7 +101,6 @@ function ResultsChart({ results, type }) {
     setChartConfig({
       xAxisKey: xAxisCandidates.length > 0 ? xAxisCandidates[0].name : columns[0].name,
       yAxisKeys: yAxisCandidates.slice(0, 3).map((col) => col.name), // Limit to 3 series initially
-      showSettings: false,
     });
   }, [results, type]);
 
@@ -122,7 +120,10 @@ function ResultsChart({ results, type }) {
         if (!aggregatedData[key]) {
           aggregatedData[key] = 0;
         }
-        aggregatedData[key] += Number(row[yAxisKey] || 0);
+        const value = row[yAxisKey];
+        // Ensure we're adding a number, defaulting to 0 for null/undefined/NaN
+        aggregatedData[key] +=
+          value === null || value === undefined || isNaN(Number(value)) ? 0 : Number(value);
       });
 
       return Object.keys(aggregatedData).map((key) => ({
@@ -131,15 +132,17 @@ function ResultsChart({ results, type }) {
       }));
     }
 
-    // For line and bar charts, we use the data as is
+    // For line and bar charts, we use the data as is but ensure values are numeric
     return results.data.map((row) => {
       const formattedRow = {
         [chartConfig.xAxisKey]: row[chartConfig.xAxisKey],
       };
 
-      // Add y-axis values
+      // Add y-axis values, ensuring they are valid numbers
       chartConfig.yAxisKeys.forEach((key) => {
-        formattedRow[key] = row[key];
+        const value = row[key];
+        formattedRow[key] =
+          value === null || value === undefined || isNaN(Number(value)) ? null : Number(value);
       });
 
       return formattedRow;
@@ -167,106 +170,88 @@ function ResultsChart({ results, type }) {
     return value;
   };
 
-  // Toggle chart settings panel
-  const toggleSettings = () => {
-    setChartConfig({
-      ...chartConfig,
-      showSettings: !chartConfig.showSettings,
-    });
-  };
-
-  // Update chart settings
-  const updateChartConfig = (key, value) => {
-    setChartConfig({
-      ...chartConfig,
-      [key]: value,
-    });
-  };
-
-  // Get all available columns as options
-  const columnOptions =
-    results?.columns?.map((col) => ({
-      id: col.name,
-      name: col.displayName || col.name,
-      type: col.type,
-    })) || [];
-
   // Prepare chart data
   const chartData = prepareChartData();
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Chart settings toggle button */}
-      <div className="px-4 py-2 border-b border-gray-200">
-        <button
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-          onClick={toggleSettings}
-        >
-          {chartConfig.showSettings ? 'Hide Chart Settings' : 'Show Chart Settings'}
-        </button>
-      </div>
-
+    <div className="h-full">
       {/* Chart container */}
-      <div className="flex-1 p-4">
-        <ResponsiveContainer width="100%" height="100%">
-          {type === 'line' ? (
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              {chartConfig.yAxisKeys.map((key, index) => (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={COLORS[index % COLORS.length]}
-                  activeDot={{ r: 8 }}
-                  name={results.columns.find((col) => col.name === key)?.displayName || key}
-                />
-              ))}
-            </LineChart>
-          ) : type === 'bar' ? (
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              {chartConfig.yAxisKeys.map((key, index) => (
-                <Bar
-                  key={key}
-                  dataKey={key}
-                  fill={COLORS[index % COLORS.length]}
-                  name={results.columns.find((col) => col.name === key)?.displayName || key}
-                />
-              ))}
-            </BarChart>
-          ) : (
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                outerRadius={120}
-                fill="#8884d8"
-                dataKey="value"
-                nameKey="name"
-                label={({ name, value, percent }) =>
-                  `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
-                }
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+      <div className="h-full p-4">
+        {chartData.length === 0 ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center p-8">
+              <h3 className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+                No data available for chart
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Please check your data selection or try a different visualization
+              </p>
+            </div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            {type === 'line' ? (
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {chartConfig.yAxisKeys.map((key, index) => (
+                  <Line
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    stroke={COLORS[index % COLORS.length]}
+                    activeDot={{ r: 8 }}
+                    connectNulls={true}
+                    name={results.columns.find((col) => col.name === key)?.displayName || key}
+                  />
                 ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          )}
-        </ResponsiveContainer>
+              </LineChart>
+            ) : type === 'bar' ? (
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {chartConfig.yAxisKeys.map((key, index) => (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    fill={COLORS[index % COLORS.length]}
+                    name={results.columns.find((col) => col.name === key)?.displayName || key}
+                  />
+                ))}
+              </BarChart>
+            ) : (
+              <PieChart>
+                {chartData.length > 0 && (
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={true}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, value, percent }) =>
+                      `${name}: ${value} (${((percent || 0) * 100).toFixed(0)}%)`
+                    }
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                )}
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            )}
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

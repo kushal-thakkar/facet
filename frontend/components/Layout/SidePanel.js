@@ -126,7 +126,7 @@ function SidePanel({ toggleDarkMode, darkMode }) {
     <div className="h-full flex flex-col overflow-y-auto">
       {/* Facet logo and name */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
-        <span className="text-primary dark:text-indigo-400 font-bold text-2xl mr-2">⚡</span>
+        <span className="text-primary dark:text-indigo-400 font-bold text-2xl mr-2">🧩</span>
         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Facet</h1>
       </div>
       {!currentConnection ? (

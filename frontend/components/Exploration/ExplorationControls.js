@@ -83,26 +83,25 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     setFilterText('');
   };
 
-  // Create a global ESC key handler for all dropdowns/expandable areas
+  // Create a global ESC key handler for only the table dropdown
   React.useEffect(() => {
     function handleEscapeKey(event) {
       if (event.key === 'Escape') {
         // Close table dropdown
         setShowTableDropdown(false);
 
-        // Fields selector is self-contained and we need to access its state
-        document.querySelectorAll('.fields-selector-expanded').forEach((el) => {
-          // Trigger a click on the header to collapse it
-          const header = el.querySelector('.fields-selector-header');
-          if (header) header.click();
-        });
+        // Note: We no longer auto-close the fields selector here
+        // Each dropdown now manages its own state independently
       }
     }
 
     function handleClickOutside(event) {
+      // Only close the table dropdown if clicked outside
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowTableDropdown(false);
       }
+      // We are intentionally NOT closing the fields selector when clicking inside it
+      // The fields selector now manages its own state independently
     }
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -119,6 +118,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     const [selectedFields, setSelectedFields] = useState(currentSelection || []);
     const [searchTerm, setSearchTerm] = useState('');
     const isInitialRender = useRef(true);
+    const fieldsRef = useRef(null);
 
     // Update local state when parent's currentSelection changes
     useEffect(() => {
@@ -136,6 +136,39 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       // Only call the parent's callback if this isn't from the parent's state change
       onSelectionChange(selectedFields);
     }, [selectedFields]); // Intentionally omitting onSelectionChange to prevent infinite loops
+
+    // Handle clicks outside the dropdown and Escape key
+    useEffect(() => {
+      // Only run this effect if the dropdown is open
+      if (!isExpanded) return;
+
+      function handleClickOutside(event) {
+        if (fieldsRef.current && !fieldsRef.current.contains(event.target)) {
+          setIsExpanded(false);
+        }
+      }
+
+      function handleEscapeKey(event) {
+        if (event.key === 'Escape') {
+          setIsExpanded(false);
+        }
+      }
+
+      // Add event listeners
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+
+      // Clean up event listeners
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
+    }, [isExpanded]);
+
+    // Toggle header only - no other events should toggle the dropdown
+    const toggleDropdown = () => {
+      setIsExpanded(!isExpanded);
+    };
 
     // Toggle a single field selection
     const toggleField = (columnId) => {
@@ -163,6 +196,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
     return (
       <div
+        ref={fieldsRef}
         className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm overflow-hidden ${
           isExpanded ? 'fields-selector-expanded' : ''
         }`}
@@ -170,7 +204,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         {/* Header */}
         <div
           className="fields-selector-header px-4 py-3 bg-gray-50 dark:bg-gray-700 flex justify-between items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={toggleDropdown}
         >
           <div className="flex items-center">
             <svg
@@ -243,16 +277,16 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 <button
                   type="button"
                   className="px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/50 border border-blue-200 dark:border-blue-800 rounded-md transition-colors"
-                  onClick={selectAll}
+                  onClick={() => selectAll()}
                 >
-                  Select All
+                  All
                 </button>
                 <button
                   type="button"
                   className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-md transition-colors"
-                  onClick={selectNone}
+                  onClick={() => selectNone()}
                 >
-                  Select None
+                  None
                 </button>
               </div>
             </div>
@@ -419,7 +453,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           {/* Run Query Button */}
           <div>
             <button
-              className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              className={`inline-flex items-center px-4 py-2 h-10 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 isLoading
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
@@ -484,8 +518,15 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       <div className="overflow-y-auto flex-1 p-4 space-y-4 bg-gray-50 dark:bg-dark-bg">
         {/* Visualization Type Selection */}
         <div className="mb-4">
+          <div className="flex justify-between items-center mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Visualization Type
+            </label>
+            {/* Empty space to match Order By's button layout */}
+            <div className="ml-1 w-10 h-6"></div>
+          </div>
           <Dropdown
-            label="Visualization Type"
+            label=""
             options={[
               { id: 'table', label: 'Table 🔢' },
               { id: 'line', label: 'Line Chart 📈' },
@@ -522,167 +563,317 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Group By - Dropdown */}
-          <Dropdown
-            label="Group By"
-            options={[
-              { id: 'none', label: 'None' },
-              ...availableColumns.map((column) => ({
-                id: column.id,
-                label: column.name,
-              })),
-            ]}
-            value={(currentExploration.groupBy || [])[0] || 'none'}
-            onChange={(value) => {
-              if (value === 'none') {
-                actions.updateCurrentExploration({ groupBy: [] });
-              } else {
-                actions.updateCurrentExploration({ groupBy: [value] });
+          {/* Group By - Dropdown with label outside */}
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Group By
+              </label>
+              {/* Empty space to match Order By's button layout */}
+              <div className="ml-1 w-10 h-6"></div>
+            </div>
+            <Dropdown
+              label=""
+              options={[
+                { id: 'none', label: 'None' },
+                ...availableColumns.map((column) => ({
+                  id: column.id,
+                  label: column.name,
+                })),
+              ]}
+              value={(currentExploration.groupBy || [])[0] || 'none'}
+              onChange={(value) => {
+                if (value === 'none') {
+                  actions.updateCurrentExploration({ groupBy: [] });
+                } else {
+                  actions.updateCurrentExploration({ groupBy: [value] });
+                }
+              }}
+              enableTypeahead={true}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-green-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
               }
-            }}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-green-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            }
-          />
+            />
+          </div>
 
-          {/* Order By - Dropdown */}
-          <Dropdown
-            label="Order By"
-            options={[
-              { id: 'none', label: 'None' },
-              ...availableColumns.map((column) => ({
-                id: `${column.id}_asc`,
-                label: `${column.name} (Asc)`,
-              })),
-              ...availableColumns.map((column) => ({
-                id: `${column.id}_desc`,
-                label: `${column.name} (Desc)`,
-              })),
-            ]}
-            value={'none'} // This would use a value from state in a real implementation
-            onChange={(value) => {
-              // Order by implementation
-              console.log('Order by:', value);
-            }}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-blue-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+          {/* Order By - With tiny direction button near label */}
+          <div>
+            {/* Use the same structure and margin as other dropdowns */}
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Order By
+              </label>
+
+              {/* Tiny Direction toggle button - always visible but disabled when None is selected */}
+              <button
+                type="button"
+                className={`ml-1 px-1 py-0.5 h-6 text-xs border rounded focus:outline-none ${
+                  (currentExploration.orderBy || 'none') === 'none'
+                    ? 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                    : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+                onClick={() => {
+                  // Only proceed if not "none"
+                  if ((currentExploration.orderBy || 'none') === 'none') return;
+
+                  const currentOrderBy = currentExploration.orderBy || '';
+
+                  // Check if we might have underscores in column names
+                  if (currentOrderBy.includes('_')) {
+                    let column, direction;
+
+                    // If it ends with _asc or _desc, that's our direction
+                    if (currentOrderBy.endsWith('_asc')) {
+                      column = currentOrderBy.slice(0, -4); // Remove _asc
+                      direction = 'asc';
+                    } else if (currentOrderBy.endsWith('_desc')) {
+                      column = currentOrderBy.slice(0, -5); // Remove _desc
+                      direction = 'desc';
+                    } else {
+                      // No direction suffix, assume it's just a column with underscores
+                      column = currentOrderBy;
+                      direction = 'asc';
+                    }
+
+                    // Toggle direction
+                    const newDirection = direction === 'desc' ? 'asc' : 'desc';
+
+                    actions.updateCurrentExploration({
+                      orderBy: `${column}_${newDirection}`,
+                    });
+                  } else {
+                    // Simple case - no underscores in column name
+                    const newDirection = 'desc'; // If no direction, default to desc on first click
+
+                    actions.updateCurrentExploration({
+                      orderBy: `${currentOrderBy}_${newDirection}`,
+                    });
+                  }
+                }}
+                title={
+                  (currentExploration.orderBy || 'none') === 'none'
+                    ? 'Select a column to sort'
+                    : currentExploration.orderBy?.endsWith('_desc')
+                      ? 'Descending order'
+                      : currentExploration.orderBy?.endsWith('_asc')
+                        ? 'Ascending order'
+                        : 'Default order (click to sort descending)'
+                }
+                disabled={(currentExploration.orderBy || 'none') === 'none'}
               >
-                <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h5a1 1 0 000-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM13 16a1 1 0 102 0v-5.586l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 101.414 1.414L13 10.414V16z" />
-              </svg>
-            }
-          />
+                <div className="flex items-center">
+                  <span>{currentExploration.orderBy?.endsWith('_desc') ? 'Desc' : 'Asc'}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-3 w-3 ml-1 ${
+                      (currentExploration.orderBy || 'none') === 'none'
+                        ? 'text-gray-400 dark:text-gray-600'
+                        : 'text-blue-600'
+                    }`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    {currentExploration.orderBy?.endsWith('_desc') ? (
+                      <path d="M5 9l5 5 5-5H5z" /> // Down arrow
+                    ) : (
+                      <path d="M5 11l5-5 5 5H5z" /> // Up arrow
+                    )}
+                  </svg>
+                </div>
+              </button>
+            </div>
+
+            {/* Dropdown with search capability */}
+            <Dropdown
+              label=""
+              options={[
+                { id: 'none', label: 'None' },
+                ...availableColumns.map((column) => ({
+                  id: column.id,
+                  label: column.name,
+                })),
+              ]}
+              value={
+                // Handle the case where orderBy might contain a direction suffix
+                (currentExploration.orderBy || 'none').endsWith('_asc')
+                  ? currentExploration.orderBy.slice(0, -4)
+                  : (currentExploration.orderBy || 'none').endsWith('_desc')
+                    ? currentExploration.orderBy.slice(0, -5)
+                    : currentExploration.orderBy || 'none'
+              }
+              onChange={(value) => {
+                if (value === 'none') {
+                  actions.updateCurrentExploration({
+                    orderBy: 'none',
+                  });
+                } else {
+                  // Try to get the current direction from the existing orderBy
+                  let currentDirection = 'asc'; // Default direction
+
+                  if (currentExploration.orderBy) {
+                    if (currentExploration.orderBy.endsWith('_desc')) {
+                      currentDirection = 'desc';
+                    } else if (currentExploration.orderBy.endsWith('_asc')) {
+                      currentDirection = 'asc';
+                    }
+                  }
+
+                  actions.updateCurrentExploration({
+                    orderBy: `${value}_${currentDirection}`,
+                  });
+                }
+              }}
+              enableTypeahead={true}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-blue-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h5a1 1 0 000-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3z" />
+                </svg>
+              }
+            />
+          </div>
 
           {/* Aggregate - Dropdown */}
-          <Dropdown
-            label="Aggregate"
-            options={[
-              { id: 'count', label: 'Count' },
-              { id: 'sum', label: 'Sum' },
-              { id: 'avg', label: 'Avg' },
-              { id: 'min', label: 'Min' },
-              { id: 'max', label: 'Max' },
-            ]}
-            value={(currentExploration.metrics && currentExploration.metrics[0]?.function) || 'avg'}
-            onChange={(value) => {
-              actions.updateCurrentExploration({
-                metrics: [
-                  {
-                    function: value,
-                    column: null,
-                    alias: value,
-                  },
-                ],
-              });
-            }}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-purple-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            }
-          />
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Aggregate
+              </label>
+              {/* Empty space to match Order By's button layout */}
+              <div className="ml-1 w-10 h-6"></div>
+            </div>
+            <Dropdown
+              label=""
+              options={[
+                { id: 'count', label: 'Count' },
+                { id: 'sum', label: 'Sum' },
+                { id: 'avg', label: 'Avg' },
+                { id: 'min', label: 'Min' },
+                { id: 'max', label: 'Max' },
+              ]}
+              value={
+                (currentExploration.metrics && currentExploration.metrics[0]?.function) || 'avg'
+              }
+              onChange={(value) => {
+                actions.updateCurrentExploration({
+                  metrics: [
+                    {
+                      function: value,
+                      column: null,
+                      alias: value,
+                    },
+                  ],
+                });
+              }}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-purple-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              }
+            />
+          </div>
 
           {/* Limit - Dropdown */}
-          <Dropdown
-            label="Limit"
-            options={[
-              { id: '50', label: '50 rows' },
-              { id: '100', label: '100 rows' },
-              { id: '1000', label: '1000 rows' },
-              { id: 'none', label: 'No limit' },
-            ]}
-            value={'100'} // This would use a value from state in a real implementation
-            onChange={(value) => {
-              // Limit implementation
-              console.log('Limit:', value);
-            }}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-yellow-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            }
-          />
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Limit
+              </label>
+              {/* Empty space to match Order By's button layout */}
+              <div className="ml-1 w-10 h-6"></div>
+            </div>
+            <Dropdown
+              label=""
+              options={[
+                { id: '50', label: '50 rows' },
+                { id: '100', label: '100 rows' },
+                { id: '1000', label: '1000 rows' },
+                { id: 'none', label: 'No limit' },
+              ]}
+              value={currentExploration.limit || '100'}
+              onChange={(value) => {
+                actions.updateCurrentExploration({
+                  limit: value,
+                });
+              }}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-yellow-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              }
+            />
+          </div>
 
           {/* Granularity - Dropdown (for time-based data) */}
-          <Dropdown
-            label="Granularity"
-            options={[
-              { id: 'auto', label: 'Auto' },
-              { id: 'second', label: 'Second' },
-              { id: 'minute', label: 'Minute' },
-              { id: 'hour', label: 'Hour' },
-              { id: 'day', label: 'Day' },
-              { id: 'week', label: 'Week' },
-              { id: 'month', label: 'Month' },
-            ]}
-            value={'auto'} // This would use a value from state in a real implementation
-            onChange={(value) => {
-              // Granularity implementation
-              console.log('Granularity:', value);
-            }}
-            icon={
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-indigo-600"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            }
-          />
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Granularity
+              </label>
+              {/* Empty space to match Order By's button layout */}
+              <div className="ml-1 w-10 h-6"></div>
+            </div>
+            <Dropdown
+              label=""
+              options={[
+                { id: 'auto', label: 'Auto' },
+                { id: 'second', label: 'Second' },
+                { id: 'minute', label: 'Minute' },
+                { id: 'hour', label: 'Hour' },
+                { id: 'day', label: 'Day' },
+                { id: 'month', label: 'Month' },
+              ]}
+              value={currentExploration.granularity || 'auto'}
+              onChange={(value) => {
+                actions.updateCurrentExploration({
+                  granularity: value,
+                });
+              }}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-indigo-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              }
+            />
+          </div>
         </div>
 
         {/* Fields Selector (Collapsible) */}

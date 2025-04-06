@@ -97,12 +97,12 @@ function FilterBar() {
     const requiresValue = !['is_null', 'is_not_null'].includes(filter.operator);
 
     return (
-      <div className="flex items-center bg-blue-50 border border-blue-200 rounded-md p-2 mb-2">
+      <div className="flex items-center bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-2 mb-2">
         <div className="flex-grow flex space-x-2">
           {editable ? (
             <>
               <select
-                className="bg-white border border-gray-300 rounded px-2 py-1.5 min-w-[120px] text-sm"
+                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] text-sm text-gray-800 dark:text-gray-200"
                 value={filter.column}
                 onChange={(e) => onSave({ ...filter, column: e.target.value })}
               >
@@ -115,7 +115,7 @@ function FilterBar() {
               </select>
 
               <select
-                className="bg-white border border-gray-300 rounded px-2 py-1.5 min-w-[120px] text-sm"
+                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] text-sm text-gray-800 dark:text-gray-200"
                 value={filter.operator}
                 onChange={(e) => onSave({ ...filter, operator: e.target.value })}
                 disabled={!filter.column}
@@ -130,7 +130,7 @@ function FilterBar() {
               {requiresValue ? (
                 columnType === 'boolean' ? (
                   <select
-                    className="bg-white border border-gray-300 rounded px-2 py-1.5 flex-grow text-sm"
+                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-800 dark:text-gray-200"
                     value={String(filter.value)}
                     onChange={(e) => onSave({ ...filter, value: e.target.value === 'true' })}
                   >
@@ -140,14 +140,14 @@ function FilterBar() {
                 ) : columnType === 'date' || columnType === 'timestamp' ? (
                   <input
                     type="date"
-                    className="bg-white border border-gray-300 rounded px-2 py-1.5 flex-grow text-sm"
+                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-800 dark:text-gray-200"
                     value={filter.value || ''}
                     onChange={(e) => onSave({ ...filter, value: e.target.value })}
                   />
                 ) : (
                   <input
                     type={columnType === 'number' ? 'number' : 'text'}
-                    className="bg-white border border-gray-300 rounded px-2 py-1.5 flex-grow text-sm"
+                    className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-800 dark:text-gray-200"
                     value={filter.value || ''}
                     placeholder="Enter value"
                     onChange={(e) =>
@@ -160,27 +160,27 @@ function FilterBar() {
                   />
                 )
               ) : (
-                <div className="bg-white border border-gray-300 rounded px-2 py-1.5 flex-grow text-sm text-gray-400">
+                <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow text-sm text-gray-400 dark:text-gray-500 flex items-center">
                   No value needed
                 </div>
               )}
             </>
           ) : (
             <>
-              <div className="bg-white border border-gray-300 rounded px-2 py-1.5 min-w-[120px]">
-                <span className="text-sm font-medium">
+              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] flex items-center">
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                   {availableColumns.find((col) => col.id === filter.column)?.name || filter.column}
                 </span>
               </div>
-              <div className="bg-white border border-gray-300 rounded px-2 py-1.5 min-w-[120px]">
-                <span className="text-sm">
+              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 min-w-[120px] flex items-center">
+                <span className="text-sm text-gray-800 dark:text-gray-200">
                   {getOperatorsForType(
                     availableColumns.find((col) => col.id === filter.column)?.type || 'string'
                   ).find((op) => op.id === filter.operator)?.label || filter.operator}
                 </span>
               </div>
-              <div className="bg-white border border-gray-300 rounded px-2 py-1.5 flex-grow">
-                <span className="text-sm font-mono">
+              <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 flex-grow flex items-center">
+                <span className="text-sm font-mono text-gray-800 dark:text-gray-200">
                   {['is_null', 'is_not_null'].includes(filter.operator)
                     ? '-'
                     : typeof filter.value === 'object'
@@ -197,7 +197,7 @@ function FilterBar() {
             <>
               <button
                 type="button"
-                className="text-green-600 hover:text-green-800 focus:outline-none p-1"
+                className="text-green-600 dark:text-green-500 hover:text-green-800 dark:hover:text-green-400 focus:outline-none p-1"
                 onClick={() => {
                   // Validate
                   if (!filter.column) {
@@ -239,7 +239,7 @@ function FilterBar() {
               </button>
               <button
                 type="button"
-                className="text-red-600 hover:text-red-800 focus:outline-none p-1"
+                className="text-red-600 dark:text-red-500 hover:text-red-800 dark:hover:text-red-400 focus:outline-none p-1"
                 onClick={onCancel}
               >
                 <svg
@@ -261,7 +261,7 @@ function FilterBar() {
           ) : (
             <button
               type="button"
-              className="text-gray-400 hover:text-red-500 focus:outline-none"
+              className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 focus:outline-none"
               onClick={() => onRemove(index)}
               aria-label="Remove filter"
             >
@@ -310,15 +310,21 @@ function FilterBar() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center">
-          <label className="block text-sm font-medium text-gray-700 mr-2">Filters</label>
-          <div className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">
+            Filters
+          </label>
+          <div className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
             {filters.length}
           </div>
         </div>
 
         <button
           type="button"
-          className="inline-flex items-center px-3 py-1.5 border border-blue-500 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-sm"
+          className="inline-flex items-center px-3 h-10 border text-sm font-medium rounded-md shadow-sm transition-colors
+            border-blue-500 dark:border-blue-600 
+            text-blue-700 dark:text-blue-400 
+            bg-blue-50 dark:bg-blue-900/30 
+            hover:bg-blue-100 dark:hover:bg-blue-800/50"
           onClick={() => setShowNewFilter(true)}
           disabled={showNewFilter}
         >

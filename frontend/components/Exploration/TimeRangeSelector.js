@@ -99,14 +99,27 @@ function TimeRangeSelector() {
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        Time Range
-      </label>
-      <div className="flex space-x-2">
+      <div className="grid grid-cols-2 gap-4 mb-1.5">
+        <div className="flex justify-between items-center">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Time Range
+          </label>
+          {/* Empty space to match Order By's button layout */}
+          <div className="ml-1 w-10 h-6"></div>
+        </div>
+        <div className="flex justify-between items-center">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Comparison
+          </label>
+          {/* Empty space to match Order By's button layout */}
+          <div className="ml-1 w-10 h-6"></div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
         <div className="relative">
           <button
             type="button"
-            className="inline-flex justify-between items-center w-40 px-3 py-1.5 border border-gray-300 dark:border-gray-500 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
+            className="inline-flex justify-between items-center w-full h-10 px-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none shadow-sm"
             onClick={() => setShowTimeDialog(true)}
           >
             <span>{timeRangeLabel}</span>
@@ -169,7 +182,7 @@ function TimeRangeSelector() {
         <div className="relative">
           <button
             type="button"
-            className={`inline-flex justify-between items-center w-40 px-3 py-1.5 border border-gray-300 dark:border-gray-500 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-primary ${
+            className={`inline-flex justify-between items-center w-full h-10 px-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none shadow-sm ${
               isComparisonDisabled ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             onClick={() => !isComparisonDisabled && setShowComparisonDialog(true)}

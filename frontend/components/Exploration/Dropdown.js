@@ -60,7 +60,7 @@ const Dropdown = ({ label, options, value, onChange, icon, enableTypeahead = fal
       {/* Dropdown trigger */}
       <button
         type="button"
-        className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md shadow-sm text-sm hover:border-blue-500 focus:outline-none"
+        className="w-full flex items-center justify-between px-3 py-2 h-10 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md shadow-sm text-sm hover:border-blue-500 focus:outline-none"
         onClick={handleOpen}
       >
         <div className="flex items-center">

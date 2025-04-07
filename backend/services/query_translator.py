@@ -178,8 +178,13 @@ class SQLTranslator:
                     select_expr = f'{func_name}({metric.column}) AS "{alias}"'
                     select_items.append(select_expr)
 
+        # If there are selected fields and no metrics/group by, use the selected fields directly
+        if not select_items and selected_fields:
+            for field in selected_fields:
+                select_items.append(field)
+
         if not select_items:
-            # Default to SELECT *
+            # Default to SELECT * only if no fields were selected
             return "SELECT *"
 
         return f"SELECT {', '.join(select_items)}"

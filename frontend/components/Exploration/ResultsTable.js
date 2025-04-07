@@ -5,6 +5,8 @@ import { useAppState } from '../../context/AppStateContext';
 function ResultsTable({ results }) {
   const { state } = useAppState();
   const { preferences } = state;
+  // Store the columns to display at the time results are received
+  const [displayColumns, setDisplayColumns] = useState([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,6 +24,22 @@ function ResultsTable({ results }) {
 
   // Get current page of data
   const currentData = results?.data?.slice(startRow, endRow) || [];
+
+  // Set the display columns when results are received
+  React.useEffect(() => {
+    if (results && results.columns) {
+      const { currentExploration } = state;
+      const selectedFields = currentExploration.selectedFields;
+
+      if (selectedFields && selectedFields.length > 0) {
+        // Filter columns based on selected fields
+        setDisplayColumns(results.columns.filter((column) => selectedFields.includes(column.name)));
+      } else {
+        // Show all columns if no selection
+        setDisplayColumns(results.columns);
+      }
+    }
+  }, [results]);
 
   // Handle sort click
   const handleSort = (columnName) => {
@@ -121,7 +139,7 @@ function ResultsTable({ results }) {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-100 dark:bg-gray-800 sticky top-0 shadow-sm">
             <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-              {results?.columns?.map((column) => (
+              {displayColumns.map((column) => (
                 <th
                   key={column.name}
                   scope="col"
@@ -143,7 +161,7 @@ function ResultsTable({ results }) {
           <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {sortedData().map((row, rowIndex) => (
               <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                {results.columns.map((column) => {
+                {displayColumns.map((column) => {
                   const value = row[column.name];
                   const columnType = getColumnType(column.name, value);
 

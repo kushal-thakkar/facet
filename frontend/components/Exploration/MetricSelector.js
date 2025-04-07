@@ -36,7 +36,7 @@ function MetricSelector() {
   });
 
   // Get current metrics or default to empty array
-  const metrics = currentExploration.metrics || [];
+  const metrics = currentExploration.agg || [];
 
   // Get available columns for current table
   const availableColumns = currentExploration.source?.table
@@ -88,7 +88,7 @@ function MetricSelector() {
 
     // Add to metrics
     actions.updateCurrentExploration({
-      metrics: [...metrics, metric],
+      agg: [...metrics, metric],
     });
 
     // Reset form
@@ -108,7 +108,7 @@ function MetricSelector() {
     updatedMetrics.splice(index, 1);
 
     actions.updateCurrentExploration({
-      metrics: updatedMetrics,
+      agg: updatedMetrics,
     });
   };
 

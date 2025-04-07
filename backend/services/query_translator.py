@@ -44,10 +44,10 @@ class SQLTranslator:
             # Build the SELECT clause - handle table view differently
             if visualization_type == "table" and query_model.selectedFields:
                 select_clause = self._build_select_for_table(
-                    query_model.metrics, query_model.groupBy, query_model.selectedFields
+                    query_model.agg, query_model.groupBy, query_model.selectedFields
                 )
             else:
-                select_clause = self._build_select(query_model.metrics, query_model.groupBy)
+                select_clause = self._build_select(query_model.agg, query_model.groupBy)
 
             # Build the FROM clause
             from_clause = self._build_from(query_model.source)
@@ -55,8 +55,8 @@ class SQLTranslator:
             # Build the WHERE clause
             where_clause = self._build_where(query_model.filters, query_model.timeRange)
 
-            # Build the GROUP BY clause - only if metrics or groupBy defined
-            if query_model.metrics or query_model.groupBy:
+            # Build the GROUP BY clause - only if agg or groupBy defined
+            if query_model.agg or query_model.groupBy:
                 group_by_clause = self._build_group_by(query_model.groupBy)
             else:
                 group_by_clause = ""
@@ -113,7 +113,7 @@ class SQLTranslator:
                     # For COUNT, simply add one COUNT(*) column and ignore selected fields
                     # This matches the expectation that the COUNT query should just show the count
                     count_expr = "COUNT(*)"
-                    select_expr = f"{count_expr} AS row_count"
+                    select_expr = f"{count_expr} AS count"
                     select_items.append(select_expr)
                 else:
                     # For other aggregations, apply to each selected field
@@ -147,20 +147,20 @@ class SQLTranslator:
             # For COUNT queries without GROUP BY, just return COUNT(*)
             if agg_function_name == "COUNT":
                 count_expr = "COUNT(*)"
-                select_expr = f"{count_expr} AS row_count"
+                select_expr = f"{count_expr} AS count"
                 select_items.append(select_expr)
             # For other queries, add selected fields directly
             elif selected_fields:
                 for field in selected_fields:
                     select_items.append(field)
 
-        # Check if we've already added a row_count column - if so, don't add metrics
-        row_count_exists = [item.lower() for item in select_items]
-        already_added_row_count = any("row_count" in item for item in row_count_exists)
+        # Check if we've already added a count column - if so, don't add metrics
+        count_exists = [item.lower() for item in select_items]
+        already_added_count = any(" as count" in item for item in count_exists)
 
-        # If we've already added COUNT(*) as row_count, skip all metrics
+        # If we've already added COUNT(*) as count, skip all metrics
         # This happens when the user selects COUNT as the aggregation function
-        if already_added_row_count:
+        if already_added_count:
             # Skip all metrics - we've already added the COUNT column
             pass
         else:

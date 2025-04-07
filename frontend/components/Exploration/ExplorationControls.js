@@ -52,7 +52,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       },
       filters: [],
       groupBy: [],
-      metrics: [],
+      agg: [],
     });
 
     // Fetch columns for the selected table
@@ -809,12 +809,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 { id: 'min', label: 'Min' },
                 { id: 'max', label: 'Max' },
               ]}
-              value={
-                (currentExploration.metrics && currentExploration.metrics[0]?.function) || 'avg'
-              }
+              value={(currentExploration.agg && currentExploration.agg[0]?.function) || 'avg'}
               onChange={(value) => {
                 actions.updateCurrentExploration({
-                  metrics: [
+                  agg: [
                     {
                       function: value,
                       column: null,

@@ -9,7 +9,7 @@ const initialState = {
   currentExploration: {
     filters: [],
     groupBy: [],
-    metrics: [],
+    agg: [],
     timeRange: null,
     comparison: {
       enabled: false,

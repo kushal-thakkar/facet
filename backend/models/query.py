@@ -77,7 +77,7 @@ class QueryModel(BaseModel):
     source: Optional[QuerySource] = None
     filters: List[Union[FilterCondition, LogicalFilterGroup]] = []
     groupBy: List[str] = []
-    metrics: List[Metric] = []
+    agg: List[Metric] = []
     timeRange: Optional[TimeRange] = None
     comparison: Optional[Comparison] = None
     sort: List[SortOrder] = []

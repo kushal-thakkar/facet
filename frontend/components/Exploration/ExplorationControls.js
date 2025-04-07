@@ -2,8 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import TimeRangeSelector from './TimeRangeSelector';
 import FilterBar from './FilterBar';
-import GroupBySelector from './GroupBySelector';
-import MetricSelector from './MetricSelector';
 import Dropdown from './Dropdown';
 import { useAppState } from '../../context/AppStateContext';
 import api from '../../utils/apiClient';

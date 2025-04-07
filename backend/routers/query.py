@@ -1,18 +1,12 @@
 # app/routers/query.py
+"""API routes for executing queries."""
 import logging
-from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from models.query import (
-    QueryExplainRequest,
-    QueryExplainResult,
-    QueryHistoryEntry,
-    QueryModel,
     QueryRequest,
     QueryResult,
-    QueryValidationRequest,
-    QueryValidationResult,
 )
 from services.connection_service import ConnectionService
 from services.query_service import QueryService
@@ -26,10 +20,12 @@ logger = logging.getLogger(__name__)
 
 # Dependencies
 def get_query_service():
+    """Return a query service instance."""
     return QueryService()
 
 
 def get_connection_service():
+    """Return a connection service instance."""
     return ConnectionService()
 
 
@@ -39,9 +35,7 @@ async def execute_query(
     query_service: QueryService = Depends(get_query_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Execute a query
-    """
+    """Execute a query."""
     try:
         # Get connection
         connection = await connection_service.get_connection(query_request.connectionId)

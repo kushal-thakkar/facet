@@ -1,8 +1,9 @@
-# app/services/exploration_service.py
+"""Service for managing explorations and their metadata."""
+
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from models.explorations import Exploration
 
@@ -10,14 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class ExplorationService:
-    """
-    Service for managing saved explorations
-    """
+    """Service for managing saved explorations."""
 
     def __init__(self):
-        """
-        Initialize the exploration service
-        """
+        """Initialize the exploration service."""
         # In-memory storage for explorations (would be replaced with a database in production)
         self.explorations = []
 
@@ -25,8 +22,7 @@ class ExplorationService:
         self._load_explorations()
 
     async def get_all_explorations(self) -> List[Exploration]:
-        """
-        Get all explorations
+        """Get all explorations.
 
         Returns:
             List of explorations
@@ -34,8 +30,7 @@ class ExplorationService:
         return self.explorations
 
     async def get_exploration(self, exploration_id: str) -> Optional[Exploration]:
-        """
-        Get an exploration by ID
+        """Get an exploration by ID.
 
         Args:
             exploration_id: The exploration ID
@@ -50,8 +45,7 @@ class ExplorationService:
         return None
 
     async def create_exploration(self, exploration: Exploration) -> Exploration:
-        """
-        Create a new exploration
+        """Create a new exploration.
 
         Args:
             exploration: The exploration to create
@@ -68,8 +62,7 @@ class ExplorationService:
         return exploration
 
     async def update_exploration(self, exploration: Exploration) -> Exploration:
-        """
-        Update an existing exploration
+        """Update an existing exploration.
 
         Args:
             exploration: The exploration to update
@@ -89,8 +82,7 @@ class ExplorationService:
         return exploration
 
     async def delete_exploration(self, exploration_id: str) -> None:
-        """
-        Delete an exploration
+        """Delete an exploration.
 
         Args:
             exploration_id: The exploration ID to delete
@@ -102,9 +94,7 @@ class ExplorationService:
         self._save_explorations()
 
     def _load_explorations(self) -> None:
-        """
-        Load explorations from file (for development/testing)
-        """
+        """Load explorations from file for development/testing."""
         try:
             # Check if explorations file exists
             if os.path.exists("explorations.json"):
@@ -117,9 +107,7 @@ class ExplorationService:
             logger.error(f"Error loading explorations: {str(e)}")
 
     def _save_explorations(self) -> None:
-        """
-        Save explorations to file (for development/testing)
-        """
+        """Save explorations to file for development/testing."""
         try:
             # Convert Exploration objects to dictionaries
             explorations_data = [exp.dict() for exp in self.explorations]

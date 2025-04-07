@@ -1,5 +1,5 @@
-# app/database/connector_factory.py
 """Factory for creating database connectors based on connection type."""
+
 import logging
 from typing import Optional
 

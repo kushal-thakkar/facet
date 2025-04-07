@@ -1,5 +1,3 @@
-// utils/formatters.js
-
 /**
  * Rounds a number to 2 decimal places and correctly handles edge cases
  * @param {number} value - The number to round

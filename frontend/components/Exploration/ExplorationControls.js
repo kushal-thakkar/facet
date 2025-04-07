@@ -1,4 +1,3 @@
-// components/Exploration/ExplorationControls.js
 import React, { useState, useRef, useEffect } from 'react';
 import TimeRangeSelector from './TimeRangeSelector';
 import FilterBar from './FilterBar';

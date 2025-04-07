@@ -1,4 +1,3 @@
-// components/Exploration/ResultsTable.js
 import React, { useState } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 

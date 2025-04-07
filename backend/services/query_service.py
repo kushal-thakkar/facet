@@ -1,5 +1,5 @@
-# app/services/query_service.py
 """Service for handling database queries."""
+
 import logging
 
 from database.connector_factory import DatabaseConnectorFactory

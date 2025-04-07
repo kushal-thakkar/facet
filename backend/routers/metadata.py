@@ -1,5 +1,5 @@
-# app/routers/metadata.py
 """Router for metadata-related API endpoints."""
+
 import logging
 from typing import List
 

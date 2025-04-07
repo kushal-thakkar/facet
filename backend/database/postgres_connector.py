@@ -1,5 +1,5 @@
-# app/database/postgres_connector.py
 """PostgreSQL database connector implementation."""
+
 import logging
 import time
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple

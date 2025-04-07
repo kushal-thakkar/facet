@@ -1,4 +1,3 @@
-// components/Connection/ConnectionForm.js
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import api from '../../utils/apiClient';

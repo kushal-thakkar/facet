@@ -1,5 +1,3 @@
-// utils/explorationUtils.js
-
 // Extract available columns for a given table from metadata
 export const getAvailableColumns = (currentTable, metadata) => {
   if (!currentTable || !metadata.columns) return [];

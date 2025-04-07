@@ -1,4 +1,3 @@
-// pages/index.js
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/Layout/MainLayout';
 import ResultsArea from '../components/Exploration/ResultsArea';

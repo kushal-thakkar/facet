@@ -1,5 +1,5 @@
-# app/database/base_connector.py
 """Base class for database connectors used in the application."""
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
 

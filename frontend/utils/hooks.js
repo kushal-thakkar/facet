@@ -1,4 +1,3 @@
-// utils/hooks.js
 import { useEffect } from 'react';
 
 // Hook for handling click outside and escape key events

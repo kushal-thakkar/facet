@@ -1,5 +1,5 @@
-# app/services/connection_service.py
 """Service for managing database connections."""
+
 import logging
 import os
 from datetime import datetime

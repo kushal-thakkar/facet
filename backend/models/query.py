@@ -1,4 +1,3 @@
-# app/models/query.py
 """Models for query representation and execution."""
 
 from datetime import datetime

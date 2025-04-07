@@ -1,4 +1,3 @@
-// components/Exploration/ResultsArea.js
 import React, { useState, useEffect, useRef } from 'react';
 import ResultsTable from './ResultsTable';
 import ResultsChart from './ResultsChart';

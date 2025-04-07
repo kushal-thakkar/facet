@@ -1,5 +1,5 @@
-# app/database/clickhouse_connector.py
 """Connector implementation for ClickHouse databases."""
+
 import logging
 import time
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple

@@ -1,5 +1,5 @@
-# app/routers/query.py
 """API routes for executing queries."""
+
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status

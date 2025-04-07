@@ -1,5 +1,5 @@
-# app/services/metadata_service.py
 """Service for managing database metadata."""
+
 import logging
 from datetime import datetime
 from typing import List, Optional

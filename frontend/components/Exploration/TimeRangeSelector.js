@@ -1,4 +1,3 @@
-// components/Exploration/TimeRangeSelector.js
 import React, { useState, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { useOutsideClickAndEscape } from '../../utils/hooks';

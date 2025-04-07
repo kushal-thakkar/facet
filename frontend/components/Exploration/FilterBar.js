@@ -1,4 +1,3 @@
-// components/Exploration/FilterBar.js
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { useOutsideClickAndEscape } from '../../utils/hooks';

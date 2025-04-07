@@ -1,13 +1,14 @@
-# app/models/connection.py
+"""Models for database connection configuration and management."""
+
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
 
 class ConnectionConfig(BaseModel):
-    """
-    Configuration for a database connection.
+    """Configuration for a database connection.
+
     This will vary based on the database type.
     """
 
@@ -21,13 +22,13 @@ class ConnectionConfig(BaseModel):
 
     # Allow any other fields that might be specific to a database type
     class Config:
+        """Configuration for the model."""
+
         extra = "allow"
 
 
 class Connection(BaseModel):
-    """
-    Database connection information
-    """
+    """Database connection information."""
 
     id: str
     name: str
@@ -38,9 +39,7 @@ class Connection(BaseModel):
 
 
 class ConnectionCreate(BaseModel):
-    """
-    Request model for creating a new connection
-    """
+    """Request model for creating a new connection."""
 
     name: str
     type: str
@@ -48,9 +47,7 @@ class ConnectionCreate(BaseModel):
 
 
 class ConnectionUpdate(BaseModel):
-    """
-    Request model for updating an existing connection
-    """
+    """Request model for updating an existing connection."""
 
     name: str
     type: str
@@ -58,18 +55,14 @@ class ConnectionUpdate(BaseModel):
 
 
 class ConnectionTestRequest(BaseModel):
-    """
-    Request model for testing a connection
-    """
+    """Request model for testing a connection."""
 
     type: str
     config: ConnectionConfig
 
 
 class ConnectionTestResult(BaseModel):
-    """
-    Result of a connection test
-    """
+    """Result of a connection test."""
 
     success: bool
     message: str

@@ -1,4 +1,5 @@
-# main.py
+"""Main entry point for the Facet API application."""
+
 import logging
 import os
 from datetime import datetime
@@ -39,17 +40,13 @@ app.include_router(explorations.router, prefix="/api/v1/explorations", tags=["Ex
 
 @app.get("/", tags=["Health"])
 async def root():
-    """
-    Root endpoint for health checks
-    """
+    """Root endpoint for health checks."""
     return {"status": "healthy", "timestamp": datetime.now().isoformat(), "api_version": "v1"}
 
 
 @app.get("/api", tags=["Health"])
 async def api_root():
-    """
-    API root endpoint
-    """
+    """Return API root endpoint information."""
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
@@ -62,9 +59,7 @@ async def api_root():
 
 @app.get("/api/health", tags=["Health"])
 async def health_check():
-    """
-    Health check endpoint
-    """
+    """Health check endpoint."""
     return {"status": "healthy", "version": "1.0.0", "timestamp": datetime.now().isoformat()}
 
 

@@ -1,14 +1,13 @@
-# app/models/metadata.py
+"""Models for database metadata representation."""
+
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 
 class TableMetadata(BaseModel):
-    """
-    Metadata for a database table
-    """
+    """Metadata for a database table."""
 
     name: str
     displayName: Optional[str] = None
@@ -23,9 +22,7 @@ class TableMetadata(BaseModel):
 
 
 class ColumnMetadata(BaseModel):
-    """
-    Metadata for a database column
-    """
+    """Metadata for a database column."""
 
     name: str
     tableName: str
@@ -42,9 +39,7 @@ class ColumnMetadata(BaseModel):
 
 
 class RelationshipMetadata(BaseModel):
-    """
-    Metadata for a relationship between tables
-    """
+    """Metadata for a relationship between tables."""
 
     sourceTable: str
     sourceColumn: str
@@ -56,9 +51,7 @@ class RelationshipMetadata(BaseModel):
 
 
 class MetadataUpdateRequest(BaseModel):
-    """
-    Request model for updating metadata
-    """
+    """Request model for updating metadata."""
 
     displayName: Optional[str] = None
     description: Optional[str] = None

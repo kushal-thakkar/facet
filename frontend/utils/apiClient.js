@@ -1,5 +1,3 @@
-// utils/apiClient.js
-
 // Determine the API base URL based on the environment
 const getApiBaseUrl = () => {
   // Check for environment variable (will be available in Node.js environment)

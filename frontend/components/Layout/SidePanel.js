@@ -1,4 +1,3 @@
-// components/Layout/SidePanel.js
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import ExplorationControls from '../Exploration/ExplorationControls';

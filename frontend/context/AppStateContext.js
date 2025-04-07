@@ -1,4 +1,3 @@
-// context/AppStateContext.js
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 // Initial state definition

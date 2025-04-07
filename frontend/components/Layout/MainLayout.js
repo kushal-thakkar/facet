@@ -1,4 +1,3 @@
-// components/Layout/MainLayout.js
 import React, { useState } from 'react';
 import SidePanel from './SidePanel';
 import { useAppState } from '../../context/AppStateContext';

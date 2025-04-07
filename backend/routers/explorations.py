@@ -1,8 +1,9 @@
-# app/routers/explorations.py
+"""API routes for exploration management."""
+
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -20,22 +21,23 @@ logger = logging.getLogger(__name__)
 
 # Dependencies
 def get_exploration_service():
+    """Dependency for exploration service."""
     return ExplorationService()
 
 
 def get_query_service():
+    """Dependency for query service."""
     return QueryService()
 
 
 def get_connection_service():
+    """Dependency for connection service."""
     return ConnectionService()
 
 
 @router.get("/", response_model=List[Exploration])
 async def list_explorations(service: ExplorationService = Depends(get_exploration_service)):
-    """
-    Get all explorations
-    """
+    """Get all explorations."""
     try:
         explorations = await service.get_all_explorations()
         return explorations
@@ -51,9 +53,7 @@ async def list_explorations(service: ExplorationService = Depends(get_exploratio
 async def create_exploration(
     exploration: ExplorationCreate, service: ExplorationService = Depends(get_exploration_service)
 ):
-    """
-    Create a new exploration
-    """
+    """Create a new exploration."""
     try:
         # Generate ID
         exploration_id = f"exp_{uuid.uuid4().hex[:8]}"
@@ -84,9 +84,7 @@ async def create_exploration(
 async def get_exploration(
     exploration_id: str, service: ExplorationService = Depends(get_exploration_service)
 ):
-    """
-    Get an exploration by ID
-    """
+    """Get an exploration by ID."""
     try:
         exploration = await service.get_exploration(exploration_id)
         if not exploration:
@@ -111,9 +109,7 @@ async def update_exploration(
     exploration_update: ExplorationUpdate,
     service: ExplorationService = Depends(get_exploration_service),
 ):
-    """
-    Update an exploration
-    """
+    """Update an exploration."""
     try:
         # Get existing exploration
         existing_exploration = await service.get_exploration(exploration_id)
@@ -126,15 +122,21 @@ async def update_exploration(
         # Update fields
         updated_exploration = Exploration(
             id=exploration_id,
-            name=exploration_update.name
-            if exploration_update.name is not None
-            else existing_exploration.name,
-            description=exploration_update.description
-            if exploration_update.description is not None
-            else existing_exploration.description,
-            query=exploration_update.query
-            if exploration_update.query is not None
-            else existing_exploration.query,
+            name=(
+                exploration_update.name
+                if exploration_update.name is not None
+                else existing_exploration.name
+            ),
+            description=(
+                exploration_update.description
+                if exploration_update.description is not None
+                else existing_exploration.description
+            ),
+            query=(
+                exploration_update.query
+                if exploration_update.query is not None
+                else existing_exploration.query
+            ),
             created_at=existing_exploration.created_at,
             updated_at=datetime.now(),
             last_run=existing_exploration.last_run,
@@ -157,9 +159,7 @@ async def update_exploration(
 async def delete_exploration(
     exploration_id: str, service: ExplorationService = Depends(get_exploration_service)
 ):
-    """
-    Delete an exploration
-    """
+    """Delete an exploration."""
     try:
         # Check if exploration exists
         existing_exploration = await service.get_exploration(exploration_id)
@@ -189,9 +189,7 @@ async def execute_exploration(
     query_service: QueryService = Depends(get_query_service),
     connection_service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Execute a saved exploration
-    """
+    """Execute a saved exploration."""
     try:
         # Get exploration
         exploration = await exploration_service.get_exploration(exploration_id)

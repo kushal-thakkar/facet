@@ -1,4 +1,5 @@
-# app/routers/connections.py
+"""API routes for database connection management."""
+
 import logging
 import uuid
 from datetime import datetime
@@ -6,10 +7,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from database.connector_factory import DatabaseConnectorFactory
 from models.connection import (
     Connection,
-    ConnectionConfig,
     ConnectionCreate,
     ConnectionTestRequest,
     ConnectionTestResult,
@@ -26,14 +25,13 @@ logger = logging.getLogger(__name__)
 
 # Dependencies
 def get_connection_service():
+    """Dependency for connection service."""
     return ConnectionService()
 
 
 @router.get("/", response_model=List[Connection])
 async def list_connections(service: ConnectionService = Depends(get_connection_service)):
-    """
-    Get all connections
-    """
+    """Get all connections."""
     try:
         connections = await service.get_all_connections()
         return connections
@@ -49,9 +47,7 @@ async def list_connections(service: ConnectionService = Depends(get_connection_s
 async def create_connection(
     connection: ConnectionCreate, service: ConnectionService = Depends(get_connection_service)
 ):
-    """
-    Create a new connection
-    """
+    """Create a new connection."""
     try:
         # Generate ID
         connection_id = f"conn_{uuid.uuid4().hex[:8]}"
@@ -81,9 +77,7 @@ async def create_connection(
 async def get_connection(
     connection_id: str, service: ConnectionService = Depends(get_connection_service)
 ):
-    """
-    Get a connection by ID
-    """
+    """Get a connection by ID."""
     try:
         connection = await service.get_connection(connection_id)
         if not connection:
@@ -108,9 +102,7 @@ async def update_connection(
     connection_update: ConnectionUpdate,
     service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Update a connection
-    """
+    """Update a connection."""
     try:
         # Get existing connection
         existing_connection = await service.get_connection(connection_id)
@@ -147,9 +139,7 @@ async def update_connection(
 async def delete_connection(
     connection_id: str, service: ConnectionService = Depends(get_connection_service)
 ):
-    """
-    Delete a connection
-    """
+    """Delete a connection."""
     try:
         # Check if connection exists
         existing_connection = await service.get_connection(connection_id)
@@ -177,9 +167,7 @@ async def test_connection(
     test_request: ConnectionTestRequest,
     service: ConnectionService = Depends(get_connection_service),
 ):
-    """
-    Test a connection
-    """
+    """Test a connection."""
     try:
         # Test connection
         result = await service.test_connection(test_request.type, test_request.config)

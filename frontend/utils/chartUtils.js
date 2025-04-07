@@ -1,5 +1,3 @@
-// utils/chartUtils.js
-
 // Chart color palette used across visualizations
 export const CHART_COLORS = [
   '#3B82F6', // blue

@@ -1,5 +1,5 @@
-# app/services/query_translator.py
 """Translator for converting query models to SQL statements."""
+
 import logging
 from typing import List, Optional, Union
 

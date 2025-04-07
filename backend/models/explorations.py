@@ -1,4 +1,5 @@
-# models/explorations.py
+"""Models for saved explorations and related functionality."""
+
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -6,9 +7,7 @@ from pydantic import BaseModel
 
 
 class Exploration(BaseModel):
-    """
-    Saved exploration
-    """
+    """Saved exploration."""
 
     id: str
     name: str
@@ -20,9 +19,7 @@ class Exploration(BaseModel):
 
 
 class ExplorationCreate(BaseModel):
-    """
-    Request model for creating a new exploration
-    """
+    """Request model for creating a new exploration."""
 
     name: str
     description: Optional[str] = None
@@ -30,9 +27,7 @@ class ExplorationCreate(BaseModel):
 
 
 class ExplorationUpdate(BaseModel):
-    """
-    Request model for updating an existing exploration
-    """
+    """Request model for updating an existing exploration."""
 
     name: Optional[str] = None
     description: Optional[str] = None

@@ -40,7 +40,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       },
       filters: [],
       groupBy: [],
-      agg: [],
+      agg: [{ function: 'avg', column: null, alias: 'avg' }],
       selectedFields: [], // Reset selected fields when table changes
     });
 

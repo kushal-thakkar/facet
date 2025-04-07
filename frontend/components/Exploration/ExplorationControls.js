@@ -31,18 +31,28 @@ function ExplorationControls({ onRunQuery, isLoading }) {
   // Handle table selection
   const handleTableSelect = async (tableName) => {
     const connectionId = currentConnection?.id;
+    const vizType = currentExploration.visualization?.type;
 
-    // Update the current exploration with the selected table
-    actions.updateCurrentExploration({
+    // Prepare update object
+    const updateObj = {
       source: {
         table: tableName,
         connectionId: connectionId,
       },
       filters: [],
       groupBy: [],
-      agg: [{ function: 'avg', column: null, alias: 'avg' }],
       selectedFields: [], // Reset selected fields when table changes
-    });
+    };
+
+    // Only set aggregation for non-preview visualizations
+    if (vizType !== 'preview') {
+      updateObj.agg = [{ function: 'avg', column: null, alias: 'avg' }];
+    } else {
+      updateObj.agg = []; // Clear aggregation for preview mode
+    }
+
+    // Update the current exploration with the selected table
+    actions.updateCurrentExploration(updateObj);
 
     // Clear query results when table changes
     actions.updateQueryResults(null);
@@ -508,12 +518,13 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           <Dropdown
             label=""
             options={[
+              { id: 'preview', label: 'Preview 👁️' },
               { id: 'table', label: 'Table 🔢' },
               { id: 'line', label: 'Line Chart 📈' },
               { id: 'bar', label: 'Bar Chart 📊' },
               { id: 'pie', label: 'Pie Chart 🥧' },
             ]}
-            value={currentExploration.visualization?.type || 'table'}
+            value={currentExploration.visualization?.type}
             onChange={(type) => {
               // Create update object for visualization type
               const updateObj = {
@@ -523,10 +534,20 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 },
               };
 
-              // When changing to pie chart, clear sort and reset granularity
+              // Special handling for different visualization types
               if (type === 'pie') {
+                // For pie charts, clear sort and reset granularity
                 updateObj.sort = [];
                 updateObj.granularity = 'auto';
+              }
+
+              if (type === 'preview') {
+                // For preview mode, clear aggregation and group by (but allow Order By and Limit)
+                updateObj.agg = [];
+                updateObj.groupBy = [];
+              } else if (currentExploration.visualization?.type === 'preview' && !updateObj.agg) {
+                // When switching from preview to another viz type, add default aggregation
+                updateObj.agg = [{ function: 'avg', column: null, alias: 'avg' }];
               }
 
               actions.updateCurrentExploration(updateObj);
@@ -579,7 +600,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 }
               }}
               enableTypeahead={true}
-              disabled={!isTableSelected}
+              disabled={!isTableSelected || currentExploration.visualization?.type === 'preview'}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -758,7 +779,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   ],
                 });
               }}
-              disabled={!isTableSelected}
+              disabled={!isTableSelected || currentExploration.visualization?.type === 'preview'}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -842,8 +863,8 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               }}
               disabled={
                 !isTableSelected ||
-                ['table', 'pie', 'bar'].includes(currentExploration.visualization?.type)
-              } // Disable granularity for table, pie, and bar visualizations
+                ['table', 'pie', 'bar', 'preview'].includes(currentExploration.visualization?.type)
+              } // Disable granularity for table, pie, bar, and preview visualizations
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

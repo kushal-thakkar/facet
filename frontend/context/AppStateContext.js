@@ -15,7 +15,7 @@ const initialState = {
       range: 'none',
     },
     visualization: {
-      type: 'table',
+      type: 'preview',
       config: {},
     },
     limit: '100', // Default limit

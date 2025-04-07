@@ -150,7 +150,7 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       const selectedFields = currentExploration.selectedFields || [];
 
       // Make sure to include all necessary fields in the query
-      const queryWithConnectionId = {
+      let queryWithConnectionId = {
         ...currentExploration,
         source: {
           ...currentExploration.source,
@@ -165,6 +165,16 @@ function SidePanel({ toggleDarkMode, darkMode }) {
               ? parseInt(currentExploration.limit, 10)
               : 100,
       };
+
+      // Special handling for preview visualization type
+      if (currentExploration.visualization?.type === 'preview') {
+        // For preview mode, make sure we don't use aggregation or group by
+        queryWithConnectionId = {
+          ...queryWithConnectionId,
+          agg: [], // Clear any aggregation
+          groupBy: [], // Clear any grouping
+        };
+      }
 
       // Debug the query object
       console.log('Executing query:', queryWithConnectionId);

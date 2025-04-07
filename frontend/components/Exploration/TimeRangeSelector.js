@@ -42,8 +42,10 @@ function TimeRangeSelector({ disabled }) {
     range: 'none',
   };
 
-  // Get visualization type and check if it's table or pie chart
-  const isComparisonDisabled = ['table', 'pie'].includes(currentExploration.visualization?.type);
+  // Get visualization type and check if it's disabled for comparison
+  const isComparisonDisabled = ['table', 'pie', 'preview'].includes(
+    currentExploration.visualization?.type
+  );
 
   // Find the labels for current selections
   const timeRangeLabel =

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ResultsTable from './ResultsTable';
 import ResultsChart from './ResultsChart';
+import ResultsPreview from './ResultsPreview';
 import { useAppState } from '../../context/AppStateContext';
 
 function ResultsArea({ results, isLoading }) {
@@ -246,6 +247,9 @@ function ResultsArea({ results, isLoading }) {
               )}
             </div>
           </div>
+        ) : visualizationType === 'preview' ? (
+          // Preview view
+          <ResultsPreview results={results} />
         ) : visualizationType === 'table' ? (
           // Table view
           <ResultsTable results={results} />

@@ -1,6 +1,7 @@
 // components/Exploration/FilterBar.js
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import { useOutsideClickAndEscape } from '../../utils/hooks';
 
 // Field search select component to fix ESLint errors with hooks in callbacks
 function FieldSearchSelect({ filter, index, availableColumns, handleFilterChange }) {
@@ -12,8 +13,9 @@ function FieldSearchSelect({ filter, index, availableColumns, handleFilterChange
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
 
+  // Custom hook to handle clicks outside the dropdown and input
   useEffect(() => {
-    function handleClickOutside(event) {
+    const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target) &&
@@ -22,9 +24,10 @@ function FieldSearchSelect({ filter, index, availableColumns, handleFilterChange
       ) {
         dropdownRef.current.classList.add('hidden');
       }
-    }
+    };
 
     document.addEventListener('mousedown', handleClickOutside);
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };

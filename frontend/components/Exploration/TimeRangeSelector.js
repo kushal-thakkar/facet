@@ -1,6 +1,7 @@
 // components/Exploration/TimeRangeSelector.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAppState } from '../../context/AppStateContext';
+import { useOutsideClickAndEscape } from '../../utils/hooks';
 
 const TIME_RANGE_PRESETS = [
   { id: 'last_15_min', label: 'Last 15 minutes' },
@@ -71,31 +72,18 @@ function TimeRangeSelector({ disabled }) {
   };
 
   // Close dropdowns when clicking outside or pressing Escape key
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (event.target.closest('.time-range-dialog') === null) {
-        setShowTimeDialog(false);
-      }
-      if (event.target.closest('.comparison-dialog') === null) {
-        setShowComparisonDialog(false);
-      }
-    }
+  const timeRangeDialogRef = useRef(null);
+  const comparisonDialogRef = useRef(null);
 
-    function handleEscapeKey(event) {
-      if (event.key === 'Escape') {
-        setShowTimeDialog(false);
-        setShowComparisonDialog(false);
-      }
-    }
+  // Handle outside clicks and escape key for time range dialog
+  useOutsideClickAndEscape(timeRangeDialogRef, () => {
+    if (showTimeDialog) setShowTimeDialog(false);
+  });
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscapeKey);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, []);
+  // Handle outside clicks and escape key for comparison dialog
+  useOutsideClickAndEscape(comparisonDialogRef, () => {
+    if (showComparisonDialog) setShowComparisonDialog(false);
+  });
 
   return (
     <div>
@@ -131,7 +119,10 @@ function TimeRangeSelector({ disabled }) {
 
           {/* Time Range Dialog */}
           {showTimeDialog && (
-            <div className="time-range-dialog absolute z-10 mt-1 w-80 bg-white dark:bg-dark-card shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+            <div
+              ref={timeRangeDialogRef}
+              className="time-range-dialog absolute z-10 mt-1 w-80 bg-white dark:bg-dark-card shadow-lg rounded-lg border border-gray-200 dark:border-gray-700"
+            >
               <div className="p-3">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Select Time Range
@@ -199,7 +190,10 @@ function TimeRangeSelector({ disabled }) {
 
           {/* Comparison Dialog */}
           {showComparisonDialog && (
-            <div className="comparison-dialog absolute z-10 mt-1 w-56 bg-white dark:bg-dark-card shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+            <div
+              ref={comparisonDialogRef}
+              className="comparison-dialog absolute z-10 mt-1 w-56 bg-white dark:bg-dark-card shadow-lg rounded-lg border border-gray-200 dark:border-gray-700"
+            >
               <div className="p-2">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Comparison

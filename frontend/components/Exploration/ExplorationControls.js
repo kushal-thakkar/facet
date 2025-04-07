@@ -6,6 +6,7 @@ import Dropdown from './Dropdown';
 import { useAppState } from '../../context/AppStateContext';
 import api from '../../utils/apiClient';
 import { useOutsideClickAndEscape } from '../../utils/hooks';
+import { getAvailableColumns } from '../../utils/explorationUtils';
 
 function ExplorationControls({ onRunQuery, isLoading }) {
   const { state, actions } = useAppState();
@@ -18,18 +19,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
   const isTableSelected = Boolean(currentExploration.source?.table);
 
   // Get available columns for current table - used for fields selector and dropdowns
-  const availableColumns = currentExploration.source?.table
-    ? Object.keys(metadata.columns || {})
-        .filter((key) => key.startsWith(`${currentExploration.source.table}.`))
-        .map((key) => {
-          const [table, column] = key.split('.');
-          return {
-            id: column,
-            name: metadata.columns[key]?.displayName || column,
-            type: metadata.columns[key]?.dataType || 'string',
-          };
-        })
-    : [];
+  const availableColumns = getAvailableColumns(currentExploration.source?.table, metadata);
 
   // Get available tables from metadata
   const availableTables = metadata.tables ? Object.values(metadata.tables) : [];

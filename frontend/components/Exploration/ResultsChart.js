@@ -138,8 +138,6 @@ function ResultsChart({ results, type }) {
     });
   };
 
-  // We now use formatXAxisTick from chartUtils
-
   // Prepare chart data
   const chartData = prepareChartData();
 

@@ -32,27 +32,16 @@ class QueryService:
         """
         connector = None
         try:
-            # Create connector for the database
             connector = await DatabaseConnectorFactory.create_connector(connection)
             if not connector:
                 raise ValueError(f"Unsupported database type: {connection.type}")
 
-            # Connect to the database
             await connector.connect()
-
-            # Create SQL translator
             translator = SQLTranslator(connector.get_dialect())
-
-            # Translate query model to SQL
             sql = translator.translate(query_model)
-
-            # Log the generated SQL for debugging
             logger.info(f"Executing SQL: {sql}")
 
-            # Execute query
             results, columns, execution_time = await connector.execute_query(sql)
-
-            # Create query result
             result = QueryResult(
                 columns=columns,
                 data=results,
@@ -79,6 +68,5 @@ class QueryService:
                 error=str(e),
             )
         finally:
-            # Ensure connector is closed properly
             if connector:
                 await connector.close()

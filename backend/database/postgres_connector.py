@@ -32,7 +32,6 @@ class PostgresConnector(DatabaseConnector):
             return
 
         try:
-            # Create connection pool
             self.pool = await asyncpg.create_pool(
                 host=self.connection.config.host,
                 port=self.connection.config.port,
@@ -66,7 +65,6 @@ class PostgresConnector(DatabaseConnector):
             if self.pool is None:
                 raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
-                # Execute a simple query
                 version = await conn.fetchval("SELECT version()")
                 return True, f"Connection successful. PostgreSQL version: {version}"
         except Exception as e:
@@ -91,7 +89,6 @@ class PostgresConnector(DatabaseConnector):
             if self.pool is None:
                 raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
-                # Get tables
                 tables_query = """
                 SELECT
                     t.table_name as name,
@@ -124,7 +121,6 @@ class PostgresConnector(DatabaseConnector):
                         )
                     )
 
-                # Get columns
                 columns_query = """
                 SELECT
                     c.table_name,
@@ -210,7 +206,6 @@ class PostgresConnector(DatabaseConnector):
                         )
                     )
 
-                # Get relationships
                 relationships_query = """
                 SELECT
                     tc.constraint_name,
@@ -232,7 +227,6 @@ class PostgresConnector(DatabaseConnector):
                 relationship_records = await conn.fetch(relationships_query)
 
                 for record in relationship_records:
-                    # Determine relationship type (many-to-one is the most common for FK)
                     relationship_type = "many-to-one"
 
                     relationships.append(
@@ -274,17 +268,14 @@ class PostgresConnector(DatabaseConnector):
             if self.pool is None:
                 raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
-                # Execute query
                 statement = await conn.prepare(sql)
                 records = await statement.fetch(*param_values)
 
-                # Get column information and convert to ColumnInfo Pydantic models
                 columns = [
                     ColumnInfo(name=attr.name, type=attr.type.name)
                     for attr in statement.get_attributes()
                 ]
 
-                # Convert records to dictionaries
                 results = [dict(record) for record in records]
 
                 execution_time = time.time() - start_time
@@ -315,9 +306,7 @@ class PostgresConnector(DatabaseConnector):
             if self.pool is None:
                 raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
-                # Start a transaction
                 async with conn.transaction():
-                    # Execute query
                     stmt = await conn.prepare(sql)
                     cursor = await stmt.cursor(*param_values)
 
@@ -349,10 +338,8 @@ class PostgresConnector(DatabaseConnector):
             if self.pool is None:
                 raise RuntimeError("Database connection pool is not initialized")
             async with self.pool.acquire() as conn:
-                # Execute EXPLAIN
                 plan = await conn.fetchval(explain_sql, *param_values)
 
-                # The result is a JSON string
                 return {"plan": plan[0], "cost": plan[0].get("Plan", {}).get("Total Cost")}
 
         except Exception as e:

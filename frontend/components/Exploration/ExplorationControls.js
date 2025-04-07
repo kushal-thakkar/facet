@@ -46,7 +46,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     });
 
     // Clear query results when table changes
-    // (We already prevent selecting the same table in the UI)
     actions.updateQueryResults(null);
 
     // Fetch columns for the selected table
@@ -68,7 +67,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         };
       });
 
-      // Update metadata with the columns
       actions.updateMetadata({
         columns: { ...metadata.columns, ...columnsObject },
       });
@@ -80,12 +78,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     setFilterText('');
   };
 
-  // Use custom hook for handling outside clicks and escape key for table dropdown
   useOutsideClickAndEscape(dropdownRef, () => {
     setShowTableDropdown(false);
   });
 
-  // Fields selector component - allows selecting fields with checkboxes
   const FieldsSelector = ({ columns, currentSelection, onSelectionChange }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedFields, setSelectedFields] = useState(currentSelection || []);
@@ -93,34 +89,27 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     const isInitialRender = useRef(true);
     const fieldsRef = useRef(null);
 
-    // Update local state when parent's currentSelection changes
     useEffect(() => {
       setSelectedFields(currentSelection || []);
     }, [currentSelection]);
 
-    // Update parent component when selection changes, but only after the initial render
     useEffect(() => {
-      // Skip the first render to avoid the initial update
       if (isInitialRender.current) {
         isInitialRender.current = false;
         return;
       }
 
-      // Only call the parent's callback if this isn't from the parent's state change
       onSelectionChange(selectedFields);
     }, [selectedFields]); // Intentionally omitting onSelectionChange to prevent infinite loops
 
-    // Handle clicks outside the dropdown and Escape key using the custom hook
     useOutsideClickAndEscape(fieldsRef, () => {
       if (isExpanded) setIsExpanded(false);
     });
 
-    // Toggle header only - no other events should toggle the dropdown
     const toggleDropdown = () => {
       setIsExpanded(!isExpanded);
     };
 
-    // Toggle a single field selection
     const toggleField = (columnId) => {
       if (selectedFields.includes(columnId)) {
         setSelectedFields(selectedFields.filter((id) => id !== columnId));
@@ -129,17 +118,14 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       }
     };
 
-    // Select all fields
     const selectAll = () => {
       setSelectedFields(columns.map((col) => col.id));
     };
 
-    // Deselect all fields
     const selectNone = () => {
       setSelectedFields([]);
     };
 
-    // Filter columns based on search term
     const filteredColumns = columns.filter((col) =>
       col.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -284,8 +270,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     );
   };
 
-  // We're using the imported Dropdown component now instead of defining it here
-
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 bg-white dark:bg-dark-card border-b border-gray-200 dark:border-gray-700 shadow-sm">
@@ -417,7 +401,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
             )}
           </div>
 
-          {/* Run Query Button */}
           <div>
             <button
               className={`inline-flex items-center px-4 py-2 h-10 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
@@ -577,7 +560,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Group By
               </label>
-              {/* Empty space to match Order By's button layout */}
               <div className="ml-1 w-10 h-6"></div>
             </div>
             <Dropdown
@@ -620,7 +602,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 Order By
               </label>
 
-              {/* Tiny Direction toggle button - always visible but disabled when None is selected */}
               <button
                 type="button"
                 className={`ml-1 px-1 py-0.5 h-6 text-xs border rounded focus:outline-none ${
@@ -695,7 +676,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               </button>
             </div>
 
-            {/* Dropdown with search capability */}
             <Dropdown
               label=""
               options={[
@@ -756,7 +736,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Aggregate
               </label>
-              {/* Empty space to match Order By's button layout */}
               <div className="ml-1 w-10 h-6"></div>
             </div>
             <Dropdown
@@ -804,7 +783,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Limit
               </label>
-              {/* Empty space to match Order By's button layout */}
               <div className="ml-1 w-10 h-6"></div>
             </div>
             <Dropdown
@@ -845,7 +823,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Granularity
               </label>
-              {/* Empty space to match Order By's button layout */}
               <div className="ml-1 w-10 h-6"></div>
             </div>
             <Dropdown

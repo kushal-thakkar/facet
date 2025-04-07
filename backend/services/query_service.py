@@ -30,6 +30,7 @@ class QueryService:
         Returns:
             Query result
         """
+        connector = None
         try:
             # Create connector for the database
             connector = await DatabaseConnectorFactory.create_connector(connection)
@@ -77,3 +78,7 @@ class QueryService:
                 cacheHit=False,
                 error=str(e),
             )
+        finally:
+            # Ensure connector is closed properly
+            if connector:
+                await connector.close()

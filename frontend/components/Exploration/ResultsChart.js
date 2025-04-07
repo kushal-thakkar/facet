@@ -184,7 +184,7 @@ function ResultsChart({ results, type }) {
                 No data available for chart
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
-                Please check your data selection or try a different visualization
+                Please check your data selection or try a different query
               </p>
             </div>
           </div>

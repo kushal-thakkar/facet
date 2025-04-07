@@ -129,48 +129,61 @@ function ResultsTable({ results }) {
     <div className="h-full flex flex-col">
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-100 dark:bg-gray-800 sticky top-0 shadow-sm">
-            <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-              {displayColumns.map((column) => (
-                <th
-                  key={column.name}
-                  scope="col"
-                  className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
-                  onClick={() => handleSort(column.name)}
-                >
-                  <div className="flex items-center">
-                    <span>{column.displayName || column.name}</span>
-                    {sortColumn === column.name && (
-                      <span className="ml-1 text-primary dark:text-primary">
-                        {sortDirection === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedData().map((row, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                {displayColumns.map((column) => {
-                  const value = row[column.name];
-                  const columnType = getColumnType(column.name, value);
-
-                  return (
-                    <td
-                      key={column.name}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300"
-                    >
-                      {formatCellValue(value, columnType)}
-                    </td>
-                  );
-                })}
+        {totalRows === 0 ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center p-8">
+              <h3 className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+                No data available for table
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Please check your data selection or try a different query
+              </p>
+            </div>
+          </div>
+        ) : (
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-100 dark:bg-gray-800 sticky top-0 shadow-sm">
+              <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                {displayColumns.map((column) => (
+                  <th
+                    key={column.name}
+                    scope="col"
+                    className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+                    onClick={() => handleSort(column.name)}
+                  >
+                    <div className="flex items-center">
+                      <span>{column.displayName || column.name}</span>
+                      {sortColumn === column.name && (
+                        <span className="ml-1 text-primary dark:text-primary">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+              {sortedData().map((row, rowIndex) => (
+                <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                  {displayColumns.map((column) => {
+                    const value = row[column.name];
+                    const columnType = getColumnType(column.name, value);
+
+                    return (
+                      <td
+                        key={column.name}
+                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300"
+                      >
+                        {formatCellValue(value, columnType)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Pagination controls */}
@@ -202,9 +215,15 @@ function ResultsTable({ results }) {
         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              Showing <span className="font-medium">{startRow + 1}</span> to{' '}
-              <span className="font-medium">{endRow}</span> of{' '}
-              <span className="font-medium">{totalRows}</span> results
+              {totalRows > 0 ? (
+                <>
+                  Showing <span className="font-medium">{startRow + 1}</span> to{' '}
+                  <span className="font-medium">{endRow}</span> of{' '}
+                  <span className="font-medium">{totalRows}</span> results
+                </>
+              ) : (
+                <>No results found</>
+              )}
             </p>
           </div>
           <div className="flex items-center space-x-4">

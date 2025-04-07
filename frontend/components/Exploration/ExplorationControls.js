@@ -488,7 +488,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   ? 'Select a table first'
                   : isLoading
                     ? 'Query is running...'
-                    : 'Run query'
+                    : 'Query'
               }
             >
               {isLoading ? (
@@ -537,7 +537,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                       d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     ></path>
                   </svg>
-                  Run Query
+                  Query
                 </span>
               )}
             </button>

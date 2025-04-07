@@ -110,6 +110,15 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       }
     }
 
+    // Validation for bar chart - must have exactly 1 field selected
+    if (exploration.visualization?.type === 'bar') {
+      const selectedFields = exploration.selectedFields || [];
+      console.log(`Bar chart validation: ${selectedFields.length} fields selected`);
+      if (selectedFields.length !== 1) {
+        return 'Bar chart requires exactly 1 field to be selected.';
+      }
+    }
+
     // Future validations can be added here based on other visualization types
 
     console.log('Query validation passed');

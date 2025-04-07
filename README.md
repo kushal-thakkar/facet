@@ -7,8 +7,6 @@ Facet is a GUI-first SQL data exploration tool designed to enable engineers, pro
 - **Visual Query Building**: Create complex SQL queries using an intuitive interface
 - **Multiple Database Support**: Connect to PostgreSQL and ClickHouse databases
 - **Interactive Visualizations**: View your data as tables, line charts, bar charts, and pie charts
-- **Metadata Browser**: Explore database tables, columns, and relationships
-- **Saved Explorations**: Save and share your queries for future use
 - **Export Options**: Export results as CSV, JSON, or the generated SQL
 
 ## Project Structure
@@ -249,33 +247,6 @@ Facet supports connecting to PostgreSQL and ClickHouse databases. Database conne
    ```bash
    docker-compose -f docker-compose.dev.yml restart backend
    ```
-
-## Usage Guide
-
-### Creating an Exploration
-
-1. Select a connection from the dropdown in the header
-2. Choose a table from the sidebar
-3. Add filters to narrow down your data
-4. Select dimensions to group by
-5. Add metrics to aggregate
-6. Run the query to see the results
-
-### Visualizing Results
-
-1. After running a query, use the visualization tabs to switch between:
-   - Table view
-   - Line chart
-   - Bar chart
-   - Pie chart
-2. Configure the visualization by clicking "Show Chart Settings"
-3. Export the results using the "Export" dropdown
-
-### Saving Explorations
-
-1. After creating an exploration, click the "Save" button
-2. Enter a name for the exploration
-3. Access saved explorations from the sidebar
 
 ## Acknowledgments
 

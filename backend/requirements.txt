@@ -6,7 +6,6 @@ aiochclient==2.6.0
 aiohttp
 pydantic>=2.0.0
 python-dotenv==1.0.0
-redis==4.5.5
 sqlalchemy==2.0.15
 pytest==7.3.1
 pytest-asyncio==0.21.0

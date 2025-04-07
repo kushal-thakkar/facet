@@ -45,7 +45,6 @@ services:
     depends_on:
       - postgres
       - clickhouse
-      - redis
     networks:
       - facet-network
 
@@ -76,14 +75,6 @@ services:
     environment:
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
       - CLICKHOUSE_PASSWORD=clickhouse_pass
-    networks:
-      - facet-network
-
-  # Redis for caching
-  redis:
-    image: redis:alpine
-    ports:
-      - '6379:6379'
     networks:
       - facet-network
 

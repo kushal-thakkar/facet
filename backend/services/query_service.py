@@ -84,11 +84,6 @@ class QueryService:
                 sql=sql if "sql" in locals() else "",
                 cacheHit=False,
                 error=str(e),
-                suggestions=[
-                    "Check your filter conditions",
-                    "Verify table and column names",
-                    "Simplify the query",
-                ],
             )
 
     async def validate_query(

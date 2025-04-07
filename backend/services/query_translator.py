@@ -95,119 +95,54 @@ class SQLTranslator:
         """
         select_items = []
 
-        # Different handling based on whether we have GROUP BY or not
-        if group_by:
-            # First add GROUP BY columns to the select list
-            for dimension in group_by:
-                select_items.append(dimension)
+        # First add GROUP BY columns to the select list
+        for dimension in group_by:
+            select_items.append(dimension)
 
-            # Get the aggregation function from UI's Aggregate selection or use COUNT
-            agg_function_name = "COUNT"
-            if metrics and metrics[0] and metrics[0].function:
-                agg_function_name = metrics[0].function.upper()
+        # Get the primary aggregation function (first one in the list)
+        agg_function = None
+        if metrics and len(metrics) > 0 and metrics[0]:
+            agg_function = metrics[0]
 
-            # For COUNT, add selected fields directly (no aggregation) + one COUNT column
-            # For other aggregations (SUM, AVG, MIN, MAX), apply to each selected field
-            if selected_fields:
-                if agg_function_name == "COUNT":
-                    # For COUNT, simply add one COUNT(*) column and ignore selected fields
-                    # This matches the expectation that the COUNT query should just show the count
-                    count_expr = "COUNT(*)"
-                    select_expr = f"{count_expr} AS count"
-                    select_items.append(select_expr)
-                else:
-                    # For other aggregations, apply to each selected field
-                    for field in selected_fields:
-                        # Skip fields that are already in the GROUP BY
-                        if field in group_by:
-                            continue
+        # Handle aggregation based on function type
+        if agg_function:
+            func_name = agg_function.function.upper()
 
-                        # Apply aggregation function to the field
-                        # Extract just the column name for the alias if it contains a table prefix
-                        column_name = field.split(".")[-1] if "." in field else field
-
-                        # Apply the function to the field
-                        # Ensure we're using valid SQL - empty function parameters can cause errors
-                        if not field or field.strip() == "":
-                            continue  # Skip empty fields
-                        else:
-                            # Normal case - apply the function to the field
-                            expr = f"{agg_function_name}({field})"
-                            alias = f"{column_name}_{agg_function_name.lower()}"
-                            select_expr = f"{expr} AS {alias}"
-                            select_items.append(select_expr)
-        else:
-            # No GROUP BY
-
-            # Check if we're doing a COUNT query
-            agg_function_name = "COUNT"
-            if metrics and metrics[0] and metrics[0].function:
-                agg_function_name = metrics[0].function.upper()
-
-            # For COUNT queries without GROUP BY, just return COUNT(*)
-            if agg_function_name == "COUNT":
-                count_expr = "COUNT(*)"
-                select_expr = f"{count_expr} AS count"
+            # Case 1: COUNT function
+            if func_name == "COUNT":
+                # Just add COUNT(*) regardless of selected fields
+                select_expr = f"COUNT(*) AS {agg_function.alias or 'count'}"
                 select_items.append(select_expr)
-            # For other queries, add selected fields directly
-            elif selected_fields:
+
+            # Case 2: Other aggregation functions (SUM, AVG, etc.)
+            else:
+                # For other aggregations, we need selected fields
+                if not selected_fields:
+                    logger.error(f"No fields selected for {func_name} aggregation")
+                    raise ValueError(f"You must select fields for {func_name} aggregation")
+
+                # Apply aggregation to each selected field that isn't in GROUP BY
                 for field in selected_fields:
-                    select_items.append(field)
+                    # Skip fields already in GROUP BY
+                    if field in group_by:
+                        continue
 
-        # Check if we've already added a count column - if so, don't add metrics
-        count_exists = [item.lower() for item in select_items]
-        already_added_count = any(" as count" in item for item in count_exists)
+                    # Skip empty fields
+                    if not field or field.strip() == "":
+                        continue
 
-        # If we've already added COUNT(*) as count, skip all metrics
-        # This happens when the user selects COUNT as the aggregation function
-        if already_added_count:
-            # Skip all metrics - we've already added the COUNT column
-            pass
-        else:
-            # Add aggregation functions to the select list
-            for agg_function in metrics:
-                # Skip if it's a count with no column and we're not grouping
-                if agg_function.function == "count" and not agg_function.column and not group_by:
-                    continue
+                    # Extract column name for alias
+                    column_name = field.split(".")[-1] if "." in field else field
 
-                if agg_function.function == "count" and not agg_function.column:
-                    # COUNT(*) case
-                    select_expr = f"COUNT(*) AS {agg_function.alias}"
-                else:
-                    # Normal aggregation case
-                    # Only use aggregation if we have groupBy or explicit aggregation is required
-                    if group_by:
-                        func_name = agg_function.function.upper()
-                        column = agg_function.column or "*"
-                        alias = agg_function.alias
+                    # Build the expression
+                    expr = f"{func_name}({field})"
+                    alias = f"{func_name.lower()}({column_name})"
+                    # Quote the alias to handle special characters
+                    select_expr = f'{expr} AS "{alias}"'
+                    select_items.append(select_expr)
 
-                        # Apply the aggregation function with a better alias to avoid conflicts
-                        if column == "*":
-                            # Special case for COUNT(*) which is valid SQL
-                            select_expr = f"{func_name}({column}) AS {alias}"
-                        elif not column or column.strip() == "":
-                            # If column is empty, use a fallback that won't cause SQL errors
-                            select_expr = f"COUNT(*) AS {alias}"
-                        else:
-                            # Normal case with a specific column
-                            # Extract column name for alias if it has table prefix
-                            column_name = column.split(".")[-1] if "." in column else column
-                            select_expr = (
-                                f"{func_name}({column}) AS {column_name}_{func_name.lower()}"
-                            )
-                    elif agg_function.column:
-                        # For table view without grouping, just select the column
-                        if agg_function.column not in select_items:
-                            select_expr = agg_function.column
-                        else:
-                            continue  # Skip if already in select items
-                    else:
-                        continue  # Skip if no column specified and no grouping
-
-                select_items.append(select_expr)
-
+        # If no items have been added and no GROUP BY, default to SELECT *
         if not select_items:
-            # Default to SELECT *
             return "SELECT *"
 
         return f"SELECT {', '.join(select_items)}"
@@ -224,35 +159,37 @@ class SQLTranslator:
         """
         select_items = []
 
-        # Add group by columns to the select list
+        # First add GROUP BY columns to the select list
         for dimension in group_by:
             select_items.append(dimension)
 
-        # Add metrics to the select list
-        for metric in metrics:
-            if metric.function == "count" and not metric.column:
-                # COUNT(*) case
-                select_expr = f"COUNT(*) AS {metric.alias}"
-            else:
-                # Normal aggregation case
-                func_name = metric.function.upper()
-                column = metric.column or "*"
-                alias = metric.alias
+        # Handle all metrics (aggregations)
+        if metrics:
+            for metric in metrics:
+                func_name = metric.function.upper() if metric.function else "COUNT"
 
-                # Apply the aggregation function with a better alias to avoid conflicts
-                if column == "*":
-                    # Special case for COUNT(*) which is valid SQL
-                    select_expr = f"{func_name}({column}) AS {alias}"
-                elif not column or column.strip() == "":
-                    # If column is empty, use a fallback that won't cause SQL errors
-                    select_expr = f"COUNT(*) AS {alias}"
+                # Case 1: COUNT function
+                if func_name == "COUNT":
+                    # Use COUNT(*) if no column specified or column is "*"
+                    select_expr = f"COUNT(*) AS {metric.alias or 'count'}"
+                    select_items.append(select_expr)
+
+                # Case 2: Other aggregation functions
                 else:
-                    # Normal case with a specific column
-                    # Extract just the column name for the alias if it contains a table prefix
-                    column_name = column.split(".")[-1] if "." in column else column
-                    select_expr = f"{func_name}({column}) AS {column_name}_{func_name.lower()}"
+                    # For non-COUNT aggregations, we must have a specific column
+                    if not metric.column:
+                        logger.error(f"No column specified for {func_name} aggregation")
+                        raise ValueError(f"Column must be specified for {func_name} aggregation")
 
-            select_items.append(select_expr)
+                    # Extract column name for the alias
+                    column_name = (
+                        metric.column.split(".")[-1] if "." in metric.column else metric.column
+                    )
+                    alias = metric.alias or f"{func_name.lower()}({column_name})"
+
+                    # Build the expression with quoted alias
+                    select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+                    select_items.append(select_expr)
 
         if not select_items:
             # Default to SELECT *

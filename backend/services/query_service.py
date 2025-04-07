@@ -53,6 +53,9 @@ class QueryService:
             # Translate query model to SQL
             sql = translator.translate(query_model)
 
+            # Log the generated SQL for debugging
+            logger.info(f"Executing SQL: {sql}")
+
             # Execute query
             results, columns, execution_time = await connector.execute_query(sql)
 

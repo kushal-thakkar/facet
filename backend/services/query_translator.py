@@ -36,8 +36,18 @@ class SQLTranslator:
             SQL query string
         """
         try:
-            # Build the SELECT clause
-            select_clause = self._build_select(query_model.metrics, query_model.groupBy)
+            # Handle different visualization types
+            visualization_type = (
+                query_model.visualization.type if query_model.visualization else "table"
+            )
+
+            # Build the SELECT clause - handle table view differently
+            if visualization_type == "table" and query_model.selectedFields:
+                select_clause = self._build_select_for_table(
+                    query_model.metrics, query_model.groupBy, query_model.selectedFields
+                )
+            else:
+                select_clause = self._build_select(query_model.metrics, query_model.groupBy)
 
             # Build the FROM clause
             from_clause = self._build_from(query_model.source)
@@ -45,8 +55,11 @@ class SQLTranslator:
             # Build the WHERE clause
             where_clause = self._build_where(query_model.filters, query_model.timeRange)
 
-            # Build the GROUP BY clause
-            group_by_clause = self._build_group_by(query_model.groupBy)
+            # Build the GROUP BY clause - only if metrics or groupBy defined
+            if query_model.metrics or query_model.groupBy:
+                group_by_clause = self._build_group_by(query_model.groupBy)
+            else:
+                group_by_clause = ""
 
             # Build the ORDER BY clause
             order_by_clause = self._build_order_by(query_model.sort)
@@ -57,13 +70,147 @@ class SQLTranslator:
             # Combine all clauses
             sql = (
                 f"{select_clause}\n{from_clause}\n{where_clause}\n"
-                f"{group_by_clause}\n{order_by_clause}\n{limit_clause}"
+                + f"{group_by_clause}\n{order_by_clause}\n{limit_clause}"
             )
 
+            # Debug logging to see the final SQL
+            logger.info(f"Generated SQL: {sql}")
             return sql
         except Exception as e:
             logger.error(f"Error translating query: {str(e)}")
             raise
+
+    def _build_select_for_table(
+        self, metrics: List[Metric], group_by: List[str], selected_fields: List[str]
+    ) -> str:
+        """Build the SELECT clause specifically for table visualization.
+
+        Args:
+            metrics: List of metrics to include
+            group_by: List of dimensions to group by
+            selected_fields: List of explicitly selected fields to include
+
+        Returns:
+            SELECT clause string
+        """
+        select_items = []
+
+        # Different handling based on whether we have GROUP BY or not
+        if group_by:
+            # First add GROUP BY columns to the select list
+            for dimension in group_by:
+                select_items.append(dimension)
+
+            # Get the aggregation function from UI's Aggregate selection or use COUNT
+            agg_function_name = "COUNT"
+            if metrics and metrics[0] and metrics[0].function:
+                agg_function_name = metrics[0].function.upper()
+
+            # For COUNT, add selected fields directly (no aggregation) + one COUNT column
+            # For other aggregations (SUM, AVG, MIN, MAX), apply to each selected field
+            if selected_fields:
+                if agg_function_name == "COUNT":
+                    # For COUNT, simply add one COUNT(*) column and ignore selected fields
+                    # This matches the expectation that the COUNT query should just show the count
+                    count_expr = "COUNT(*)"
+                    select_expr = f"{count_expr} AS row_count"
+                    select_items.append(select_expr)
+                else:
+                    # For other aggregations, apply to each selected field
+                    for field in selected_fields:
+                        # Skip fields that are already in the GROUP BY
+                        if field in group_by:
+                            continue
+
+                        # Apply aggregation function to the field
+                        # Extract just the column name for the alias if it contains a table prefix
+                        column_name = field.split(".")[-1] if "." in field else field
+
+                        # Apply the function to the field
+                        # Ensure we're using valid SQL - empty function parameters can cause errors
+                        if not field or field.strip() == "":
+                            continue  # Skip empty fields
+                        else:
+                            # Normal case - apply the function to the field
+                            expr = f"{agg_function_name}({field})"
+                            alias = f"{column_name}_{agg_function_name.lower()}"
+                            select_expr = f"{expr} AS {alias}"
+                            select_items.append(select_expr)
+        else:
+            # No GROUP BY
+
+            # Check if we're doing a COUNT query
+            agg_function_name = "COUNT"
+            if metrics and metrics[0] and metrics[0].function:
+                agg_function_name = metrics[0].function.upper()
+
+            # For COUNT queries without GROUP BY, just return COUNT(*)
+            if agg_function_name == "COUNT":
+                count_expr = "COUNT(*)"
+                select_expr = f"{count_expr} AS row_count"
+                select_items.append(select_expr)
+            # For other queries, add selected fields directly
+            elif selected_fields:
+                for field in selected_fields:
+                    select_items.append(field)
+
+        # Check if we've already added a row_count column - if so, don't add metrics
+        row_count_exists = [item.lower() for item in select_items]
+        already_added_row_count = any("row_count" in item for item in row_count_exists)
+
+        # If we've already added COUNT(*) as row_count, skip all metrics
+        # This happens when the user selects COUNT as the aggregation function
+        if already_added_row_count:
+            # Skip all metrics - we've already added the COUNT column
+            pass
+        else:
+            # Add aggregation functions to the select list
+            for agg_function in metrics:
+                # Skip if it's a count with no column and we're not grouping
+                if agg_function.function == "count" and not agg_function.column and not group_by:
+                    continue
+
+                if agg_function.function == "count" and not agg_function.column:
+                    # COUNT(*) case
+                    select_expr = f"COUNT(*) AS {agg_function.alias}"
+                else:
+                    # Normal aggregation case
+                    # Only use aggregation if we have groupBy or explicit aggregation is required
+                    if group_by:
+                        func_name = agg_function.function.upper()
+                        column = agg_function.column or "*"
+                        alias = agg_function.alias
+
+                        # Apply the aggregation function with a better alias to avoid conflicts
+                        if column == "*":
+                            # Special case for COUNT(*) which is valid SQL
+                            select_expr = f"{func_name}({column}) AS {alias}"
+                        elif not column or column.strip() == "":
+                            # If column is empty, use a fallback that won't cause SQL errors
+                            select_expr = f"COUNT(*) AS {alias}"
+                        else:
+                            # Normal case with a specific column
+                            # Extract column name for alias if it has table prefix
+                            column_name = column.split(".")[-1] if "." in column else column
+                            select_expr = (
+                                f"{func_name}({column}) AS {column_name}_{func_name.lower()}"
+                            )
+                    elif agg_function.column:
+                        # For table view without grouping, just select the column
+                        if agg_function.column not in select_items:
+                            select_expr = agg_function.column
+                        else:
+                            continue  # Skip if already in select items
+                    else:
+                        continue  # Skip if no column specified and no grouping
+
+                select_items.append(select_expr)
+
+        if not select_items:
+            # Default to SELECT *
+            return "SELECT *"
+
+        return f"SELECT {', '.join(select_items)}"
 
     def _build_select(self, metrics: List[Metric], group_by: List[str]) -> str:
         """Build the SELECT clause.
@@ -88,7 +235,22 @@ class SQLTranslator:
                 select_expr = f"COUNT(*) AS {metric.alias}"
             else:
                 # Normal aggregation case
-                select_expr = f"{metric.function.upper()}({metric.column}) AS {metric.alias}"
+                func_name = metric.function.upper()
+                column = metric.column or "*"
+                alias = metric.alias
+
+                # Apply the aggregation function with a better alias to avoid conflicts
+                if column == "*":
+                    # Special case for COUNT(*) which is valid SQL
+                    select_expr = f"{func_name}({column}) AS {alias}"
+                elif not column or column.strip() == "":
+                    # If column is empty, use a fallback that won't cause SQL errors
+                    select_expr = f"COUNT(*) AS {alias}"
+                else:
+                    # Normal case with a specific column
+                    # Extract just the column name for the alias if it contains a table prefix
+                    column_name = column.split(".")[-1] if "." in column else column
+                    select_expr = f"{func_name}({column}) AS {column_name}_{func_name.lower()}"
 
             select_items.append(select_expr)
 

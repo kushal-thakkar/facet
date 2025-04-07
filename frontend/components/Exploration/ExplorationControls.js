@@ -907,7 +907,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   granularity: value,
                 });
               }}
-              disabled={!isTableSelected}
+              disabled={!isTableSelected || currentExploration.visualization?.type === 'table'} // Disable granularity for table visualization
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

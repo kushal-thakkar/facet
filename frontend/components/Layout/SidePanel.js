@@ -94,14 +94,49 @@ function SidePanel({ toggleDarkMode, darkMode }) {
     setError(null);
 
     try {
-      // Make sure the query has the connectionId in the source
+      // Process the orderBy field to convert it to the proper sort format
+      let sort = [];
+      if (currentExploration.orderBy && currentExploration.orderBy !== 'none') {
+        const orderByParts = currentExploration.orderBy.split('_');
+        // Check if it has a direction suffix (_asc or _desc)
+        if (
+          orderByParts.length > 1 &&
+          (orderByParts[orderByParts.length - 1] === 'asc' ||
+            orderByParts[orderByParts.length - 1] === 'desc')
+        ) {
+          // Last part is the direction
+          const direction = orderByParts.pop();
+          // Rejoin the column name in case it had underscores
+          const column = orderByParts.join('_');
+          sort = [{ column, direction }];
+        } else {
+          // No direction, default to asc
+          sort = [{ column: currentExploration.orderBy, direction: 'asc' }];
+        }
+      }
+
+      // Process the selected fields - use them directly if available
+      const selectedFields = currentExploration.selectedFields || [];
+
+      // Make sure to include all necessary fields in the query
       const queryWithConnectionId = {
         ...currentExploration,
         source: {
           ...currentExploration.source,
           connectionId: currentConnection.id,
         },
+        sort: sort, // Apply the processed sort order
+        selectedFields: selectedFields, // Include selected fields
+        limit:
+          currentExploration.limit === 'none'
+            ? null
+            : currentExploration.limit
+              ? parseInt(currentExploration.limit, 10)
+              : 100,
       };
+
+      // Debug the query object
+      console.log('Executing query:', queryWithConnectionId);
 
       // Execute query using API client
       console.log('Executing query for connection:', currentConnection.id);

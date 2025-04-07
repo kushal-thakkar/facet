@@ -1,4 +1,6 @@
 # app/models/query.py
+"""Models for query representation and execution."""
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
@@ -6,9 +8,7 @@ from pydantic import BaseModel
 
 
 class FilterCondition(BaseModel):
-    """
-    A single filter condition
-    """
+    """A single filter condition."""
 
     column: str
     operator: str
@@ -16,9 +16,7 @@ class FilterCondition(BaseModel):
 
 
 class LogicalFilterGroup(BaseModel):
-    """
-    A group of filter conditions with a logical operator
-    """
+    """A group of filter conditions with a logical operator."""
 
     logic: str  # 'and' or 'or'
     conditions: List[Union["FilterCondition", "LogicalFilterGroup"]]
@@ -29,9 +27,7 @@ LogicalFilterGroup.update_forward_refs()
 
 
 class TimeRange(BaseModel):
-    """
-    Time range specification
-    """
+    """Time range specification."""
 
     column: str
     range: str  # last_7_days, this_month, etc.
@@ -40,55 +36,43 @@ class TimeRange(BaseModel):
 
 
 class Comparison(BaseModel):
-    """
-    Comparison specification
-    """
+    """Comparison specification."""
 
     enabled: bool
     range: str  # previous_period, previous_year, etc.
 
 
 class Metric(BaseModel):
-    """
-    Metric specification
-    """
+    """Aggregation function specification (shown as "Aggregate" in the UI)."""
 
     column: Optional[str] = None
-    function: str
+    function: str  # aggregate function: count, sum, avg, min, max
     alias: str
 
 
 class SortOrder(BaseModel):
-    """
-    Sort order specification
-    """
+    """Sort order specification."""
 
     column: str
     direction: str  # asc, desc
 
 
 class Visualization(BaseModel):
-    """
-    Visualization specification
-    """
+    """Visualization specification."""
 
     type: str
     config: Dict[str, Any] = {}
 
 
 class QuerySource(BaseModel):
-    """
-    Source table for a query
-    """
+    """Source table for a query."""
 
     connectionId: str
     table: str
 
 
 class QueryModel(BaseModel):
-    """
-    JSON query model
-    """
+    """JSON query model."""
 
     source: Optional[QuerySource] = None
     filters: List[Union[FilterCondition, LogicalFilterGroup]] = []
@@ -99,39 +83,34 @@ class QueryModel(BaseModel):
     sort: List[SortOrder] = []
     limit: Optional[int] = 100
     visualization: Optional[Visualization] = None
+    selectedFields: List[str] = []  # Added for field selection in table view
+    granularity: Optional[str] = None  # For time-based aggregation
+    orderBy: Optional[str] = None  # Raw orderBy string from frontend
 
 
 class QueryRequest(BaseModel):
-    """
-    Request model for executing a query
-    """
+    """Request model for executing a query."""
 
     connectionId: str
     query: QueryModel
 
 
 class QueryValidationRequest(BaseModel):
-    """
-    Request model for validating a query
-    """
+    """Request model for validating a query."""
 
     connectionId: str
     query: QueryModel
 
 
 class QueryExplainRequest(BaseModel):
-    """
-    Request model for explaining a query
-    """
+    """Request model for explaining a query."""
 
     connectionId: str
     query: QueryModel
 
 
 class ColumnInfo(BaseModel):
-    """
-    Information about a column in query results
-    """
+    """Information about a column in query results."""
 
     name: str
     displayName: Optional[str] = None
@@ -140,9 +119,7 @@ class ColumnInfo(BaseModel):
 
 
 class QueryResult(BaseModel):
-    """
-    Result of a query execution
-    """
+    """Result of a query execution."""
 
     columns: List[ColumnInfo]
     data: List[Dict[str, Any]]
@@ -156,9 +133,7 @@ class QueryResult(BaseModel):
 
 
 class QueryValidationResult(BaseModel):
-    """
-    Result of a query validation
-    """
+    """Result of a query validation."""
 
     valid: bool
     errors: List[str] = []
@@ -167,9 +142,7 @@ class QueryValidationResult(BaseModel):
 
 
 class QueryExplainResult(BaseModel):
-    """
-    Result of a query explanation
-    """
+    """Result of a query explanation."""
 
     plan: str
     cost: Optional[float] = None
@@ -177,9 +150,7 @@ class QueryExplainResult(BaseModel):
 
 
 class QueryHistoryEntry(BaseModel):
-    """
-    An entry in the query history
-    """
+    """An entry in the query history."""
 
     id: str
     connectionId: str

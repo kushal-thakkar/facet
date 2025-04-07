@@ -19,6 +19,8 @@ const initialState = {
       type: 'table',
       config: {},
     },
+    limit: '100', // Default limit
+    selectedFields: [], // Default selected fields
   },
   queryResults: null,
   metadata: {

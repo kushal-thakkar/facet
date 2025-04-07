@@ -237,8 +237,29 @@ function SidePanel({ toggleDarkMode, darkMode }) {
               if (selectedId) {
                 const selected = state.connections.find((conn) => conn.id === selectedId);
                 if (selected) {
+                  // Check if connection actually changed
+                  const connectionChanged =
+                    !currentConnection || currentConnection.id !== selected.id;
+
+                  // Clear current table and results when connection changes
+                  if (connectionChanged) {
+                    // Clear exploration data
+                    actions.updateCurrentExploration({
+                      source: { connectionId: selected.id, table: null },
+                      filters: [],
+                      groupBy: [],
+                      agg: [],
+                      selectedFields: [],
+                    });
+
+                    // Clear results
+                    actions.updateQueryResults(null);
+                  }
+
+                  // Set the connection
                   actions.setCurrentConnection(selected);
                   console.log('Connection selected:', selected);
+
                   // Force a fetch of metadata when connection changes
                   if (selected.id) {
                     fetchMetadata(selected.id);
@@ -246,6 +267,8 @@ function SidePanel({ toggleDarkMode, darkMode }) {
                 }
               } else {
                 actions.setCurrentConnection(null);
+                // Clear results when disconnecting
+                actions.updateQueryResults(null);
               }
             }}
             disabled={connectionLoading}

@@ -54,6 +54,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       selectedFields: [], // Reset selected fields when table changes
     });
 
+    // Clear query results when table changes
+    // (We already prevent selecting the same table in the UI)
+    actions.updateQueryResults(null);
+
     // Fetch columns for the selected table
     try {
       const columns = await api.get(
@@ -423,8 +427,17 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                     filteredTables.map((table) => (
                       <div
                         key={table.name}
-                        className="px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer text-gray-800 dark:text-gray-200"
-                        onClick={() => handleTableSelect(table.name)}
+                        className={`px-3 py-2 ${
+                          table.name === currentExploration.source?.table
+                            ? 'bg-blue-100 dark:bg-blue-900/40 cursor-default'
+                            : 'hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer'
+                        } text-gray-800 dark:text-gray-200`}
+                        onClick={() => {
+                          // Only process click if this isn't the current table
+                          if (table.name !== currentExploration.source?.table) {
+                            handleTableSelect(table.name);
+                          }
+                        }}
                       >
                         <div className="font-medium flex items-center">
                           <svg

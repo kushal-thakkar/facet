@@ -842,8 +842,8 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               }}
               disabled={
                 !isTableSelected ||
-                ['table', 'pie'].includes(currentExploration.visualization?.type)
-              } // Disable granularity for table and pie visualizations
+                ['table', 'pie', 'bar'].includes(currentExploration.visualization?.type)
+              } // Disable granularity for table, pie, and bar visualizations
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

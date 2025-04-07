@@ -16,16 +16,16 @@ facet/
 ├── frontend/              # Next.js frontend application
 │   ├── components/        # React components
 │   │   ├── Connection/    # Connection management components
-│   │   ├── Exploration/   # Query building components
-│   │   └── Layout/        # Layout components
+│   │   ├── Exploration/   # Query building and visualization components
+│   │   └── Layout/        # Main layout component
 │   ├── context/           # React context for state management
 │   ├── pages/             # Next.js pages
 │   └── styles/            # CSS and styling
 ├── backend/               # FastAPI backend application
-│   ├── database/          # Database connectors
-│   ├── models/            # Pydantic models
-│   ├── routers/           # API routes
-│   ├── services/          # Business logic
+│   ├── database/          # Database connectors for different database types
+│   ├── models/            # Pydantic data models
+│   ├── routers/           # API route endpoints
+│   ├── services/          # Business logic and query execution
 │   ├── mockdb/            # Mock database for testing
 │   │   └── data/          # Sample data files
 │   ├── scripts/           # Database initialization scripts

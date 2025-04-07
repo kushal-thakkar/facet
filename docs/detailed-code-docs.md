@@ -43,7 +43,7 @@ Services implement the business logic:
 
 - `connection_service.py`: Handle database connection management
 - `metadata_service.py`: Retrieve and format schema information
-- `query_service.py`: Execute queries and process results
+- `query_service.py`: Execute queries and process results (simplified to core functionality)
 - `query_translator.py`: Translate UI query definitions to SQL
 - `exploration_service.py`: Manage saved explorations
 
@@ -82,23 +82,19 @@ Components are organized by functionality:
 
 **Layout:**
 - `MainLayout.js`: Main application layout
-- `Header.js`: Application header
-- `Footer.js`: Application footer
-- `SidePanel.js`: Sidebar navigation
-- `InfoPanel.js`: Information display panel
+- `SidePanel.js`: Sidebar navigation for connections and tables
 
 **Connection:**
 - `ConnectionForm.js`: Database connection form
 
 **Exploration:**
-- `ExplorationControls.js`: Query building controls
+- `ExplorationControls.js`: Query building controls with integrated dimension and metric selection
 - `FilterBar.js`: Query filtering controls
-- `GroupBySelector.js`: Dimension selection
-- `MetricSelector.js`: Metric selection
 - `ResultsArea.js`: Query results container
 - `ResultsTable.js`: Tabular results display
 - `ResultsChart.js`: Chart visualization
 - `TimeRangeSelector.js`: Time range selection
+- `Dropdown.js`: Reusable dropdown component
 
 #### Context
 
@@ -211,8 +207,6 @@ CREATE TABLE explorations (
 ### Query API
 
 - `POST /api/query/execute`: Execute a query
-- `GET /api/query/{query_id}/status`: Check query status
-- `GET /api/query/{query_id}/results`: Get query results
 
 ### Explorations API
 

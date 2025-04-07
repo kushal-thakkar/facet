@@ -35,7 +35,7 @@ The API will be available at http://localhost:8000 with auto-reloading.
 The easiest way to get started is to use Docker Compose to set up the entire development environment:
 
 ```bash
-docker-compose up
+docker-compose -f docker-compose.dev.yml up
 ```
 
 This will start:
@@ -43,7 +43,6 @@ This will start:
 - Backend at http://localhost:8000
 - PostgreSQL at localhost:5432
 - ClickHouse at localhost:8123
-- Redis at localhost:6379
 - Mock database at http://localhost:8080
 
 ### Rebuilding Docker Images

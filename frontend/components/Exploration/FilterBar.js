@@ -2,6 +2,114 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 
+// Field search select component to fix ESLint errors with hooks in callbacks
+function FieldSearchSelect({ filter, index, availableColumns, handleFilterChange }) {
+  const [searchValue, setSearchValue] = useState(
+    filter.column ? availableColumns.find((col) => col.id === filter.column)?.name || '' : ''
+  );
+
+  // Close the dropdown when clicking outside
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target)
+      ) {
+        dropdownRef.current.classList.add('hidden');
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Update search value when filter column changes externally
+  useEffect(() => {
+    if (filter.column) {
+      const colName = availableColumns.find((col) => col.id === filter.column)?.name || '';
+      if (colName && colName !== searchValue) {
+        setSearchValue(colName);
+      }
+    }
+  }, [filter.column, searchValue, availableColumns]);
+
+  return (
+    <div className="relative">
+      <input
+        ref={inputRef}
+        type="text"
+        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 w-full text-sm text-gray-800 dark:text-gray-200"
+        value={searchValue}
+        placeholder="Search fields..."
+        onChange={(e) => {
+          setSearchValue(e.target.value);
+          // Show dropdown when typing
+          if (dropdownRef.current) {
+            dropdownRef.current.classList.remove('hidden');
+          }
+
+          // Only clear the column if input is empty
+          if (e.target.value === '') {
+            handleFilterChange({ ...filter, column: '' }, index);
+          } else {
+            // Check if there are multiple matching columns
+            const matches = availableColumns.filter((col) =>
+              col.name.toLowerCase().includes(e.target.value.toLowerCase())
+            );
+
+            // Only auto-select if it's an exact match AND there's only one match
+            const exactMatch =
+              matches.length === 1 &&
+              matches[0].name.toLowerCase() === e.target.value.toLowerCase();
+
+            if (exactMatch) {
+              handleFilterChange({ ...filter, column: matches[0].id }, index);
+            }
+          }
+        }}
+        onClick={() => {
+          // Show dropdown on click
+          if (dropdownRef.current) {
+            dropdownRef.current.classList.remove('hidden');
+          }
+        }}
+      />
+      <div
+        ref={dropdownRef}
+        className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto hidden"
+      >
+        {availableColumns
+          .filter(
+            (col) =>
+              searchValue === '' || col.name.toLowerCase().includes(searchValue.toLowerCase())
+          )
+          .map((col) => (
+            <div
+              key={col.id}
+              className="px-2 py-1.5 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+              onClick={() => {
+                handleFilterChange({ ...filter, column: col.id }, index);
+                setSearchValue(col.name);
+                if (dropdownRef.current) {
+                  dropdownRef.current.classList.add('hidden');
+                }
+              }}
+            >
+              {col.name}
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
 // Operators based on data type
 const OPERATORS_BY_TYPE = {
   string: [
@@ -122,7 +230,7 @@ function FilterBar({ disabled }) {
       if (filter.value !== localValue && document.activeElement !== inputRef.current) {
         setLocalValue(filter.value);
       }
-    }, [filter.value]);
+    }, [filter.value, localValue]);
 
     // Handle local value change without immediately triggering save
     const handleLocalValueChange = (value) => {
@@ -148,18 +256,12 @@ function FilterBar({ disabled }) {
           {editable ? (
             <div className="w-full flex flex-col space-y-2">
               {/* Field selector at the top */}
-              <select
-                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-2 h-10 w-full text-sm text-gray-800 dark:text-gray-200"
-                value={filter.column}
-                onChange={(e) => handleFilterChange({ ...filter, column: e.target.value }, index)}
-              >
-                <option value="">Select field</option>
-                {availableColumns.map((col) => (
-                  <option key={col.id} value={col.id}>
-                    {col.name}
-                  </option>
-                ))}
-              </select>
+              <FieldSearchSelect
+                filter={filter}
+                index={index}
+                availableColumns={availableColumns}
+                handleFilterChange={handleFilterChange}
+              />
 
               {/* Operator and value on the same row */}
               <div className="flex space-x-2">

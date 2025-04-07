@@ -125,7 +125,7 @@ function ResultsTable({ results }) {
                 <th
                   key={column.name}
                   scope="col"
-                  className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+                  className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => handleSort(column.name)}
                 >
                   <div className="flex items-center">

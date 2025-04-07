@@ -12,8 +12,8 @@ const OPERATORS_BY_TYPE = {
     { id: 'contains', label: 'contains' },
     { id: 'starts_with', label: 'starts with' },
     { id: 'ends_with', label: 'ends with' },
-    { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' },
+    { id: 'is_null', label: 'is null' },
+    { id: 'is_not_null', label: 'is not null' },
   ],
   integer: [
     { id: '=', label: '=' },
@@ -24,8 +24,8 @@ const OPERATORS_BY_TYPE = {
     { id: '<=', label: '<=' },
     { id: 'in', label: 'in' },
     { id: 'not_in', label: 'not in' },
-    { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' },
+    { id: 'is_null', label: 'is null' },
+    { id: 'is_not_null', label: 'is not null' },
   ],
   number: [
     { id: '=', label: '=' },
@@ -36,13 +36,13 @@ const OPERATORS_BY_TYPE = {
     { id: '<=', label: '<=' },
     { id: 'in', label: 'in' },
     { id: 'not_in', label: 'not in' },
-    { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' },
+    { id: 'is_null', label: 'is null' },
+    { id: 'is_not_null', label: 'is not null' },
   ],
   boolean: [
     { id: '=', label: '=' },
-    { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' },
+    { id: 'is_null', label: 'is null' },
+    { id: 'is_not_null', label: 'is not null' },
   ],
   date: [
     { id: '=', label: '=' },
@@ -51,8 +51,8 @@ const OPERATORS_BY_TYPE = {
     { id: '>=', label: 'on or after' },
     { id: '<', label: 'before' },
     { id: '<=', label: 'on or before' },
-    { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' },
+    { id: 'is_null', label: 'is null' },
+    { id: 'is_not_null', label: 'is not null' },
   ],
   timestamp: [
     { id: '=', label: '=' },
@@ -61,8 +61,8 @@ const OPERATORS_BY_TYPE = {
     { id: '>=', label: 'on or after' },
     { id: '<', label: 'before' },
     { id: '<=', label: 'on or before' },
-    { id: 'is_null', label: 'is empty' },
-    { id: 'is_not_null', label: 'is not empty' },
+    { id: 'is_null', label: 'is null' },
+    { id: 'is_not_null', label: 'is not null' },
   ],
 };
 

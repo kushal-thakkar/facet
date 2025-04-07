@@ -51,6 +51,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       filters: [],
       groupBy: [],
       agg: [],
+      selectedFields: [], // Reset selected fields when table changes
     });
 
     // Fetch columns for the selected table

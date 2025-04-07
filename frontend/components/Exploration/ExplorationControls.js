@@ -585,9 +585,9 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 },
               };
 
-              // When changing to pie chart, clear order by and reset granularity
+              // When changing to pie chart, clear sort and reset granularity
               if (type === 'pie') {
-                updateObj.orderBy = 'none';
+                updateObj.sort = [];
                 updateObj.granularity = 'auto';
               }
 
@@ -669,80 +669,67 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 type="button"
                 className={`ml-1 px-1 py-0.5 h-6 text-xs border rounded focus:outline-none ${
                   !isTableSelected ||
-                  (currentExploration.orderBy || 'none') === 'none' ||
+                  !(currentExploration.sort && currentExploration.sort.length > 0) ||
                   currentExploration.visualization?.type === 'pie'
                     ? 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                     : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 onClick={() => {
-                  // Only proceed if table is selected, orderBy is not "none", and viz type is not pie
+                  // Only proceed if table is selected, sort exists, and viz type is not pie
                   if (
                     !isTableSelected ||
-                    (currentExploration.orderBy || 'none') === 'none' ||
+                    !(currentExploration.sort && currentExploration.sort.length > 0) ||
                     currentExploration.visualization?.type === 'pie'
                   )
                     return;
 
-                  const currentOrderBy = currentExploration.orderBy || '';
+                  // Get the current sort setting
+                  const currentSort = currentExploration.sort[0];
 
-                  // Check if we might have underscores in column names
-                  if (currentOrderBy.includes('_')) {
-                    let column, direction;
+                  // Toggle the direction
+                  const newDirection = currentSort.direction === 'desc' ? 'asc' : 'desc';
 
-                    // If it ends with _asc or _desc, that's our direction
-                    if (currentOrderBy.endsWith('_asc')) {
-                      column = currentOrderBy.slice(0, -4); // Remove _asc
-                      direction = 'asc';
-                    } else if (currentOrderBy.endsWith('_desc')) {
-                      column = currentOrderBy.slice(0, -5); // Remove _desc
-                      direction = 'desc';
-                    } else {
-                      // No direction suffix, assume it's just a column with underscores
-                      column = currentOrderBy;
-                      direction = 'asc';
-                    }
-
-                    // Toggle direction
-                    const newDirection = direction === 'desc' ? 'asc' : 'desc';
-
-                    actions.updateCurrentExploration({
-                      orderBy: `${column}_${newDirection}`,
-                    });
-                  } else {
-                    // Simple case - no underscores in column name
-                    const newDirection = 'desc'; // If no direction, default to desc on first click
-
-                    actions.updateCurrentExploration({
-                      orderBy: `${currentOrderBy}_${newDirection}`,
-                    });
-                  }
+                  // Update with the new direction
+                  actions.updateCurrentExploration({
+                    sort: [{ column: currentSort.column, direction: newDirection }],
+                  });
                 }}
                 title={
                   !isTableSelected
                     ? 'Select a table first'
-                    : (currentExploration.orderBy || 'none') === 'none'
+                    : !(currentExploration.sort && currentExploration.sort.length > 0)
                       ? 'Select a column to sort'
-                      : currentExploration.orderBy?.endsWith('_desc')
+                      : currentExploration.sort[0]?.direction === 'desc'
                         ? 'Descending order'
-                        : currentExploration.orderBy?.endsWith('_asc')
-                          ? 'Ascending order'
-                          : 'Default order (click to sort descending)'
+                        : 'Ascending order'
                 }
-                disabled={!isTableSelected || (currentExploration.orderBy || 'none') === 'none'}
+                disabled={
+                  !isTableSelected ||
+                  !(currentExploration.sort && currentExploration.sort.length > 0)
+                }
               >
                 <div className="flex items-center">
-                  <span>{currentExploration.orderBy?.endsWith('_desc') ? 'Desc' : 'Asc'}</span>
+                  <span>
+                    {currentExploration.sort &&
+                    currentExploration.sort.length > 0 &&
+                    currentExploration.sort[0].direction === 'desc'
+                      ? 'Desc'
+                      : 'Asc'}
+                  </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className={`h-3 w-3 ml-1 ${
-                      !isTableSelected || (currentExploration.orderBy || 'none') === 'none'
+                      !isTableSelected ||
+                      !(currentExploration.sort && currentExploration.sort.length > 0)
                         ? 'text-gray-400 dark:text-gray-600'
                         : 'text-blue-600'
                     }`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
-                    {currentExploration.orderBy?.endsWith('_desc') ? (
+                    {currentExploration.sort &&
+                    currentExploration.sort.length > 0 &&
+                    currentExploration.sort[0].direction === 'desc' ? (
                       <path d="M5 9l5 5 5-5H5z" /> // Down arrow
                     ) : (
                       <path d="M5 11l5-5 5 5H5z" /> // Up arrow
@@ -763,32 +750,28 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 })),
               ]}
               value={
-                // Handle the case where orderBy might contain a direction suffix
-                (currentExploration.orderBy || 'none').endsWith('_asc')
-                  ? currentExploration.orderBy.slice(0, -4)
-                  : (currentExploration.orderBy || 'none').endsWith('_desc')
-                    ? currentExploration.orderBy.slice(0, -5)
-                    : currentExploration.orderBy || 'none'
+                // Get the column from sort if it exists, otherwise 'none'
+                currentExploration.sort && currentExploration.sort.length > 0
+                  ? currentExploration.sort[0].column
+                  : 'none'
               }
               onChange={(value) => {
                 if (value === 'none') {
+                  // Clear the sort
                   actions.updateCurrentExploration({
-                    orderBy: 'none',
+                    sort: [],
                   });
                 } else {
-                  // Try to get the current direction from the existing orderBy
-                  let currentDirection = 'asc'; // Default direction
+                  // Get current direction or use default
+                  let currentDirection = 'asc';
 
-                  if (currentExploration.orderBy) {
-                    if (currentExploration.orderBy.endsWith('_desc')) {
-                      currentDirection = 'desc';
-                    } else if (currentExploration.orderBy.endsWith('_asc')) {
-                      currentDirection = 'asc';
-                    }
+                  if (currentExploration.sort && currentExploration.sort.length > 0) {
+                    currentDirection = currentExploration.sort[0].direction;
                   }
 
+                  // Set the sort with the new column and current direction
                   actions.updateCurrentExploration({
-                    orderBy: `${value}_${currentDirection}`,
+                    sort: [{ column: value, direction: currentDirection }],
                   });
                 }
               }}

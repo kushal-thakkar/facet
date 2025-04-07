@@ -135,26 +135,8 @@ function SidePanel({ toggleDarkMode, darkMode }) {
     setIsLoading(true);
 
     try {
-      // Process the orderBy field to convert it to the proper sort format
-      let sort = [];
-      if (currentExploration.orderBy && currentExploration.orderBy !== 'none') {
-        const orderByParts = currentExploration.orderBy.split('_');
-        // Check if it has a direction suffix (_asc or _desc)
-        if (
-          orderByParts.length > 1 &&
-          (orderByParts[orderByParts.length - 1] === 'asc' ||
-            orderByParts[orderByParts.length - 1] === 'desc')
-        ) {
-          // Last part is the direction
-          const direction = orderByParts.pop();
-          // Rejoin the column name in case it had underscores
-          const column = orderByParts.join('_');
-          sort = [{ column, direction }];
-        } else {
-          // No direction, default to asc
-          sort = [{ column: currentExploration.orderBy, direction: 'asc' }];
-        }
-      }
+      // Use the sort field directly - it's already in the correct format
+      let sort = currentExploration.sort || [];
 
       // Process the selected fields - use them directly if available
       const selectedFields = currentExploration.selectedFields || [];

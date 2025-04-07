@@ -85,7 +85,6 @@ class QueryModel(BaseModel):
     visualization: Optional[Visualization] = None
     selectedFields: List[str] = []  # Added for field selection
     granularity: Optional[str] = None  # For time-based aggregation
-    orderBy: Optional[str] = None  # Raw orderBy string from frontend
 
 
 class QueryRequest(BaseModel):

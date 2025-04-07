@@ -5,6 +5,7 @@ import FilterBar from './FilterBar';
 import Dropdown from './Dropdown';
 import { useAppState } from '../../context/AppStateContext';
 import api from '../../utils/apiClient';
+import { useOutsideClickAndEscape } from '../../utils/hooks';
 
 function ExplorationControls({ onRunQuery, isLoading }) {
   const { state, actions } = useAppState();
@@ -89,34 +90,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     setFilterText('');
   };
 
-  // Create a global ESC key handler for only the table dropdown
-  React.useEffect(() => {
-    function handleEscapeKey(event) {
-      if (event.key === 'Escape') {
-        // Close table dropdown
-        setShowTableDropdown(false);
-
-        // Note: We no longer auto-close the fields selector here
-        // Each dropdown now manages its own state independently
-      }
-    }
-
-    function handleClickOutside(event) {
-      // Only close the table dropdown if clicked outside
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowTableDropdown(false);
-      }
-      // We are intentionally NOT closing the fields selector when clicking inside it
-      // The fields selector now manages its own state independently
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscapeKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, []);
+  // Use custom hook for handling outside clicks and escape key for table dropdown
+  useOutsideClickAndEscape(dropdownRef, () => {
+    setShowTableDropdown(false);
+  });
 
   // Fields selector component - allows selecting fields with checkboxes
   const FieldsSelector = ({ columns, currentSelection, onSelectionChange }) => {
@@ -143,33 +120,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       onSelectionChange(selectedFields);
     }, [selectedFields]); // Intentionally omitting onSelectionChange to prevent infinite loops
 
-    // Handle clicks outside the dropdown and Escape key
-    useEffect(() => {
-      // Only run this effect if the dropdown is open
-      if (!isExpanded) return;
-
-      function handleClickOutside(event) {
-        if (fieldsRef.current && !fieldsRef.current.contains(event.target)) {
-          setIsExpanded(false);
-        }
-      }
-
-      function handleEscapeKey(event) {
-        if (event.key === 'Escape') {
-          setIsExpanded(false);
-        }
-      }
-
-      // Add event listeners
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscapeKey);
-
-      // Clean up event listeners
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscapeKey);
-      };
-    }, [isExpanded]);
+    // Handle clicks outside the dropdown and Escape key using the custom hook
+    useOutsideClickAndEscape(fieldsRef, () => {
+      if (isExpanded) setIsExpanded(false);
+    });
 
     // Toggle header only - no other events should toggle the dropdown
     const toggleDropdown = () => {

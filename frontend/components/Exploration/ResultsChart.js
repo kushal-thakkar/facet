@@ -16,18 +16,7 @@ import {
   Cell,
 } from 'recharts';
 import { useAppState } from '../../context/AppStateContext';
-
-// Chart color palette
-const COLORS = [
-  '#3B82F6', // blue
-  '#10B981', // green
-  '#F59E0B', // yellow
-  '#EF4444', // red
-  '#8B5CF6', // purple
-  '#EC4899', // pink
-  '#14B8A6', // teal
-  '#F97316', // orange
-];
+import { CHART_COLORS, formatXAxisTick } from '../../utils/chartUtils';
 
 function ResultsChart({ results, type }) {
   const { state } = useAppState();
@@ -149,26 +138,7 @@ function ResultsChart({ results, type }) {
     });
   };
 
-  // Format the x-axis tick values
-  const formatXAxisTick = (value) => {
-    if (value === null || value === undefined) return '';
-
-    // If it looks like a date, format it
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
-      try {
-        return new Date(value).toLocaleDateString();
-      } catch (e) {
-        return value;
-      }
-    }
-
-    // If it's too long, truncate it
-    if (typeof value === 'string' && value.length > 15) {
-      return value.substring(0, 12) + '...';
-    }
-
-    return value;
-  };
+  // We now use formatXAxisTick from chartUtils
 
   // Prepare chart data
   const chartData = prepareChartData();
@@ -202,7 +172,7 @@ function ResultsChart({ results, type }) {
                     key={key}
                     type="monotone"
                     dataKey={key}
-                    stroke={COLORS[index % COLORS.length]}
+                    stroke={CHART_COLORS[index % CHART_COLORS.length]}
                     activeDot={{ r: 8 }}
                     connectNulls={true}
                     name={results.columns.find((col) => col.name === key)?.displayName || key}
@@ -220,7 +190,7 @@ function ResultsChart({ results, type }) {
                   <Bar
                     key={key}
                     dataKey={key}
-                    fill={COLORS[index % COLORS.length]}
+                    fill={CHART_COLORS[index % CHART_COLORS.length]}
                     name={results.columns.find((col) => col.name === key)?.displayName || key}
                   />
                 ))}
@@ -242,7 +212,10 @@ function ResultsChart({ results, type }) {
                     }
                   >
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                      />
                     ))}
                   </Pie>
                 )}

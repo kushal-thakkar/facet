@@ -9,7 +9,6 @@ function SidePanel({ toggleDarkMode, darkMode }) {
   const { currentConnection, metadata, explorations, currentExploration, connections } = state;
   const [queryResults, setQueryResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [loadingMetadata, setLoadingMetadata] = useState(false);
 
@@ -44,7 +43,13 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       }
     } catch (error) {
       console.error('Error fetching connections:', error);
-      setError('Failed to fetch connections. Please try again later.');
+      // Show error in results panel instead of error box
+      const errorResult = {
+        error: 'Failed to fetch connections. Please try again later.',
+        isApiError: true,
+      };
+      setQueryResults(errorResult);
+      actions.updateQueryResults(errorResult);
     } finally {
       setConnectionLoading(false);
     }
@@ -53,7 +58,6 @@ function SidePanel({ toggleDarkMode, darkMode }) {
   // Fetch metadata for a connection
   const fetchMetadata = async (connectionId) => {
     setLoadingMetadata(true);
-    setError(null);
     try {
       console.log(`Fetching metadata for connection ID: ${connectionId}`);
 
@@ -77,21 +81,58 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       });
     } catch (error) {
       console.error('Error fetching metadata:', error);
-      setError(`Error loading metadata: ${error.message}`);
+      // Show error in results panel instead of error box
+      const errorResult = {
+        error: `Error loading metadata: ${error.message}`,
+        isApiError: true,
+      };
+      setQueryResults(errorResult);
+      actions.updateQueryResults(errorResult);
       actions.updateMetadata({ tables: {} });
     } finally {
       setLoadingMetadata(false);
     }
   };
 
+  // Validate query configuration based on visualization type and other parameters
+  const validateQuery = (exploration) => {
+    if (!currentConnection || !exploration.source) {
+      console.log('Validation error: No connection or source table selected');
+      return 'Please select a connection and table first';
+    }
+
+    // Validation for pie chart - must have exactly 1 field selected
+    if (exploration.visualization?.type === 'pie') {
+      const selectedFields = exploration.selectedFields || [];
+      console.log(`Pie chart validation: ${selectedFields.length} fields selected`);
+      if (selectedFields.length !== 1) {
+        return 'Pie chart requires exactly 1 field to be selected.';
+      }
+    }
+
+    // Future validations can be added here based on other visualization types
+
+    console.log('Query validation passed');
+    return null; // No errors
+  };
+
   const handleRunQuery = async () => {
-    if (!currentConnection || !currentExploration.source) {
-      setError('Please select a connection and table first');
+    // Run validations
+    const validationError = validateQuery(currentExploration);
+    if (validationError) {
+      // Create a validation error object that will be displayed in the results area
+      const validationErrorResult = {
+        error: validationError,
+        isValidationError: true,
+      };
+
+      // Show validation error only in the results panel, not in the side panel
+      setQueryResults(validationErrorResult);
+      actions.updateQueryResults(validationErrorResult);
       return;
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
       // Process the orderBy field to convert it to the proper sort format
@@ -150,8 +191,15 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       actions.updateQueryResults(data);
     } catch (err) {
       console.error('Error executing query:', err);
-      setError(err.message || 'An error occurred while executing the query');
-      actions.updateQueryResults(null);
+
+      // Show API errors only in the results panel
+      const errorResult = {
+        error: err.message || 'An error occurred while executing the query',
+        isApiError: true,
+      };
+
+      setQueryResults(errorResult);
+      actions.updateQueryResults(errorResult);
     } finally {
       setIsLoading(false);
     }
@@ -182,13 +230,6 @@ function SidePanel({ toggleDarkMode, darkMode }) {
           <>
             {/* Exploration Controls */}
             <ExplorationControls onRunQuery={handleRunQuery} isLoading={isLoading} />
-
-            {/* Error message if any */}
-            {error && (
-              <div className="mx-4 mb-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-3 text-sm rounded-lg border border-red-200 dark:border-red-800">
-                {error}
-              </div>
-            )}
           </>
         )}
       </div>

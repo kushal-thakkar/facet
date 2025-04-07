@@ -47,7 +47,9 @@ class SQLTranslator:
                     query_model.agg, query_model.groupBy, query_model.selectedFields
                 )
             else:
-                select_clause = self._build_select(query_model.agg, query_model.groupBy)
+                select_clause = self._build_select(
+                    query_model.agg, query_model.groupBy, query_model.selectedFields
+                )
 
             # Build the FROM clause
             from_clause = self._build_from(query_model.source)
@@ -147,12 +149,19 @@ class SQLTranslator:
 
         return f"SELECT {', '.join(select_items)}"
 
-    def _build_select(self, metrics: List[Metric], group_by: List[str]) -> str:
+    def _build_select(
+        self,
+        metrics: List[Metric],
+        group_by: List[str],
+        selected_fields: Optional[List[str]] = None,
+    ) -> str:
         """Build the SELECT clause.
 
         Args:
             metrics: List of metrics to include
             group_by: List of dimensions to group by
+            selected_fields: Optional list of explicitly selected fields.
+                Used for picking an aggregation column.
 
         Returns:
             SELECT clause string
@@ -178,8 +187,16 @@ class SQLTranslator:
                 else:
                     # For non-COUNT aggregations, we must have a specific column
                     if not metric.column:
-                        logger.error(f"No column specified for {func_name} aggregation")
-                        raise ValueError(f"Column must be specified for {func_name} aggregation")
+                        # Check if we have selectedFields (used in pie charts)
+                        if selected_fields and len(selected_fields) > 0:
+                            # Use the first selected field for the aggregation
+                            metric.column = selected_fields[0]
+                            logger.info(f"Using selected field '{metric.column}' for {func_name}")
+                        else:
+                            logger.error(f"No column specified for {func_name} aggregation")
+                            raise ValueError(
+                                f"Column must be specified for {func_name} aggregation"
+                            )
 
                     # Extract column name for the alias
                     column_name = (

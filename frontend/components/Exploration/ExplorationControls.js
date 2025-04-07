@@ -577,12 +577,21 @@ function ExplorationControls({ onRunQuery, isLoading }) {
             ]}
             value={currentExploration.visualization?.type || 'table'}
             onChange={(type) => {
-              actions.updateCurrentExploration({
+              // Create update object for visualization type
+              const updateObj = {
                 visualization: {
                   ...currentExploration.visualization,
                   type,
                 },
-              });
+              };
+
+              // When changing to pie chart, clear order by and reset granularity
+              if (type === 'pie') {
+                updateObj.orderBy = 'none';
+                updateObj.granularity = 'auto';
+              }
+
+              actions.updateCurrentExploration(updateObj);
             }}
             enableTypeahead={true}
             disabled={!isTableSelected}
@@ -659,13 +668,20 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               <button
                 type="button"
                 className={`ml-1 px-1 py-0.5 h-6 text-xs border rounded focus:outline-none ${
-                  !isTableSelected || (currentExploration.orderBy || 'none') === 'none'
+                  !isTableSelected ||
+                  (currentExploration.orderBy || 'none') === 'none' ||
+                  currentExploration.visualization?.type === 'pie'
                     ? 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                     : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 onClick={() => {
-                  // Only proceed if table is selected and orderBy is not "none"
-                  if (!isTableSelected || (currentExploration.orderBy || 'none') === 'none') return;
+                  // Only proceed if table is selected, orderBy is not "none", and viz type is not pie
+                  if (
+                    !isTableSelected ||
+                    (currentExploration.orderBy || 'none') === 'none' ||
+                    currentExploration.visualization?.type === 'pie'
+                  )
+                    return;
 
                   const currentOrderBy = currentExploration.orderBy || '';
 
@@ -777,11 +793,15 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 }
               }}
               enableTypeahead={true}
-              disabled={!isTableSelected}
+              disabled={!isTableSelected || currentExploration.visualization?.type === 'pie'}
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className={`h-4 w-4 ${isTableSelected ? 'text-blue-600' : 'text-gray-400'}`}
+                  className={`h-4 w-4 ${
+                    isTableSelected && currentExploration.visualization?.type !== 'pie'
+                      ? 'text-blue-600'
+                      : 'text-gray-400'
+                  }`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -905,7 +925,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   granularity: value,
                 });
               }}
-              disabled={!isTableSelected || currentExploration.visualization?.type === 'table'} // Disable granularity for table visualization
+              disabled={
+                !isTableSelected ||
+                ['table', 'pie'].includes(currentExploration.visualization?.type)
+              } // Disable granularity for table and pie visualizations
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

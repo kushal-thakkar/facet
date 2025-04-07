@@ -83,7 +83,7 @@ class QueryModel(BaseModel):
     sort: List[SortOrder] = []
     limit: Optional[int] = 100
     visualization: Optional[Visualization] = None
-    selectedFields: List[str] = []  # Added for field selection in table view
+    selectedFields: List[str] = []  # Added for field selection
     granularity: Optional[str] = None  # For time-based aggregation
     orderBy: Optional[str] = None  # Raw orderBy string from frontend
 

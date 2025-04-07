@@ -28,16 +28,9 @@ function ResultsTable({ results }) {
   // Set the display columns when results are received
   React.useEffect(() => {
     if (results && results.columns) {
-      const { currentExploration } = state;
-      const selectedFields = currentExploration.selectedFields;
-
-      if (selectedFields && selectedFields.length > 0) {
-        // Filter columns based on selected fields
-        setDisplayColumns(results.columns.filter((column) => selectedFields.includes(column.name)));
-      } else {
-        // Show all columns if no selection
-        setDisplayColumns(results.columns);
-      }
+      // Always show all available columns from the results
+      // This ensures aggregated columns (which have names like "sum(field)") are displayed
+      setDisplayColumns(results.columns);
     }
   }, [results]);
 

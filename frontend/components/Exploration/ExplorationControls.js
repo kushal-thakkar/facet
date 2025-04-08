@@ -578,11 +578,31 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           <Dropdown
             label=""
             options={[
-              { id: 'preview', label: 'Preview 👁️' },
-              { id: 'table', label: 'Table 🔢' },
-              { id: 'line', label: 'Line Chart 📈' },
-              { id: 'bar', label: 'Bar Chart 📊' },
-              { id: 'pie', label: 'Pie Chart 🥧' },
+              {
+                id: 'preview',
+                label: 'Preview 👁️',
+                tooltip: 'Raw data preview showing a sample of rows',
+              },
+              {
+                id: 'table',
+                label: 'Table 🔢',
+                tooltip: 'Aggregations, sorting, and grouping',
+              },
+              {
+                id: 'line',
+                label: 'Line Chart 📈',
+                tooltip: 'Trends over time or sequences',
+              },
+              {
+                id: 'bar',
+                label: 'Bar Chart 📊',
+                tooltip: 'Compare values across categories',
+              },
+              {
+                id: 'pie',
+                label: 'Pie Chart 🥧',
+                tooltip: 'Proportion of parts to a whole',
+              },
             ]}
             value={currentExploration.visualization?.type}
             onChange={(type) => {

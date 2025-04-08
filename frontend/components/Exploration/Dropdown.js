@@ -89,7 +89,7 @@ const Dropdown = ({
 
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-60 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 mt-1 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-80 overflow-auto">
           {/* Search input for typeahead */}
           {enableTypeahead && (
             <div className="p-2 border-b border-gray-200 dark:border-gray-700">
@@ -132,15 +132,20 @@ const Dropdown = ({
                     option.id === value
                       ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                       : 'text-gray-900 dark:text-gray-200'
-                  } truncate`}
+                  }`}
                   onClick={() => {
                     onChange(option.id);
                     setIsOpen(false);
                     setSearchTerm('');
                   }}
-                  title={option.label}
+                  title={option.tooltip || option.label}
                 >
-                  {option.label}
+                  <div className="truncate">{option.label}</div>
+                  {option.tooltip && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                      {option.tooltip}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (

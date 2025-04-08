@@ -128,7 +128,7 @@ pytest -m integration tests/routers/
 
 For integration tests that require a database:
 
-1. Use the `mockdb` service for simulated database responses
+1. Use appropriate test fixtures for database interactions
 2. Use `pytest-asyncio` for testing async functions
 
 Example integration test:
@@ -250,35 +250,6 @@ def test_query_translator_performance(benchmark):
     assert "SELECT" in result
 ```
 
-## Mock Database
-
-The mock database server provides a simulated database environment for testing without requiring actual database connections.
-
-### Starting the Mock Database
-
-The mock database starts automatically with Docker Compose, but you can also run it separately:
-
-```bash
-cd backend/mockdb
-python server.py
-```
-
-### Mock Database API
-
-The mock database exposes these endpoints:
-
-- `POST /api/query/execute` - Execute a simulated SQL query
-- `POST /api/metadata/tables` - Get table metadata
-
-### Mock Data Files
-
-The mock database uses JSON files in the `data` directory:
-
-- `metadata.json` - Table and column metadata
-- `events_data.json` - Sample event data
-- `users_data.json` - Sample user data
-
-You can customize these files to test different scenarios.
 
 ## Continuous Integration
 

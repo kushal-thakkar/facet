@@ -26,8 +26,6 @@ facet/
 │   ├── models/            # Pydantic data models
 │   ├── routers/           # API route endpoints
 │   ├── services/          # Business logic and query execution
-│   ├── mockdb/            # Mock database for testing
-│   │   └── data/          # Sample data files
 │   ├── scripts/           # Database initialization scripts
 │   └── tests/             # Unit tests
 └── docs/                  # Documentation

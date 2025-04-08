@@ -78,20 +78,6 @@ services:
     networks:
       - facet-network
 
-  # Mock database service for testing
-  mockdb:
-    build:
-      context: ./backend/mockdb
-      dockerfile: Dockerfile
-    ports:
-      - '8080:8080'
-    environment:
-      - MOCK_DATA_PATH=/data
-    volumes:
-      - ./backend/mockdb/data:/data
-    networks:
-      - facet-network
-
 networks:
   facet-network:
     driver: bridge

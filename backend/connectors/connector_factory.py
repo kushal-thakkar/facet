@@ -3,9 +3,9 @@
 import logging
 from typing import Optional
 
-from database.base_connector import DatabaseConnector
-from database.clickhouse_connector import ClickHouseConnector
-from database.postgres_connector import PostgresConnector
+from connectors.base_connector import DatabaseConnector
+from connectors.clickhouse_connector import ClickHouseConnector
+from connectors.postgres_connector import PostgresConnector
 from models.connection import Connection
 
 logger = logging.getLogger(__name__)

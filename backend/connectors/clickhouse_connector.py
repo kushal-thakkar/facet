@@ -7,7 +7,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 import aiochclient
 import aiohttp
 
-from database.base_connector import DatabaseConnector
+from connectors.base_connector import DatabaseConnector
 from models.connection import Connection
 from models.metadata import ColumnMetadata, RelationshipMetadata, TableMetadata
 from models.query import ColumnInfo

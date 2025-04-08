@@ -2,7 +2,7 @@
 
 import logging
 
-from database.connector_factory import DatabaseConnectorFactory
+from connectors.connector_factory import DatabaseConnectorFactory
 from models.connection import Connection
 from models.query import (
     QueryModel,

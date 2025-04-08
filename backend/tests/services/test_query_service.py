@@ -1,5 +1,7 @@
+"""Unit tests for the query service implementation."""
+
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -10,6 +12,7 @@ from services.query_service import QueryService
 
 @pytest.fixture
 def mock_connection():
+    """Fixture that creates a mock database connection."""
     return Connection(
         id="conn1",
         name="Test Connection",
@@ -24,6 +27,7 @@ def mock_connection():
 
 @pytest.fixture
 def mock_query_model():
+    """Fixture that creates a mock query model."""
     return QueryModel(
         source=QuerySource(connectionId="conn1", table="events"),
         filters=[],
@@ -35,6 +39,7 @@ def mock_query_model():
 
 @pytest.fixture
 def mock_query_result():
+    """Fixture that creates a mock query result."""
     return QueryResult(
         columns=[{"name": "id", "type": "integer"}],
         data=[{"id": 1}, {"id": 2}],
@@ -47,11 +52,14 @@ def mock_query_result():
 
 
 class TestQueryService:
+    """Test suite for the query service implementation."""
+
     @pytest.mark.asyncio
-    @patch("database.connector_factory.DatabaseConnectorFactory.create_connector")
+    @patch("connectors.connector_factory.DatabaseConnectorFactory.create_connector")
     async def test_execute_query(
         self, mock_create_connector, mock_connection, mock_query_model, mock_query_result
     ):
+        """Test that the execute_query method correctly runs queries and returns results."""
         # Setup mock connector
         mock_connector = AsyncMock()
         mock_connector.get_dialect.return_value = "postgresql"
@@ -85,10 +93,11 @@ class TestQueryService:
         assert result.sql is not None
 
     @pytest.mark.asyncio
-    @patch("database.connector_factory.DatabaseConnectorFactory.create_connector")
+    @patch("connectors.connector_factory.DatabaseConnectorFactory.create_connector")
     async def test_execute_query_error(
         self, mock_create_connector, mock_connection, mock_query_model
     ):
+        """Test that the execute_query method handles errors properly."""
         # Setup mock connector to raise an exception
         mock_connector = AsyncMock()
         mock_connector.get_dialect.return_value = "postgresql"
@@ -109,8 +118,9 @@ class TestQueryService:
         assert len(result.suggestions) > 0
 
     @pytest.mark.asyncio
-    @patch("database.connector_factory.DatabaseConnectorFactory.create_connector")
+    @patch("connectors.connector_factory.DatabaseConnectorFactory.create_connector")
     async def test_validate_query(self, mock_create_connector, mock_connection, mock_query_model):
+        """Test that the validate_query method correctly validates queries."""
         # Setup mock connector
         mock_connector = AsyncMock()
         mock_connector.get_dialect.return_value = "postgresql"
@@ -135,6 +145,7 @@ class TestQueryService:
 
     @pytest.mark.asyncio
     async def test_save_to_history(self, mock_connection, mock_query_model, mock_query_result):
+        """Test that queries are correctly saved to the history."""
         # Create query service
         query_service = QueryService()
 

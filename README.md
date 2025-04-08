@@ -22,7 +22,7 @@ facet/
 │   ├── pages/             # Next.js pages
 │   └── styles/            # CSS and styling
 ├── backend/               # FastAPI backend application
-│   ├── database/          # Database connectors for different database types
+│   ├── connectors/        # Connectors for different backend data sources
 │   ├── models/            # Pydantic data models
 │   ├── routers/           # API route endpoints
 │   ├── services/          # Business logic and query execution

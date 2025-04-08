@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from database.connector_factory import DatabaseConnectorFactory
+from connectors.connector_factory import DatabaseConnectorFactory
 from models.connection import Connection
 from models.metadata import (
     ColumnMetadata,

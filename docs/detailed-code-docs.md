@@ -23,7 +23,7 @@ The backend follows a layered architecture:
 
 1. **Routes Layer** (`/routers`): Defines API endpoints and handles HTTP requests/responses
 2. **Service Layer** (`/services`): Contains business logic
-3. **Database Layer** (`/database`): Manages database connections and queries
+3. **Connector Layer** (`/connectors`): Manages connections to various data sources
 4. **Models Layer** (`/models`): Defines data structures using Pydantic
 
 ### Key Components
@@ -47,14 +47,14 @@ Services implement the business logic:
 - `query_translator.py`: Translate UI query definitions to SQL
 - `exploration_service.py`: Manage saved explorations
 
-#### Database Connectors
+#### Connectors
 
-Database connectors provide a unified interface for different database types:
+Connectors provide a unified interface for different backend data sources:
 
-- `base_connector.py`: Abstract base class defining the connector interface
-- `postgres_connector.py`: PostgreSQL implementation
-- `clickhouse_connector.py`: ClickHouse implementation
-- `connector_factory.py`: Factory to create appropriate connectors
+- `connectors/base_connector.py`: Abstract base class defining the connector interface
+- `connectors/postgres_connector.py`: PostgreSQL implementation
+- `connectors/clickhouse_connector.py`: ClickHouse implementation
+- `connectors/connector_factory.py`: Factory to create appropriate connectors
 
 #### Models
 
@@ -147,7 +147,7 @@ Backend tests use pytest and are organized to mirror the application structure:
 
 - Unit tests for services and utilities
 - Integration tests for API endpoints
-- Database connector tests with mock responses
+- Connector tests with mock responses
 
 ### Frontend Testing
 

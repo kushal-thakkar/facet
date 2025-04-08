@@ -4,10 +4,7 @@ const nextConfig = {
   swcMinify: true,
 
   // Disable development indicators (including Turbopack icon)
-  devIndicators: {
-    buildActivity: false,
-    buildActivityPosition: 'bottom-right',
-  },
+  devIndicators: false,
 
   // API proxy configuration
   async rewrites() {

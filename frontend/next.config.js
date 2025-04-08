@@ -3,6 +3,12 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
+  // Disable development indicators (including Turbopack icon)
+  devIndicators: {
+    buildActivity: false,
+    buildActivityPosition: 'bottom-right',
+  },
+
   // API proxy configuration
   async rewrites() {
     return [

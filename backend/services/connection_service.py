@@ -166,7 +166,7 @@ class ConnectionService:
         try:
             # Path to the config file
             config_file = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "config", "db_connections.yaml"
+                os.path.dirname(os.path.dirname(__file__)), "config", "connections.yaml"
             )
 
             logger.info(f"Attempting to load connections from: {config_file}")

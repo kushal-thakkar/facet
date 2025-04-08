@@ -214,10 +214,10 @@ Facet supports connecting to PostgreSQL and ClickHouse databases. Database conne
 
 1. Copy the example configuration file:
    ```bash
-   cp backend/config/db_connections.yaml.example backend/config/db_connections.yaml
+   cp backend/config/connections.yaml.example backend/config/connections.yaml
    ```
 
-2. Edit the `db_connections.yaml` file to add your database connections:
+2. Edit the `connections.yaml` file to add your database connections:
    ```yaml
    connections:
      - name: "PostgreSQL (Local)"

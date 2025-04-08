@@ -58,7 +58,7 @@ async def list_tables(
         logger.error(f"Error listing tables for connection {conn_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list tables: {str(e)}",
+            detail=str(e),
         )
 
 
@@ -93,7 +93,7 @@ async def get_table_metadata(
         logger.error(f"Error getting metadata for table {table_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get table metadata: {str(e)}",
+            detail=str(e),
         )
 
 
@@ -123,7 +123,7 @@ async def get_table_columns(
         logger.error(f"Error getting columns for table {table_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get table columns: {str(e)}",
+            detail=str(e),
         )
 
 
@@ -192,7 +192,7 @@ async def refresh_metadata(
         logger.error(f"Error refreshing metadata for connection {conn_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to refresh metadata: {str(e)}",
+            detail=str(e),
         )
 
 

@@ -18,3 +18,19 @@ connections:
       user: 'default'
       password: 'clickhouse_pass'
       https: false
+
+  - name: 'BigQuery'
+    type: 'bigquery'
+    config:
+      project_id: 'your-project-id'
+      credentials_json: '{}'
+
+  - name: 'Snowflake'
+    type: 'snowflake'
+    config:
+      account: 'your-account-id.snowflakecomputing.com'
+      user: 'username'
+      password: 'password'
+      warehouse: 'compute_wh'
+      database: 'your_database'
+      schema: 'public'

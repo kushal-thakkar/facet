@@ -1,0 +1,55 @@
+# Database connections configuration
+# Copy this file to connections.yaml and modify as needed
+# The connections configured here will be available in the UI dropdown
+
+connections:
+  - name: "PostgreSQL (Local)"
+    type: "postgres"
+    config:
+      host: "postgres"
+      port: 5432
+      database: "facet"
+      user: "facet"
+      password: "facetpass"
+      ssl: false
+  
+  - name: "ClickHouse (Local)"
+    type: "clickhouse"
+    config:
+      host: "clickhouse"
+      port: 8123
+      database: "facet"
+      user: "default"
+      password: "clickhouse_pass"
+      https: false
+      
+  # Google BigQuery Example
+  # - name: "BigQuery"
+  #   type: "bigquery" 
+  #   config:
+  #     project_id: "your-project-id"
+  #     # Service account credentials JSON (can be the entire JSON as a string)
+  #     credentials_json: '{"type": "service_account", "project_id": "your-project", ...}'
+  
+  # Snowflake Example
+  # - name: "Snowflake Analytics"
+  #   type: "snowflake"
+  #   config:
+  #     account: "your-account-id.snowflakecomputing.com"  # Account identifier
+  #     user: "your_username"
+  #     password: "your_password"
+  #     warehouse: "compute_wh"  # Warehouse name
+  #     database: "analytics"
+  #     schema: "public"        # Default schema
+  #     role: "analyst"         # Optional role
+  
+  # Example of additional PostgreSQL connection
+  # - name: "Production PostgreSQL"
+  #   type: "postgres"
+  #   config:
+  #     host: "production-db.example.com"
+  #     port: 5432
+  #     database: "analytics"
+  #     user: "analyst"
+  #     password: "your-secure-password"
+  #     ssl: true

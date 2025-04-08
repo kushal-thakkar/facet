@@ -45,9 +45,19 @@ export const fetchApi = async (endpoint, options = {}) => {
 
     // Handle non-2xx responses
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API Error (${response.status}): ${errorText}`);
-      throw new Error(`API Error: ${response.statusText}`);
+      // Try to parse JSON error response
+      let errorDetail;
+      try {
+        const errorJson = await response.json();
+        errorDetail = errorJson.detail || errorJson.message || response.statusText;
+      } catch (jsonError) {
+        // Fallback to text if not JSON
+        const errorText = await response.text();
+        errorDetail = errorText || response.statusText;
+      }
+
+      console.error(`API Error (${response.status}): ${errorDetail}`);
+      throw new Error(`API Error: ${errorDetail}`);
     }
 
     // Parse JSON response

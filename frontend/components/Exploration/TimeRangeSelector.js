@@ -20,7 +20,9 @@ const COMPARISON_OPTIONS = [
   { id: 'custom', label: 'Custom comparison' },
 ];
 
-function TimeRangeSelector({ disabled }) {
+function TimeRangeSelector({ disabled, hasTimestampColumns = true }) {
+  // Combine both disabled conditions
+  const isDisabled = disabled || !hasTimestampColumns;
   const { state, actions } = useAppState();
   const { currentExploration } = state;
 
@@ -105,10 +107,12 @@ function TimeRangeSelector({ disabled }) {
           <button
             type="button"
             className={`inline-flex justify-between items-center w-full h-10 px-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 ${
-              disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+              isDisabled
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-700'
             } focus:outline-none shadow-sm`}
-            onClick={() => !disabled && setShowTimeDialog(true)}
-            disabled={disabled}
+            onClick={() => !isDisabled && setShowTimeDialog(true)}
+            disabled={isDisabled}
           >
             <span>{timeRangeLabel}</span>
             <span className="ml-1">▾</span>
@@ -174,12 +178,12 @@ function TimeRangeSelector({ disabled }) {
           <button
             type="button"
             className={`inline-flex justify-between items-center w-full h-10 px-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none shadow-sm ${
-              disabled || isComparisonDisabled
+              isDisabled || isComparisonDisabled
                 ? 'opacity-50 cursor-not-allowed'
                 : 'hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
-            onClick={() => !disabled && !isComparisonDisabled && setShowComparisonDialog(true)}
-            disabled={disabled || isComparisonDisabled}
+            onClick={() => !isDisabled && !isComparisonDisabled && setShowComparisonDialog(true)}
+            disabled={isDisabled || isComparisonDisabled}
           >
             <span>{comparisonLabel}</span>
             <span className="ml-1">▾</span>

@@ -28,7 +28,7 @@ LogicalFilterGroup.update_forward_refs()
 class TimeRange(BaseModel):
     """Time range specification."""
 
-    column: str
+    column: Optional[str] = None
     range: str  # last_7_days, this_month, etc.
     granularity: Optional[str] = None
     customRange: Optional[Dict[str, str]] = None

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import TimeRangeSelector from './TimeRangeSelector';
 import FilterBar from './FilterBar';
 import Dropdown from './Dropdown';
@@ -19,6 +19,91 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
   // Get available columns for current table - used for fields selector and dropdowns
   const availableColumns = getAvailableColumns(currentExploration.source?.table, metadata);
+
+  // Detect and prioritize timestamp columns based on type and name
+  const timestampColumns = useMemo(() => {
+    // First collect all timestamp-compatible columns
+    const timeColumns = availableColumns.filter(
+      (col) =>
+        col.type &&
+        (col.type.toLowerCase().includes('timestamp') || col.type.toLowerCase().includes('date'))
+    );
+
+    // Sort columns by priority:
+    // 1. Type priority: timestamp > date
+    // 2. Name priority: timestamp > time > date > created_at > updated_at > everything else
+    return timeColumns.sort((a, b) => {
+      // First prioritize by type (timestamp over date)
+      const aIsTimestamp = a.type.toLowerCase().includes('timestamp');
+      const bIsTimestamp = b.type.toLowerCase().includes('timestamp');
+
+      if (aIsTimestamp && !bIsTimestamp) return -1;
+      if (!aIsTimestamp && bIsTimestamp) return 1;
+
+      // If same type, prioritize by name
+      const nameOrder = ['timestamp', 'time', 'date', 'created_at', 'updated_at'];
+
+      // Get the priority index of each column name (or max value if not found)
+      const aNameIndex = nameOrder.findIndex((name) => a.name.toLowerCase().includes(name));
+      const bNameIndex = nameOrder.findIndex((name) => b.name.toLowerCase().includes(name));
+
+      // If neither name is in the priority list, maintain original order
+      if (aNameIndex === -1 && bNameIndex === -1) return 0;
+
+      // If one name is in the list and the other isn't, prioritize the one in the list
+      if (aNameIndex === -1) return 1;
+      if (bNameIndex === -1) return -1;
+
+      // Both names are in the list, prioritize by index
+      return aNameIndex - bNameIndex;
+    });
+  }, [availableColumns]);
+
+  // Check if we have any timestamp columns
+  const hasTimestampColumns = timestampColumns.length > 0;
+
+  // Pick a default timestamp column if available and needed
+  useEffect(() => {
+    // Only run this when table changes or timestamp columns change
+    if (currentExploration.source?.table) {
+      const currentTimestampColumn = currentExploration.timeRange?.column;
+
+      if (hasTimestampColumns) {
+        // If no current timestamp column or it's not valid, set the best one
+        const isCurrentColumnValid = timestampColumns.some(
+          (col) => col.id === currentTimestampColumn || col.name === currentTimestampColumn
+        );
+
+        if (!currentTimestampColumn || !isCurrentColumnValid) {
+          // Choose the highest priority timestamp column
+          const bestTimestampColumn = timestampColumns[0].id;
+
+          // Update exploration with the selected timestamp column
+          actions.updateCurrentExploration({
+            timeRange: {
+              ...currentExploration.timeRange,
+              column: bestTimestampColumn,
+            },
+          });
+
+          console.log(`Selected best timestamp column: ${bestTimestampColumn}`);
+        }
+      } else {
+        // If no timestamp columns, ensure timeRange has column set to null
+        // This prevents a validation error on the backend
+        if (currentExploration.timeRange && currentExploration.timeRange.column !== null) {
+          actions.updateCurrentExploration({
+            timeRange: {
+              ...currentExploration.timeRange,
+              column: null,
+            },
+          });
+
+          console.log('No timestamp columns available, set timeRange column to null');
+        }
+      }
+    }
+  }, [currentExploration.source?.table, timestampColumns]);
 
   // Get available tables from metadata
   const availableTables = metadata.tables ? Object.values(metadata.tables) : [];
@@ -658,7 +743,16 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
         {/* Time Range Selector */}
         <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <TimeRangeSelector disabled={!isTableSelected} />
+          <TimeRangeSelector
+            disabled={!isTableSelected}
+            hasTimestampColumns={hasTimestampColumns}
+          />
+          {isTableSelected && !hasTimestampColumns && (
+            <div className="mt-2 text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-900/20 p-2 rounded border border-amber-200 dark:border-amber-800">
+              <strong>Note:</strong> No time/date columns were found in this table. Time range
+              filtering is disabled.
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -963,18 +1057,67 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               }}
               disabled={
                 !isTableSelected ||
+                !hasTimestampColumns ||
                 ['table', 'pie', 'bar', 'preview'].includes(currentExploration.visualization?.type)
-              } // Disable granularity for table, pie, bar, and preview visualizations
+              } // Disable granularity when no time columns or for incompatible viz types
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className={`h-4 w-4 ${isTableSelected ? 'text-indigo-600' : 'text-gray-400'}`}
+                  className={`h-4 w-4 ${
+                    isTableSelected && hasTimestampColumns ? 'text-indigo-600' : 'text-gray-400'
+                  }`}
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
                   <path
                     fillRule="evenodd"
                     d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              }
+            />
+          </div>
+
+          {/* Timestamp Column Selector */}
+          <div>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Time Column
+              </label>
+              <div className="ml-1 w-10 h-6"></div>
+            </div>
+            <Dropdown
+              label=""
+              options={
+                hasTimestampColumns
+                  ? timestampColumns.map((col) => ({ id: col.id, label: col.name }))
+                  : [{ id: 'none', label: 'None' }]
+              }
+              value={currentExploration.timeRange?.column || 'none'}
+              onChange={(value) => {
+                if (value !== 'none') {
+                  actions.updateCurrentExploration({
+                    timeRange: {
+                      ...currentExploration.timeRange,
+                      column: value,
+                    },
+                  });
+                }
+              }}
+              disabled={!isTableSelected || !hasTimestampColumns}
+              icon={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`h-4 w-4 ${
+                    isTableSelected && hasTimestampColumns ? 'text-teal-600' : 'text-gray-400'
+                  }`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
                     clipRule="evenodd"
                   />
                 </svg>

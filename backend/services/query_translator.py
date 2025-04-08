@@ -380,6 +380,11 @@ class SQLTranslator:
         column = time_range.column
         range_type = time_range.range
 
+        # If column is None or empty, don't apply time filter
+        if not column:
+            logger.info("No time column specified, skipping time range filter")
+            return ""
+
         # Handle custom range
         if range_type == "custom" and time_range.customRange:
             from_date = time_range.customRange.get("from")

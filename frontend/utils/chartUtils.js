@@ -30,3 +30,23 @@ export const formatXAxisTick = (value) => {
 
   return value;
 };
+
+// Custom tooltip component for charts
+export const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded p-1 text-xs">
+      <div className="font-medium text-gray-900 dark:text-gray-200 mb-1">{label}</div>
+      {payload.map((entry, index) => (
+        <div key={`item-${index}`} className="flex items-center">
+          <span className="w-2 h-2 mr-1 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="font-medium mr-1">{entry.name}:</span>
+          <span>{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};

@@ -15,7 +15,7 @@ import {
   Cell,
 } from 'recharts';
 import { useAppState } from '../../context/AppStateContext';
-import { CHART_COLORS, formatXAxisTick } from '../../utils/chartUtils';
+import { CHART_COLORS, formatXAxisTick, CustomTooltip } from '../../utils/chartUtils';
 
 function ResultsChart({ results, type }) {
   const { state } = useAppState();
@@ -178,10 +178,9 @@ function ResultsChart({ results, type }) {
               </LineChart>
             ) : type === 'bar' ? (
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid opacity={0} />
                 <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
                 <YAxis />
-                <Tooltip />
                 <Legend />
                 {chartConfig.yAxisKeys.map((key, index) => (
                   <Bar

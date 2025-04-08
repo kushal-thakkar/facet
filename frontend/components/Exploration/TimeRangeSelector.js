@@ -30,11 +30,8 @@ function TimeRangeSelector({ disabled }) {
   // Only using presets now
   const [tempTimeSettings, setTempTimeSettings] = useState({});
 
-  // Get current time range or default
-  const timeRange = currentExploration.timeRange || {
-    column: null,
-    range: 'last_7_days',
-  };
+  // Get current time range
+  const timeRange = currentExploration.timeRange;
 
   // Get current comparison or default
   const comparison = currentExploration.comparison || {
@@ -43,9 +40,8 @@ function TimeRangeSelector({ disabled }) {
   };
 
   // Get visualization type and check if it's disabled for comparison
-  const isComparisonDisabled = ['table', 'pie', 'preview'].includes(
-    currentExploration.visualization?.type
-  );
+  // TODO: Disable for all viz types for now
+  const isComparisonDisabled = true;
 
   // Find the labels for current selections
   const timeRangeLabel =

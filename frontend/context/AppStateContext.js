@@ -9,7 +9,10 @@ const initialState = {
     filters: [],
     groupBy: [],
     agg: [],
-    timeRange: null,
+    timeRange: {
+      column: 'timestamp',
+      range: 'last_7_days',
+    },
     comparison: {
       enabled: false,
       range: 'none',

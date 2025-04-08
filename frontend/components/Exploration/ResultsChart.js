@@ -177,11 +177,11 @@ function ResultsChart({ results, type }) {
                 ))}
               </LineChart>
             ) : type === 'bar' ? (
-              <BarChart data={chartData}>
+              <BarChart data={chartData} barGap={4}>
                 <CartesianGrid opacity={0} />
                 <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
                 <YAxis />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
                 <Legend />
                 {chartConfig.yAxisKeys.map((key, index) => (
                   <Bar
@@ -189,6 +189,8 @@ function ResultsChart({ results, type }) {
                     dataKey={key}
                     fill={CHART_COLORS[index % CHART_COLORS.length]}
                     name={results.columns.find((col) => col.name === key)?.displayName || key}
+                    isAnimationActive={true}
+                    background={{ fill: 'transparent' }}
                   />
                 ))}
               </BarChart>

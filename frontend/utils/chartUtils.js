@@ -38,13 +38,15 @@ export const CustomTooltip = ({ active, payload, label }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded p-1 text-xs">
+    <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-md rounded-md p-2 text-xs max-w-xs">
       <div className="font-medium text-gray-900 dark:text-gray-200 mb-1">{label}</div>
       {payload.map((entry, index) => (
-        <div key={`item-${index}`} className="flex items-center">
+        <div key={`item-${index}`} className="flex items-center my-1">
           <span className="w-2 h-2 mr-1 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="font-medium mr-1">{entry.name}:</span>
-          <span>{entry.value}</span>
+          <span>
+            {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
+          </span>
         </div>
       ))}
     </div>

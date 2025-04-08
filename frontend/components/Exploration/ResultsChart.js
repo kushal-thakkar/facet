@@ -162,7 +162,7 @@ function ResultsChart({ results, type }) {
                 <CartesianGrid opacity={0} />
                 <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
                 <YAxis />
-                <Tooltip />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 {chartConfig.yAxisKeys.map((key, index) => (
                   <Line
@@ -181,6 +181,7 @@ function ResultsChart({ results, type }) {
                 <CartesianGrid opacity={0} />
                 <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
                 <YAxis />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 {chartConfig.yAxisKeys.map((key, index) => (
                   <Bar
@@ -215,7 +216,7 @@ function ResultsChart({ results, type }) {
                     ))}
                   </Pie>
                 )}
-                <Tooltip />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
               </PieChart>
             )}

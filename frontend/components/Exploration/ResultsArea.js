@@ -221,7 +221,7 @@ function ResultsArea({ results, isLoading }) {
                 Ready to Explore Data
               </h3>
               <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                Configure your exploration in the side panel and click &quot;Run Query&quot; to see
+                Configure your exploration in the side panel and click &quot;Query&quot; to see
                 results
               </p>
             </div>

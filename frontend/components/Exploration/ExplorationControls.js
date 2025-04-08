@@ -635,6 +635,9 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 updateObj.agg = [{ function: 'count', column: null, alias: 'count' }];
               }
 
+              // Clear query results when visualization type changes
+              actions.updateQueryResults(null);
+
               actions.updateCurrentExploration(updateObj);
             }}
             enableTypeahead={true}

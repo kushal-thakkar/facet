@@ -42,6 +42,19 @@ services:
       - CLICKHOUSE_HOST=clickhouse
       - CLICKHOUSE_PORT=8123
       - CLICKHOUSE_DB=facet
+      # Pass through environment variables from host machine
+      - FACET_POSTGRES_USER
+      - FACET_POSTGRES_PASSWORD
+      - FACET_CLICKHOUSE_USER
+      - FACET_CLICKHOUSE_PASSWORD
+      - FACET_BIGQUERY_PROJECT_ID
+      - FACET_BIGQUERY_CREDENTIALS_JSON
+      - FACET_SNOWFLAKE_ACCOUNT
+      - FACET_SNOWFLAKE_USER
+      - FACET_SNOWFLAKE_PASSWORD
+      - FACET_SNOWFLAKE_WAREHOUSE
+      - FACET_SNOWFLAKE_DATABASE
+      - FACET_SNOWFLAKE_SCHEMA
     depends_on:
       - postgres
       - clickhouse

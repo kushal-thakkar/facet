@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -187,11 +188,14 @@ class ConnectionService:
                             f"Creating connection: {conn_data['name']} ({conn_data['type']})"
                         )
 
+                        # Process config to check for environment variable references
+                        processed_config = self._process_env_variables(conn_data["config"])
+
                         connection = Connection(
                             id=conn_id,
                             name=conn_data["name"],
                             type=conn_data["type"],
-                            config=ConnectionConfig(**conn_data["config"]),
+                            config=ConnectionConfig(**processed_config),
                             created_at=datetime.now(),
                             updated_at=datetime.now(),
                         )
@@ -220,3 +224,38 @@ class ConnectionService:
                     logger.warning(f"Config directory does not exist: {config_dir}")
         except Exception as e:
             logger.error(f"Error loading predefined connections: {str(e)}")
+
+    def _process_env_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Process config values to substitute environment variables.
+
+        Environment variables should be in the format ${FACET_VARIABLE_NAME}.
+
+        Args:
+            config: The connection configuration dictionary
+
+        Returns:
+            Processed configuration with environment variables substituted
+        """
+        processed_config = {}
+
+        for key, value in config.items():
+            if isinstance(value, str):
+                # Check if the value contains an environment variable reference
+                matches = re.findall(r"\${(FACET_[A-Z0-9_]+)}", value)
+                if matches:
+                    # Process all env var references in the string
+                    new_value = value
+                    for env_var in matches:
+                        env_value = os.environ.get(env_var, "")
+                        if not env_value:
+                            logger.warning(f"Environment variable {env_var} not found or empty")
+                        new_value = new_value.replace(f"${{{env_var}}}", env_value)
+                    processed_config[key] = new_value
+                else:
+                    processed_config[key] = value
+            else:
+                # Non-string values are passed through unchanged
+                processed_config[key] = value
+
+        return processed_config

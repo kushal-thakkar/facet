@@ -5,8 +5,8 @@ connections:
       host: 'postgres'
       port: 5432
       database: 'facet'
-      user: 'facet'
-      password: 'facetpass'
+      user: '${FACET_POSTGRES_USER}'
+      password: '${FACET_POSTGRES_PASSWORD}'
       ssl: false
 
   - name: 'ClickHouse (Local)'
@@ -15,22 +15,22 @@ connections:
       host: 'clickhouse'
       port: 8123
       database: 'facet'
-      user: 'default'
-      password: 'clickhouse_pass'
+      user: '${FACET_CLICKHOUSE_USER}'
+      password: '${FACET_CLICKHOUSE_PASSWORD}'
       https: false
 
   - name: 'BigQuery'
     type: 'bigquery'
     config:
-      project_id: 'your-project-id'
-      credentials_json: '{}'
+      project_id: '${FACET_BIGQUERY_PROJECT_ID}'
+      credentials_json: '${FACET_BIGQUERY_CREDENTIALS_JSON}'
 
   - name: 'Snowflake'
     type: 'snowflake'
     config:
-      account: 'your-account-id.snowflakecomputing.com'
-      user: 'username'
-      password: 'password'
-      warehouse: 'compute_wh'
-      database: 'your_database'
-      schema: 'public'
+      account: '${FACET_SNOWFLAKE_ACCOUNT}'
+      user: '${FACET_SNOWFLAKE_USER}'
+      password: '${FACET_SNOWFLAKE_PASSWORD}'
+      warehouse: '${FACET_SNOWFLAKE_WAREHOUSE}'
+      database: '${FACET_SNOWFLAKE_DATABASE}'
+      schema: '${FACET_SNOWFLAKE_SCHEMA}'

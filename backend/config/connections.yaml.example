@@ -1,6 +1,10 @@
 # Database connections configuration
 # Copy this file to connections.yaml and modify as needed
 # The connections configured here will be available in the UI dropdown
+#
+# ENVIRONMENT VARIABLES:
+# You can use environment variables for sensitive data in the format: ${FACET_VARIABLE_NAME}
+# Example: password: "${FACET_POSTGRES_PASSWORD}"
 
 connections:
   - name: "PostgreSQL (Local)"
@@ -9,8 +13,8 @@ connections:
       host: "postgres"
       port: 5432
       database: "facet"
-      user: "facet"
-      password: "facetpass"
+      user: "${FACET_POSTGRES_USER}" 
+      password: "${FACET_POSTGRES_PASSWORD}"
       ssl: false
   
   - name: "ClickHouse (Local)"
@@ -19,37 +23,37 @@ connections:
       host: "clickhouse"
       port: 8123
       database: "facet"
-      user: "default"
-      password: "clickhouse_pass"
+      user: "${FACET_CLICKHOUSE_USER}"
+      password: "${FACET_CLICKHOUSE_PASSWORD}"
       https: false
       
   # Google BigQuery Example
   # - name: "BigQuery"
   #   type: "bigquery" 
   #   config:
-  #     project_id: "your-project-id"
+  #     project_id: "${FACET_BIGQUERY_PROJECT_ID}"
   #     # Service account credentials JSON (can be the entire JSON as a string)
-  #     credentials_json: '{"type": "service_account", "project_id": "your-project", ...}'
+  #     credentials_json: '${FACET_BIGQUERY_CREDENTIALS_JSON}'
   
   # Snowflake Example
   # - name: "Snowflake Analytics"
   #   type: "snowflake"
   #   config:
-  #     account: "your-account-id.snowflakecomputing.com"  # Account identifier
-  #     user: "your_username"
-  #     password: "your_password"
-  #     warehouse: "compute_wh"  # Warehouse name
-  #     database: "analytics"
-  #     schema: "public"        # Default schema
-  #     role: "analyst"         # Optional role
+  #     account: "${FACET_SNOWFLAKE_ACCOUNT}"  # Account identifier
+  #     user: "${FACET_SNOWFLAKE_USER}"
+  #     password: "${FACET_SNOWFLAKE_PASSWORD}"
+  #     warehouse: "${FACET_SNOWFLAKE_WAREHOUSE}"  # Warehouse name
+  #     database: "${FACET_SNOWFLAKE_DATABASE}"
+  #     schema: "${FACET_SNOWFLAKE_SCHEMA}"        # Default schema
+  #     role: "${FACET_SNOWFLAKE_ROLE}"         # Optional role
   
   # Example of additional PostgreSQL connection
   # - name: "Production PostgreSQL"
   #   type: "postgres"
   #   config:
-  #     host: "production-db.example.com"
+  #     host: "${FACET_PROD_POSTGRES_HOST}"
   #     port: 5432
-  #     database: "analytics"
-  #     user: "analyst"
-  #     password: "your-secure-password"
+  #     database: "${FACET_PROD_POSTGRES_DB}"
+  #     user: "${FACET_PROD_POSTGRES_USER}"
+  #     password: "${FACET_PROD_POSTGRES_PASSWORD}"
   #     ssl: true

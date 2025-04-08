@@ -159,7 +159,7 @@ function ResultsChart({ results, type }) {
           <ResponsiveContainer width="100%" height="100%">
             {type === 'line' ? (
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid opacity={0} />
                 <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
                 <YAxis />
                 <Tooltip />

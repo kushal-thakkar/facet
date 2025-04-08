@@ -135,3 +135,28 @@ AS SELECT
     count() AS count
 FROM users
 GROUP BY country, status;
+
+-- Manually populate materialized views to ensure data is available immediately
+-- This guarantees data is present when querying the tables
+
+-- Option 1: Trigger the materialized views directly 
+-- (this is more reliable for future schema changes)
+
+-- Trigger events_by_page_mv materialized view
+INSERT INTO events_by_page_mv SELECT 
+    page,
+    event_type,
+    toDate(timestamp) AS date,
+    timestamp,
+    count() AS count,
+    avg(duration) AS avg_duration
+FROM events
+GROUP BY page, event_type, date, timestamp;
+
+-- Trigger users_by_country_mv materialized view
+INSERT INTO users_by_country_mv SELECT
+    country,
+    status,
+    count() AS count
+FROM users
+GROUP BY country, status;

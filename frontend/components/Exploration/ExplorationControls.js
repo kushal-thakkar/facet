@@ -46,7 +46,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
     // Only set aggregation for non-preview visualizations
     if (vizType !== 'preview') {
-      updateObj.agg = [{ function: 'avg', column: null, alias: 'avg' }];
+      updateObj.agg = [{ function: 'count', column: null, alias: 'count' }];
     } else {
       updateObj.agg = []; // Clear aggregation for preview mode
     }
@@ -97,6 +97,18 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     const [searchTerm, setSearchTerm] = useState('');
     const isInitialRender = useRef(true);
     const fieldsRef = useRef(null);
+    const { state } = useAppState();
+    const { currentExploration } = state;
+
+    // Helper functions to check column types and aggregation
+    const isNumericType = (columnType) =>
+      ['number', 'integer', 'float', 'decimal', 'numeric'].includes(columnType);
+
+    // Check if using a non-COUNT aggregate function
+    const isNonCountAgg =
+      currentExploration.agg?.length > 0 &&
+      currentExploration.agg[0]?.function !== 'count' &&
+      currentExploration.visualization?.type !== 'preview';
 
     useEffect(() => {
       setSelectedFields(currentSelection || []);
@@ -119,7 +131,14 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       setIsExpanded(!isExpanded);
     };
 
-    const toggleField = (columnId) => {
+    const toggleField = (columnId, columnType) => {
+      // If using non-COUNT aggregation (and not in preview visualization),
+      // only allow numeric columns to be selected
+      if (isNonCountAgg && !isNumericType(columnType) && !selectedFields.includes(columnId)) {
+        console.log(`Blocking non-numeric column: ${columnId} of type ${columnType}`);
+        return; // Prevent non-numeric column selection
+      }
+
       if (selectedFields.includes(columnId)) {
         setSelectedFields(selectedFields.filter((id) => id !== columnId));
       } else {
@@ -128,7 +147,24 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     };
 
     const selectAll = () => {
-      setSelectedFields(columns.map((col) => col.id));
+      // If using non-COUNT aggregation (and not in preview visualization),
+      // only select numeric columns
+      if (isNonCountAgg) {
+        // Debug the columns and their types
+        console.log('Columns data:', columns);
+        // Find columns that have numeric data types
+        const numericColumns = columns.filter((col) => isNumericType(col.type));
+        console.log('Numeric columns:', numericColumns);
+
+        if (numericColumns.length > 0) {
+          setSelectedFields(numericColumns.map((col) => col.id));
+        } else {
+          // If no numeric columns found, don't change the selection
+          console.warn('No numeric columns found for non-COUNT aggregation');
+        }
+      } else {
+        setSelectedFields(columns.map((col) => col.id));
+      }
     };
 
     const selectNone = () => {
@@ -246,6 +282,12 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
             {/* Field list with checkboxes */}
             <div className="overflow-y-auto max-h-60">
+              {isNonCountAgg && (
+                <div className="mb-2 text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-900/20 p-2 rounded border border-amber-200 dark:border-amber-800">
+                  <strong>Note:</strong> For non-COUNT aggregations, only numeric fields can be
+                  selected.
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 {filteredColumns.length > 0 ? (
                   filteredColumns.map((column) => (
@@ -255,14 +297,32 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                         type="checkbox"
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         checked={selectedFields.includes(column.id)}
-                        onChange={() => toggleField(column.id)}
+                        onChange={() => toggleField(column.id, column.type)}
+                        disabled={
+                          isNonCountAgg &&
+                          !isNumericType(column.type) &&
+                          !selectedFields.includes(column.id)
+                        }
                       />
                       <label
                         htmlFor={`field-${column.id}`}
-                        className="ml-2 block text-sm text-gray-900 dark:text-gray-200 truncate"
-                        title={column.name}
+                        className={`ml-2 block text-sm truncate ${
+                          isNonCountAgg &&
+                          !isNumericType(column.type) &&
+                          !selectedFields.includes(column.id)
+                            ? 'text-gray-400 dark:text-gray-500'
+                            : 'text-gray-900 dark:text-gray-200'
+                        }`}
+                        title={`${column.name}${
+                          isNonCountAgg && !isNumericType(column.type)
+                            ? ' (non-numeric columns disabled for non-COUNT aggregations)'
+                            : ''
+                        }`}
                       >
                         {column.name}
+                        {isNumericType(column.type) && (
+                          <span className="ml-1 text-xs text-blue-500">#</span>
+                        )}
                       </label>
                     </div>
                   ))
@@ -526,12 +586,17 @@ function ExplorationControls({ onRunQuery, isLoading }) {
             ]}
             value={currentExploration.visualization?.type}
             onChange={(type) => {
+              const fromPreview = currentExploration.visualization?.type === 'preview';
+              const toPreview = type === 'preview';
+
               // Create update object for visualization type
               const updateObj = {
                 visualization: {
                   ...currentExploration.visualization,
                   type,
                 },
+                // Reset selected fields when changing visualization type
+                selectedFields: [],
               };
 
               // Special handling for different visualization types
@@ -547,7 +612,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 updateObj.groupBy = [];
               } else if (currentExploration.visualization?.type === 'preview' && !updateObj.agg) {
                 // When switching from preview to another viz type, add default aggregation
-                updateObj.agg = [{ function: 'avg', column: null, alias: 'avg' }];
+                updateObj.agg = [{ function: 'count', column: null, alias: 'count' }];
               }
 
               actions.updateCurrentExploration(updateObj);
@@ -769,7 +834,12 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               ]}
               value={(currentExploration.agg && currentExploration.agg[0]?.function) || 'avg'}
               onChange={(value) => {
-                actions.updateCurrentExploration({
+                // Check if we're switching between COUNT and non-COUNT
+                const isFromCount = currentExploration.agg?.[0]?.function === 'count';
+                const isToCount = value === 'count';
+
+                // Reset selected fields when changing between count and non-count
+                const updateObj = {
                   agg: [
                     {
                       function: value,
@@ -777,7 +847,14 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                       alias: value,
                     },
                   ],
-                });
+                };
+
+                // Reset field selection when switching between COUNT and non-COUNT
+                if (isFromCount !== isToCount) {
+                  updateObj.selectedFields = [];
+                }
+
+                actions.updateCurrentExploration(updateObj);
               }}
               disabled={!isTableSelected || currentExploration.visualization?.type === 'preview'}
               icon={

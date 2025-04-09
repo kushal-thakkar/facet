@@ -24,7 +24,7 @@ connections:
     config:
       project_id: '${FACET_BIGQUERY_PROJECT_ID}'
       credentials_json: '${FACET_BIGQUERY_CREDENTIALS_JSON}'
-      dataset_project_id: 'bigquery-public-data'
+      bigquery_dataset_project_id: 'bigquery-public-data'
       bigquery_dataset_id: '${FACET_BIGQUERY_DATASET_ID}'
 
   - name: 'Snowflake'

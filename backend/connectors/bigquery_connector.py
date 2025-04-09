@@ -132,7 +132,9 @@ class BigQueryConnector(DatabaseConnector):
 
             # Check if we're using a different project for dataset (like bigquery-public-data)
             dataset_project = getattr(
-                self.connection.config, "dataset_project_id", self.connection.config.project_id
+                self.connection.config,
+                "bigquery_dataset_project_id",
+                self.connection.config.project_id,
             )
 
             for dataset_id in dataset_ids:

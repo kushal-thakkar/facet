@@ -36,6 +36,7 @@ class Connection(BaseModel):
     config: ConnectionConfig
     created_at: datetime
     updated_at: datetime
+    bigquery_dataset_id: Optional[str] = None
 
 
 class ConnectionCreate(BaseModel):

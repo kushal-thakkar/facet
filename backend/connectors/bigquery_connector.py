@@ -41,23 +41,15 @@ class BigQueryConnector(DatabaseConnector):
             # Log connection attempt
             logger.info(f"Connecting to BigQuery with project {self.connection.config.project_id}")
 
-            # Determine authentication method
-            if (
-                hasattr(self.connection.config, "credentials_json")
-                and self.connection.config.credentials_json
-            ):
-                # Create credentials from service account JSON
-                credentials_info = json.loads(self.connection.config.credentials_json)
-                credentials = service_account.Credentials.from_service_account_info(
-                    credentials_info
-                )
-                self.client = bigquery.Client(
-                    project=self.connection.config.project_id, credentials=credentials
-                )
-            else:
-                # Default credentials (environment or service account)
-                self.client = bigquery.Client(project=self.connection.config.project_id)
+            # Create credentials from service account JSON
+            credentials_info = json.loads(self.connection.config.credentials_json)
+            credentials = service_account.Credentials.from_service_account_info(credentials_info)
 
+            # For public datasets like bigquery-public-data, we must use our own project ID
+            # for creating jobs, while accessing the data from the public project
+            self.client = bigquery.Client(
+                project=self.connection.config.project_id, credentials=credentials
+            )
             logger.info("BigQuery client initialized successfully")
 
         except Exception as e:
@@ -130,26 +122,53 @@ class BigQueryConnector(DatabaseConnector):
 
             # Get datasets
             client = await self.get_client()
-            datasets = await self._run_in_executor(lambda: list(client.list_datasets()))
+
+            # TODO: Uncomment this when we have a scalable way to get datasets/tables
+            # datasets = await self._run_in_executor(lambda: list(client.list_datasets()))
+            # logger.info(f"Datasets: {datasets}")
 
             # For each dataset, get tables
-            for dataset in datasets:
-                dataset_id = dataset.dataset_id
+            dataset_ids = [self.connection.config.bigquery_dataset_id]
+
+            # Check if we're using a different project for dataset (like bigquery-public-data)
+            dataset_project = getattr(
+                self.connection.config, "dataset_project_id", self.connection.config.project_id
+            )
+
+            for dataset_id in dataset_ids:
+                # TODO: Uncomment this when we have a scalable way to get datasets/tables
+                # dataset_id = dataset
+
+                logger.info(
+                    f"Getting tables for dataset: {dataset_id} in project: {dataset_project}"
+                )
+
+                # Construct the fully qualified dataset ID if using a different project
+                fully_qualified_dataset = (
+                    f"{dataset_project}.{dataset_id}"
+                    if dataset_project != self.connection.config.project_id
+                    else dataset_id
+                )
 
                 # Get all tables in this dataset
                 client = await self.get_client()
                 bq_tables = await self._run_in_executor(
-                    lambda: list(client.list_tables(dataset_id))
+                    lambda: list(client.list_tables(fully_qualified_dataset))
                 )
-
+                logger.info(f"Tables: {bq_tables} for dataset: {dataset_id}")
                 for table_ref in bq_tables:
                     table_id = table_ref.table_id
-                    full_table_id = f"{dataset_id}.{table_id}"
+
+                    # For display purposes, include project in the ID if it's different
+                    if dataset_project != self.connection.config.project_id:
+                        full_table_id = f"{dataset_project}.{dataset_id}.{table_id}"
+                    else:
+                        full_table_id = f"{dataset_id}.{table_id}"
 
                     # Get detailed table information
                     client = await self.get_client()
                     table = await self._run_in_executor(
-                        lambda: client.get_table(f"{dataset_id}.{table_id}")
+                        lambda: client.get_table(f"{fully_qualified_dataset}.{table_id}")
                     )
 
                     # Determine table type

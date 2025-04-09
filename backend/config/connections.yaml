@@ -35,4 +35,4 @@ connections:
       password: '${FACET_SNOWFLAKE_PASSWORD}'
       warehouse: '${FACET_SNOWFLAKE_WAREHOUSE}'
       database: '${FACET_SNOWFLAKE_DATABASE}'
-      schema: '${FACET_SNOWFLAKE_SCHEMA}'
+      snowflake_schema: '${FACET_SNOWFLAKE_SCHEMA}'

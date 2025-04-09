@@ -50,7 +50,7 @@ class SnowflakeConnector(DatabaseConnector):
                     account=self.connection.config.account,
                     warehouse=self.connection.config.warehouse,
                     database=self.connection.config.database,
-                    schema=getattr(self.connection.config, "schema", "PUBLIC"),
+                    schema=getattr(self.connection.config, "snowflake_schema", "PUBLIC"),
                     role=getattr(self.connection.config, "role", None),
                 )
             )
@@ -82,7 +82,7 @@ class SnowflakeConnector(DatabaseConnector):
                 account=self.connection.config.account,
                 warehouse=self.connection.config.warehouse,
                 database=self.connection.config.database,
-                schema=getattr(self.connection.config, "schema", "PUBLIC"),
+                schema=getattr(self.connection.config, "snowflake_schema", "PUBLIC"),
                 role=getattr(self.connection.config, "role", None),
             )
 
@@ -117,18 +117,39 @@ class SnowflakeConnector(DatabaseConnector):
                 f"Fetching metadata for Snowflake database: {self.connection.config.database}"
             )
 
-            # Get tables
-            tables_query = """
-            SELECT
-                TABLE_NAME as name,
-                TABLE_SCHEMA as schema,
-                COMMENT as description,
-                TABLE_TYPE as type,
-                ROW_COUNT as row_count
-            FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
-            ORDER BY TABLE_SCHEMA, TABLE_NAME
-            """
+            # Check if we're using SNOWFLAKE_SAMPLE_DATA
+            is_sample_data = "SNOWFLAKE_SAMPLE_DATA" in self.connection.config.database.upper()
+
+            # For SNOWFLAKE_SAMPLE_DATA, we need to specify a schema
+            if is_sample_data:
+                # Use a specific schema for sample data like TPCH_SF1, TPCDS_SF10, etc.
+                # Default to TPCH_SF1 if no schema is specified
+                schema = getattr(self.connection.config, "snowflake_schema", "TPCH_SF1")
+
+                tables_query = f"""
+                SELECT
+                    TABLE_NAME as name,
+                    TABLE_SCHEMA as schema,
+                    COMMENT as description,
+                    TABLE_TYPE as type,
+                    ROW_COUNT as row_count
+                FROM INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_SCHEMA = '{schema}'
+                ORDER BY TABLE_SCHEMA, TABLE_NAME
+                """
+            else:
+                # Standard query for regular Snowflake databases
+                tables_query = """
+                SELECT
+                    TABLE_NAME as name,
+                    TABLE_SCHEMA as schema,
+                    COMMENT as description,
+                    TABLE_TYPE as type,
+                    ROW_COUNT as row_count
+                FROM INFORMATION_SCHEMA.TABLES
+                WHERE TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
+                ORDER BY TABLE_SCHEMA, TABLE_NAME
+                """
 
             client = await self.get_client()
             cursor = await self._run_in_executor(lambda: client.cursor().execute(tables_query))
@@ -153,46 +174,68 @@ class SnowflakeConnector(DatabaseConnector):
                     )
                 )
 
-            # Get columns for all tables
-            columns_query = """
-            SELECT
-                TABLE_NAME,
-                COLUMN_NAME as name,
-                DATA_TYPE as data_type,
-                IS_NULLABLE = 'YES' as nullable,
-                COMMENT as description,
-                CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN true ELSE false END as primary_key,
-                fk.REFERENCED_TABLE as referenced_table,
-                fk.REFERENCED_COLUMN as referenced_column
-            FROM INFORMATION_SCHEMA.COLUMNS c
-            LEFT JOIN (
+            # For Snowflake sample data, we need a simpler query that doesn't rely on
+            # KEY_COLUMN_USAGE
+            # Check if we're using SNOWFLAKE_SAMPLE_DATA which has a different schema structure
+            is_sample_data = "SNOWFLAKE_SAMPLE_DATA" in self.connection.config.database.upper()
+
+            if is_sample_data:
+                # Simplified query for sample data without foreign/primary key info
+                columns_query = """
                 SELECT
-                    kcu.COLUMN_NAME,
-                    kcu.TABLE_NAME
-                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-                JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
-                    ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
-                    AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
-                WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
-            ) pk ON pk.TABLE_NAME = c.TABLE_NAME AND pk.COLUMN_NAME = c.COLUMN_NAME
-            LEFT JOIN (
+                    TABLE_NAME,
+                    COLUMN_NAME as name,
+                    DATA_TYPE as data_type,
+                    IS_NULLABLE = 'YES' as nullable,
+                    COMMENT as description,
+                    false as primary_key,
+                    null as referenced_table,
+                    null as referenced_column
+                FROM INFORMATION_SCHEMA.COLUMNS c
+                WHERE c.TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
+                ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
+                """
+            else:
+                # Standard query with foreign/primary key info for regular Snowflake databases
+                columns_query = """
                 SELECT
-                    kcu.COLUMN_NAME,
-                    kcu.TABLE_NAME,
-                    ccu.TABLE_NAME as REFERENCED_TABLE,
-                    ccu.COLUMN_NAME as REFERENCED_COLUMN
-                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-                JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
-                    ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
-                    AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
-                JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu
-                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
-                    AND tc.TABLE_SCHEMA = ccu.TABLE_SCHEMA
-                WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
-            ) fk ON fk.TABLE_NAME = c.TABLE_NAME AND fk.COLUMN_NAME = c.COLUMN_NAME
-            WHERE c.TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
-            ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
-            """
+                    TABLE_NAME,
+                    COLUMN_NAME as name,
+                    DATA_TYPE as data_type,
+                    IS_NULLABLE = 'YES' as nullable,
+                    COMMENT as description,
+                    CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN true ELSE false END as primary_key,
+                    fk.REFERENCED_TABLE as referenced_table,
+                    fk.REFERENCED_COLUMN as referenced_column
+                FROM INFORMATION_SCHEMA.COLUMNS c
+                LEFT JOIN (
+                    SELECT
+                        kcu.COLUMN_NAME,
+                        kcu.TABLE_NAME
+                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                        ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+                        AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+                    WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+                ) pk ON pk.TABLE_NAME = c.TABLE_NAME AND pk.COLUMN_NAME = c.COLUMN_NAME
+                LEFT JOIN (
+                    SELECT
+                        kcu.COLUMN_NAME,
+                        kcu.TABLE_NAME,
+                        ccu.TABLE_NAME as REFERENCED_TABLE,
+                        ccu.COLUMN_NAME as REFERENCED_COLUMN
+                    FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                    JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                        ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+                        AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+                    JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu
+                        ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME
+                        AND tc.TABLE_SCHEMA = ccu.TABLE_SCHEMA
+                    WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
+                ) fk ON fk.TABLE_NAME = c.TABLE_NAME AND fk.COLUMN_NAME = c.COLUMN_NAME
+                WHERE c.TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
+                ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
+                """
 
             client = await self.get_client()
             cursor = await self._run_in_executor(lambda: client.cursor().execute(columns_query))

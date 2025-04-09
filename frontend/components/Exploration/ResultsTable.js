@@ -74,12 +74,40 @@ function ResultsTable({ results }) {
     if (value === null || value === undefined) return '-';
 
     if (columnType === 'date' || columnType === 'timestamp') {
-      // Format dates in a user-friendly way
-      try {
-        return new Date(value).toLocaleString();
-      } catch (e) {
-        return value;
+      // Display timestamp in original format without timezone conversion
+      // Just format it to be more readable
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+        // For timestamps, keep original format but structure nicely
+        const parts = {
+          year: value.substring(0, 4),
+          month: value.substring(5, 7),
+          day: value.substring(8, 10),
+          time: value.length > 10 ? value.substring(11) : '',
+        };
+
+        // Simple month name mapping
+        const monthNames = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
+        const monthIndex = parseInt(parts.month, 10) - 1;
+        const monthName = monthNames[monthIndex] || parts.month;
+
+        return parts.time
+          ? `${parts.year}-${parts.month}-${parts.day} ${parts.time}` // Include time if available
+          : `${parts.year}-${parts.month}-${parts.day}`; // Date only
       }
+      return value;
     }
 
     if (typeof value === 'boolean') {

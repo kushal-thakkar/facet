@@ -39,7 +39,35 @@ class SQLTranslator:
             visualization_type = (
                 query_model.visualization.type if query_model.visualization else "table"
             )
-            if visualization_type == "table" and query_model.selectedFields:
+
+            # Check if time-based granularity should be applied (for line charts)
+            # Only apply time-based granularity when:
+            # 1. Visualization is line chart
+            # 2. Granularity is specified
+            # 3. TimeRange column is specified
+            # 4. We're grouping by the time column (important!)
+            is_time_granularity = (
+                visualization_type == "line"
+                and query_model.granularity
+                and query_model.timeRange is not None
+                and query_model.timeRange.column is not None
+                and query_model.groupBy
+                and query_model.timeRange.column in query_model.groupBy
+            )
+
+            # Build SELECT clause based on visualization type and granularity
+            if is_time_granularity:
+                time_column = (
+                    query_model.timeRange.column if query_model.timeRange is not None else None
+                )
+                select_clause = self._build_select_with_granularity(
+                    query_model.agg,
+                    query_model.groupBy,
+                    query_model.selectedFields,
+                    time_column,
+                    query_model.granularity,
+                )
+            elif visualization_type == "table" and query_model.selectedFields:
                 select_clause = self._build_select_for_table(
                     query_model.agg, query_model.groupBy, query_model.selectedFields
                 )
@@ -48,15 +76,31 @@ class SQLTranslator:
                     query_model.agg, query_model.groupBy, query_model.selectedFields
                 )
 
+            # Common clauses for all query types
             from_clause = self._build_from(query_model.source)
             where_clause = self._build_where(query_model.filters, query_model.timeRange)
-            if query_model.agg or query_model.groupBy:
+
+            # Handle group by clause, with special case for time granularity
+            if (
+                is_time_granularity
+                and query_model.groupBy
+                and query_model.timeRange is not None
+                and query_model.timeRange.column is not None
+                and query_model.groupBy[0] == query_model.timeRange.column
+            ):
+                group_by_clause = self._build_group_by_with_granularity(
+                    query_model.groupBy, query_model.timeRange.column, query_model.granularity
+                )
+            elif query_model.agg or query_model.groupBy:
                 group_by_clause = self._build_group_by(query_model.groupBy)
             else:
                 group_by_clause = ""
 
+            # Remaining clauses
             order_by_clause = self._build_order_by(query_model.sort)
             limit_clause = self._build_limit(query_model.limit)
+
+            # Assemble final SQL
             sql = (
                 f"{select_clause}\n{from_clause}\n{where_clause}\n"
                 + f"{group_by_clause}\n{order_by_clause}\n{limit_clause}"
@@ -189,6 +233,105 @@ class SQLTranslator:
 
         return f"SELECT {', '.join(select_items)}"
 
+    def _build_select_with_granularity(
+        self,
+        metrics: List[Metric],
+        group_by: List[str],
+        selected_fields: Optional[List[str]] = None,
+        time_column: Optional[str] = None,
+        granularity: Optional[str] = None,
+    ) -> str:
+        """Build the SELECT clause with time granularity bucketing.
+
+        Args:
+            metrics: List of metrics to include
+            group_by: List of dimensions to group by
+            selected_fields: Optional list of explicitly selected fields
+            time_column: The timestamp column to apply granularity to
+            granularity: Time granularity level (minute, hour, day, week, month)
+
+        Returns:
+            SELECT clause string with time granularity applied
+        """
+        select_items = []
+
+        # First handle the time granularity for the time column
+        if time_column and granularity:
+            # Generate the appropriate date_trunc expression based on dialect
+            truncated_alias = f"trunc_{time_column.replace('.', '_')}_{granularity}"
+
+            if self.dialect == "postgresql":
+                select_items.append(
+                    f"DATE_TRUNC('{granularity}', {time_column}) AS {truncated_alias}"
+                )
+            elif self.dialect == "clickhouse":
+                if granularity == "minute":
+                    select_items.append(f"toStartOfMinute({time_column}) AS {truncated_alias}")
+                elif granularity == "hour":
+                    select_items.append(f"toStartOfHour({time_column}) AS {truncated_alias}")
+                elif granularity == "day":
+                    select_items.append(f"toStartOfDay({time_column}) AS {truncated_alias}")
+                elif granularity == "week":
+                    select_items.append(f"toStartOfWeek({time_column}) AS {truncated_alias}")
+                elif granularity == "month":
+                    select_items.append(f"toStartOfMonth({time_column}) AS {truncated_alias}")
+                else:
+                    raise ValueError(f"Unsupported granularity for ClickHouse: {granularity}")
+            elif self.dialect == "bigquery":
+                select_items.append(
+                    f"TIMESTAMP_TRUNC({time_column}, {granularity.upper()}) AS {truncated_alias}"
+                )
+            elif self.dialect == "snowflake":
+                select_items.append(
+                    f"DATE_TRUNC('{granularity}', {time_column}) AS {truncated_alias}"
+                )
+            else:
+                # For unknown dialects, use PostgreSQL syntax as default
+                select_items.append(
+                    f"DATE_TRUNC('{granularity}', {time_column}) AS {truncated_alias}"
+                )
+
+        # Add other GROUP BY columns to the select list
+        # (excluding the time column that was already added)
+        for dimension in group_by:
+            if dimension != time_column:
+                select_items.append(dimension)
+
+        # Handle all metrics (aggregations)
+        if metrics:
+            for metric in metrics:
+                func_name = metric.function.upper() if metric.function else "COUNT"
+
+                # Case 1: COUNT function
+                if func_name == "COUNT":
+                    select_expr = f"COUNT(*) AS {metric.alias or 'count'}"
+                    select_items.append(select_expr)
+                # Case 2: Other aggregation functions
+                else:
+                    # For non-COUNT aggregations, we must have a specific column
+                    if not metric.column:
+                        if selected_fields and len(selected_fields) > 0:
+                            metric.column = selected_fields[0]
+                            logger.info(f"Using selected field '{metric.column}' for {func_name}")
+                        else:
+                            logger.error(f"No column specified for {func_name} aggregation")
+                            raise ValueError(
+                                f"Column must be specified for {func_name} aggregation"
+                            )
+
+                    # Extract column name for the alias
+                    column_name = (
+                        metric.column.split(".")[-1] if "." in metric.column else metric.column
+                    )
+                    alias = metric.alias or f"{func_name.lower()}_{column_name}"
+
+                    # Build the expression with quoted alias
+                    select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+                    select_items.append(select_expr)
+
+        # With granularity, we should always have at least the truncated time column
+        return f"SELECT {', '.join(select_items)}"
+
     def _build_from(self, source) -> str:
         """Build the FROM clause.
 
@@ -233,9 +376,10 @@ class SQLTranslator:
             for filter_item in filters:
                 if hasattr(filter_item, "logic"):
                     # It's a logical filter group
-                    group_condition = self._build_filter_group(filter_item)
-                    if group_condition:
-                        conditions.append(group_condition)
+                    if isinstance(filter_item, LogicalFilterGroup):
+                        group_condition = self._build_filter_group(filter_item)
+                        if group_condition:
+                            conditions.append(group_condition)
                 else:
                     # It's a single filter condition
                     condition = self._build_filter_condition(filter_item)
@@ -265,16 +409,17 @@ class SQLTranslator:
         group_conditions = []
 
         for condition in filter_group.conditions:
-            if hasattr(condition, "logic"):
+            if hasattr(condition, "logic") and isinstance(condition, LogicalFilterGroup):
                 # It's a nested logical filter group
                 nested_condition = self._build_filter_group(condition)
                 if nested_condition:
                     group_conditions.append(nested_condition)
             else:
                 # It's a single filter condition
-                condition_str = self._build_filter_condition(condition)
-                if condition_str:
-                    group_conditions.append(condition_str)
+                if isinstance(condition, FilterCondition):
+                    condition_str = self._build_filter_condition(condition)
+                    if condition_str:
+                        group_conditions.append(condition_str)
 
         if not group_conditions:
             return ""
@@ -447,6 +592,34 @@ class SQLTranslator:
             return ""
 
         return f"GROUP BY {', '.join(group_by)}"
+
+    def _build_group_by_with_granularity(
+        self, group_by: List[str], time_column: Optional[str], granularity: Optional[str]
+    ) -> str:
+        """Build the GROUP BY clause with time granularity support.
+
+        Args:
+            group_by: List of dimensions to group by
+            time_column: The time column to apply granularity to
+            granularity: Granularity level (minute, hour, day, etc.)
+
+        Returns:
+            GROUP BY clause string with time granularity applied
+        """
+        if not group_by or time_column is None or granularity is None:
+            return ""
+
+        # Create a new list with the time column replaced by its truncated version
+        modified_group_by = []
+        for col in group_by:
+            if col == time_column:
+                # Use the truncated time alias instead of the original column
+                truncated_alias = f"trunc_{time_column.replace('.', '_')}_{granularity}"
+                modified_group_by.append(truncated_alias)
+            else:
+                modified_group_by.append(col)
+
+        return f"GROUP BY {', '.join(modified_group_by)}"
 
     def _build_order_by(self, sort: List[SortOrder]) -> str:
         """Build the ORDER BY clause.

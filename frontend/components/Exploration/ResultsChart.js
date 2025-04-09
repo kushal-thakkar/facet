@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -16,10 +16,76 @@ import {
 } from 'recharts';
 import { useAppState } from '../../context/AppStateContext';
 import { CHART_COLORS, formatXAxisTick, CustomTooltip } from '../../utils/chartUtils';
+import { getGranularityForTimeRange } from '../../utils/explorationUtils';
 
 function ResultsChart({ results, type }) {
   const { state } = useAppState();
   const { currentExploration } = state;
+
+  // Helper function to resolve granularity based on current settings
+  const resolveGranularity = () => {
+    let displayGranularity = currentExploration.granularity;
+    if (displayGranularity === 'auto' && currentExploration.timeRange?.range) {
+      try {
+        displayGranularity = getGranularityForTimeRange(currentExploration.timeRange.range);
+      } catch (error) {
+        console.warn('Unable to resolve granularity');
+      }
+    }
+    return displayGranularity;
+  };
+
+  // Helper function to format axis ticks with granularity awareness
+  const formatAxisTick = (value) => {
+    return formatXAxisTick(value, resolveGranularity());
+  };
+
+  // Display a nicer title showing the active granularity when applicable
+  const granularityDisplay = useMemo(() => {
+    // Only show granularity for line charts when grouping by a time column
+    const isTimeBasedGrouping =
+      type === 'line' &&
+      currentExploration.timeRange?.column &&
+      currentExploration.groupBy?.includes(currentExploration.timeRange.column);
+
+    if (!isTimeBasedGrouping) return null;
+
+    // Get the appropriate granularity - if it's auto, resolve it based on the time range
+    let displayGranularity = currentExploration.granularity;
+    if (displayGranularity === 'auto' && currentExploration.timeRange?.range) {
+      try {
+        displayGranularity = getGranularityForTimeRange(currentExploration.timeRange.range);
+      } catch (error) {
+        // Just log the error and don't display anything
+        // This is display-only code so we don't need to throw, just hide the UI element
+        console.error('Error resolving display granularity:', error);
+        return null;
+      }
+    }
+
+    if (!displayGranularity) return null;
+
+    // Get the aggregation function name for display
+    if (
+      !currentExploration.agg ||
+      !currentExploration.agg.length ||
+      !currentExploration.agg[0].function
+    ) {
+      return null;
+    }
+
+    const aggFunction = currentExploration.agg[0].function.toUpperCase();
+
+    return `${aggFunction} per ${displayGranularity}${
+      currentExploration.granularity === 'auto' ? ' (auto)' : ''
+    }`;
+  }, [
+    type,
+    currentExploration.granularity,
+    currentExploration.timeRange,
+    currentExploration.groupBy,
+    currentExploration.agg,
+  ]);
 
   const [chartConfig, setChartConfig] = useState({
     xAxisKey: '',
@@ -140,6 +206,11 @@ function ResultsChart({ results, type }) {
   // Prepare chart data
   const chartData = prepareChartData();
 
+  // Create a custom tooltip component that uses our resolved granularity
+  const TooltipWithGranularity = (props) => (
+    <CustomTooltip {...props} granularity={resolveGranularity()} />
+  );
+
   return (
     <div className="h-full">
       {/* Chart container */}
@@ -156,73 +227,87 @@ function ResultsChart({ results, type }) {
             </div>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            {type === 'line' ? (
-              <LineChart data={chartData}>
-                <CartesianGrid opacity={0} />
-                <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {chartConfig.yAxisKeys.map((key, index) => (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={CHART_COLORS[index % CHART_COLORS.length]}
-                    activeDot={{ r: 8 }}
-                    connectNulls={true}
-                    name={results.columns.find((col) => col.name === key)?.displayName || key}
-                  />
-                ))}
-              </LineChart>
-            ) : type === 'bar' ? (
-              <BarChart data={chartData} barGap={4}>
-                <CartesianGrid opacity={0} />
-                <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatXAxisTick} />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                <Legend />
-                {chartConfig.yAxisKeys.map((key, index) => (
-                  <Bar
-                    key={key}
-                    dataKey={key}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]}
-                    name={results.columns.find((col) => col.name === key)?.displayName || key}
-                    isAnimationActive={true}
-                    background={{ fill: 'transparent' }}
-                  />
-                ))}
-              </BarChart>
-            ) : (
-              <PieChart>
-                {chartData.length > 0 && (
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={true}
-                    outerRadius={120}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, value, percent }) =>
-                      `${name}: ${value} (${((percent || 0) * 100).toFixed(0)}%)`
-                    }
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+          <div className="h-full flex flex-col">
+            {/* Display granularity information for line charts */}
+            {type === 'line' && granularityDisplay && (
+              <div className="text-center mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                {granularityDisplay}
+              </div>
+            )}
+
+            <div className="flex-grow">
+              <ResponsiveContainer width="100%" height="100%">
+                {type === 'line' ? (
+                  <LineChart data={chartData}>
+                    <CartesianGrid opacity={0} />
+                    <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatAxisTick} />
+                    <YAxis />
+                    <Tooltip content={<TooltipWithGranularity />} />
+                    <Legend />
+                    {chartConfig.yAxisKeys.map((key, index) => (
+                      <Line
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={CHART_COLORS[index % CHART_COLORS.length]}
+                        activeDot={{ r: 8 }}
+                        connectNulls={true}
+                        name={results.columns.find((col) => col.name === key)?.displayName || key}
                       />
                     ))}
-                  </Pie>
+                  </LineChart>
+                ) : type === 'bar' ? (
+                  <BarChart data={chartData} barGap={4}>
+                    <CartesianGrid opacity={0} />
+                    <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatAxisTick} />
+                    <YAxis />
+                    <Tooltip
+                      content={<TooltipWithGranularity />}
+                      cursor={{ fill: 'transparent' }}
+                    />
+                    <Legend />
+                    {chartConfig.yAxisKeys.map((key, index) => (
+                      <Bar
+                        key={key}
+                        dataKey={key}
+                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                        name={results.columns.find((col) => col.name === key)?.displayName || key}
+                        isAnimationActive={true}
+                        background={{ fill: 'transparent' }}
+                      />
+                    ))}
+                  </BarChart>
+                ) : (
+                  <PieChart>
+                    {chartData.length > 0 && (
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={true}
+                        outerRadius={120}
+                        fill="#8884d8"
+                        dataKey="value"
+                        nameKey="name"
+                        label={({ name, value, percent }) =>
+                          `${name}: ${value} (${((percent || 0) * 100).toFixed(0)}%)`
+                        }
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                    )}
+                    <Tooltip content={<TooltipWithGranularity />} />
+                    <Legend />
+                  </PieChart>
                 )}
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-              </PieChart>
-            )}
-          </ResponsiveContainer>
+              </ResponsiveContainer>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -13,3 +13,33 @@ export const getAvailableColumns = (currentTable, metadata) => {
       };
     });
 };
+
+// Determine appropriate granularity based on time range
+export const getGranularityForTimeRange = (timeRangePeriod) => {
+  if (!timeRangePeriod) {
+    throw new Error('Time range period must be provided');
+  }
+
+  switch (timeRangePeriod) {
+    case 'last_15_min':
+      return 'minute';
+    case 'last_1_hour':
+      return 'minute';
+    case 'last_24_hours':
+      return 'hour';
+    case 'last_7_days':
+      return 'day';
+    case 'last_30_days':
+      return 'day';
+    case 'last_90_days':
+      return 'week';
+    case 'this_quarter':
+      return 'week';
+    case 'this_year':
+      return 'month';
+    case 'custom':
+      return 'day';
+    default:
+      throw new Error(`Unrecognized time range period: ${timeRangePeriod}`);
+  }
+};

@@ -1051,9 +1051,15 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               ]}
               value={currentExploration.granularity || 'auto'}
               onChange={(value) => {
+                // Update the exploration with the selected granularity
+                // When auto is selected, it will be resolved by the frontend
+                // before sending to backend
                 actions.updateCurrentExploration({
                   granularity: value,
                 });
+
+                // Clear existing results when granularity changes
+                actions.updateQueryResults(null);
               }}
               disabled={
                 !isTableSelected ||

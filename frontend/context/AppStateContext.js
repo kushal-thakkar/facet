@@ -24,6 +24,7 @@ const initialState = {
     limit: '100', // Default limit
     selectedFields: [], // Default selected fields
     sort: [], // Initialize sort as empty array
+    granularity: 'auto', // Default granularity to auto
   },
   queryResults: null,
   metadata: {

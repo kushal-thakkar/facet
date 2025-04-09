@@ -143,15 +143,49 @@ function SidePanel({ toggleDarkMode, darkMode }) {
     setIsLoading(true);
 
     try {
+      // Import the utility function for resolving granularity
+      const { getGranularityForTimeRange } = require('../../utils/explorationUtils');
+
       // Use the sort field directly - it's already in the correct format
       let sort = currentExploration.sort || [];
 
       // Process the selected fields - use them directly if available
       const selectedFields = currentExploration.selectedFields || [];
 
+      // Handle granularity for time-based visualizations
+      // If granularity is set to 'auto', resolve it based on the current time range
+      // Only resolve and send granularity when:
+      // 1. It's a line chart
+      // 2. We have a time range with a column
+      // 3. We're grouping by that time column
+      const isTimeBasedGrouping =
+        currentExploration.visualization?.type === 'line' &&
+        currentExploration.timeRange?.column &&
+        currentExploration.groupBy?.includes(currentExploration.timeRange.column);
+
+      let resolvedGranularity = currentExploration.granularity;
+
+      // Only attempt to resolve auto granularity for time-based line charts
+      if (
+        isTimeBasedGrouping &&
+        currentExploration.granularity === 'auto' &&
+        currentExploration.timeRange?.range
+      ) {
+        try {
+          resolvedGranularity = getGranularityForTimeRange(currentExploration.timeRange.range);
+        } catch (error) {
+          // Log the error and throw it - don't silently pass incorrect values to backend
+          console.error('Error resolving granularity:', error);
+          throw new Error(
+            `Unable to determine granularity for time range '${currentExploration.timeRange.range}'. Please select a specific granularity.`
+          );
+        }
+      }
+
       // Make sure to include all necessary fields in the query
       let queryWithConnectionId = {
         ...currentExploration,
+        granularity: resolvedGranularity, // Use the resolved granularity value
         source: {
           ...currentExploration.source,
           connectionId: currentConnection.id,

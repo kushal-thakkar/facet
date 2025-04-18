@@ -13,10 +13,6 @@ const initialState = {
       column: 'timestamp',
       range: 'last_7_days',
     },
-    comparison: {
-      enabled: false,
-      range: 'none',
-    },
     visualization: {
       type: 'preview',
       config: {},

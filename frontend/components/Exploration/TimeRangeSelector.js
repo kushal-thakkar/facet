@@ -13,13 +13,6 @@ const TIME_RANGE_PRESETS = [
   { id: 'this_year', label: 'This year' },
 ];
 
-const COMPARISON_OPTIONS = [
-  { id: 'none', label: 'No comparison' },
-  { id: 'previous_period', label: 'Previous period' },
-  { id: 'previous_year', label: 'Previous year' },
-  { id: 'custom', label: 'Custom comparison' },
-];
-
 function TimeRangeSelector({ disabled, hasTimestampColumns = true }) {
   // Combine both disabled conditions
   const isDisabled = disabled || !hasTimestampColumns;
@@ -27,61 +20,28 @@ function TimeRangeSelector({ disabled, hasTimestampColumns = true }) {
   const { currentExploration } = state;
 
   const [showTimeDialog, setShowTimeDialog] = useState(false);
-  const [showComparisonDialog, setShowComparisonDialog] = useState(false);
-
   // Only using presets now
   const [tempTimeSettings, setTempTimeSettings] = useState({});
 
   // Get current time range
   const timeRange = currentExploration.timeRange;
 
-  // Get current comparison or default
-  const comparison = currentExploration.comparison || {
-    enabled: false,
-    range: 'none',
-  };
-
-  // Get visualization type and check if it's disabled for comparison
-  // TODO: Disable for all viz types for now
-  const isComparisonDisabled = true;
-
   // Find the labels for current selections
   const timeRangeLabel =
     TIME_RANGE_PRESETS.find((preset) => preset.id === timeRange.range)?.label ||
     'Select time range';
-
-  const comparisonLabel =
-    COMPARISON_OPTIONS.find((option) => option.id === comparison.range)?.label || 'No comparison';
 
   // We're only using presets now
   const applyTimeRange = () => {
     setShowTimeDialog(false);
   };
 
-  // Handler for applying comparison
-  const applyComparison = (comparisonType) => {
-    actions.updateCurrentExploration({
-      comparison: {
-        enabled: comparisonType !== 'none',
-        range: comparisonType,
-      },
-    });
-
-    setShowComparisonDialog(false);
-  };
-
   // Close dropdowns when clicking outside or pressing Escape key
   const timeRangeDialogRef = useRef(null);
-  const comparisonDialogRef = useRef(null);
 
   // Handle outside clicks and escape key for time range dialog
   useOutsideClickAndEscape(timeRangeDialogRef, () => {
     if (showTimeDialog) setShowTimeDialog(false);
-  });
-
-  // Handle outside clicks and escape key for comparison dialog
-  useOutsideClickAndEscape(comparisonDialogRef, () => {
-    if (showComparisonDialog) setShowComparisonDialog(false);
   });
 
   return (
@@ -94,12 +54,19 @@ function TimeRangeSelector({ disabled, hasTimestampColumns = true }) {
           {/* Empty space to match Order By's button layout */}
           <div className="ml-1 w-10 h-6"></div>
         </div>
-        <div className="flex justify-between items-center">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+
+        {/* Comparison section with tooltip covering the whole column */}
+        <div className="flex justify-between items-center group relative">
+          <label className="block text-sm font-medium text-gray-400 dark:text-gray-500 cursor-default">
             Comparison
           </label>
           {/* Empty space to match Order By's button layout */}
           <div className="ml-1 w-10 h-6"></div>
+
+          {/* Tooltip that covers both label and dropdown */}
+          <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 z-10 top-20 left-1/2 transform -translate-x-1/2 w-32 text-center pointer-events-none">
+            Coming soon
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -174,47 +141,15 @@ function TimeRangeSelector({ disabled, hasTimestampColumns = true }) {
           )}
         </div>
 
-        <div className="relative">
+        <div className="relative group">
           <button
             type="button"
-            className={`inline-flex justify-between items-center w-full h-10 px-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none shadow-sm ${
-              isDisabled || isComparisonDisabled
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-            onClick={() => !isDisabled && !isComparisonDisabled && setShowComparisonDialog(true)}
-            disabled={isDisabled || isComparisonDisabled}
+            className="inline-flex justify-between items-center w-full h-10 px-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-800 opacity-50 cursor-not-allowed focus:outline-none shadow-sm"
+            disabled={true}
           >
-            <span>{comparisonLabel}</span>
+            <span>No comparison</span>
             <span className="ml-1">▾</span>
           </button>
-
-          {/* Comparison Dialog */}
-          {showComparisonDialog && (
-            <div
-              ref={comparisonDialogRef}
-              className="comparison-dialog absolute z-10 mt-1 w-56 bg-white dark:bg-dark-card shadow-lg rounded-lg border border-gray-200 dark:border-gray-700"
-            >
-              <div className="p-2">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
-                  Comparison
-                </h3>
-
-                <div className="space-y-2">
-                  {COMPARISON_OPTIONS.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      className="block w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                      onClick={() => applyComparison(option.id)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

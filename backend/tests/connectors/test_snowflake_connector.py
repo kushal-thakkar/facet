@@ -149,26 +149,6 @@ async def test_execute_query(connection, mock_snowflake_client):
 
 
 @pytest.mark.asyncio
-async def test_execute_with_streaming(connection, mock_snowflake_client):
-    """Test the execute_with_streaming method."""
-    with patch("snowflake.connector.connect", return_value=mock_snowflake_client):
-        connector = SnowflakeConnector(connection)
-        connector.client = mock_snowflake_client
-
-        results = []
-        async for row in connector.execute_with_streaming("SELECT * FROM test_table"):
-            results.append(row)
-
-        assert len(results) == 1
-        assert results[0]["COL1"] == "value1"
-        assert results[0]["COL2"] == 123
-
-        mock_snowflake_client.cursor.return_value.execute.assert_called_once_with(
-            "SELECT * FROM test_table"
-        )
-
-
-@pytest.mark.asyncio
 async def test_get_query_explanation(connection, mock_snowflake_client):
     """Test the get_query_explanation method."""
     with patch("snowflake.connector.connect", return_value=mock_snowflake_client):

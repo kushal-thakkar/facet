@@ -61,19 +61,6 @@ class DatabaseConnector(ABC):
         pass
 
     @abstractmethod
-    async def execute_with_streaming(self, sql: str, params: Optional[Dict[str, Any]] = None):
-        """Execute a SQL query with streaming results.
-
-        Args:
-            sql: The SQL query to execute
-            params: Query parameters
-
-        Returns:
-            An async generator yielding result rows
-        """
-        pass
-
-    @abstractmethod
     async def get_query_explanation(
         self, sql: str, params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:

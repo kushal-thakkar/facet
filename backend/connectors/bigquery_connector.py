@@ -5,7 +5,7 @@ import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from google.cloud import bigquery
 from google.cloud.bigquery.job import QueryJob
@@ -286,84 +286,6 @@ class BigQueryConnector(DatabaseConnector):
 
         except Exception as e:
             logger.error(f"Error executing BigQuery query: {str(e)}")
-            raise
-
-    async def execute_with_streaming(
-        self, sql: str, params: Optional[Dict[str, Any]] = None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Execute a SQL query with streaming results.
-
-        Args:
-            sql: The SQL query to execute
-            params: Query parameters
-
-        Returns:
-            An async generator yielding result rows
-        """
-        try:
-            # Handle parameters
-            if params:
-                # BigQuery uses named parameters with @
-                for key, value in params.items():
-                    param_key = f"@{key}"
-                    if param_key in sql:
-                        if isinstance(value, str):
-                            sql = sql.replace(param_key, f"'{value}'")
-                        else:
-                            sql = sql.replace(param_key, str(value))
-
-            # Execute query
-            client = await self.get_client()
-            job_config = bigquery.QueryJobConfig()
-            job: QueryJob = await self._run_in_executor(
-                lambda: client.query(sql, job_config=job_config)
-            )
-
-            # Stream results with a custom buffer to avoid blocking
-            buffer_size = 100  # Number of rows to fetch at once
-
-            # Create a queue to manage results
-            queue: asyncio.Queue = asyncio.Queue(maxsize=buffer_size)
-            fetching_done = asyncio.Event()
-
-            # Start a task to fetch results
-            async def fetch_results():
-                try:
-                    # Use batches to avoid holding up the event loop
-                    rows_iter = job.result()
-                    while True:
-                        batch = []
-                        for _ in range(buffer_size):
-                            try:
-                                row = next(rows_iter)
-                                batch.append(dict(row.items()))
-                            except StopIteration:
-                                if batch:
-                                    await queue.put(batch)
-                                fetching_done.set()
-                                return
-
-                        await queue.put(batch)
-                except Exception as e:
-                    logger.error(f"Error streaming results: {str(e)}")
-                    fetching_done.set()
-
-            # Start fetching task
-            asyncio.create_task(fetch_results())
-
-            # Yield results from queue
-            while not (fetching_done.is_set() and queue.empty()):
-                if not queue.empty():
-                    batch = await queue.get()
-                    for row in batch:
-                        yield row
-                    queue.task_done()
-                else:
-                    await asyncio.sleep(0.01)
-
-        except Exception as e:
-            logger.error(f"Error executing BigQuery streaming query: {str(e)}")
             raise
 
     async def get_query_explanation(

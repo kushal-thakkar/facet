@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiochclient
 import aiohttp
@@ -263,43 +263,6 @@ class ClickHouseConnector(DatabaseConnector):
 
         except Exception as e:
             logger.error(f"Error executing query: {str(e)}")
-            raise
-
-    async def execute_with_streaming(
-        self, sql: str, params: Optional[Dict[str, Any]] = None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Execute a SQL query with streaming results.
-
-        Args:
-            sql: The SQL query to execute
-            params: Query parameters
-
-        Returns:
-            An async generator yielding result rows
-        """
-        await self.connect()
-
-        try:
-            # ClickHouse supports named parameters using {name:type}
-            if params:
-                # Convert params to ClickHouse format
-                for key, value in params.items():
-                    placeholder = f"{{{key}}}"
-                    if placeholder in sql:
-                        if isinstance(value, str):
-                            sql = sql.replace(placeholder, f"'{value}'")
-                        else:
-                            sql = sql.replace(placeholder, str(value))
-
-            # Execute query with iterate
-            if self.client is None:
-                raise RuntimeError("Client is not initialized")
-            async for row in self.client.iterate(sql):
-                yield row
-
-        except Exception as e:
-            logger.error(f"Error executing streaming query: {str(e)}")
             raise
 
     async def get_query_explanation(

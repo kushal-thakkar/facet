@@ -5,7 +5,7 @@ import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import snowflake.connector
 
@@ -370,58 +370,6 @@ class SnowflakeConnector(DatabaseConnector):
 
         except Exception as e:
             logger.error(f"Error executing Snowflake query: {str(e)}")
-            raise
-
-    async def execute_with_streaming(
-        self, sql: str, params: Optional[Dict[str, Any]] = None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Execute a SQL query with streaming results.
-
-        Args:
-            sql: The SQL query to execute
-            params: Query parameters
-
-        Returns:
-            An async generator yielding result rows
-        """
-        try:
-            # Handle parameters
-            if params:
-                for key, value in params.items():
-                    placeholder = f":{key}"
-                    if placeholder in sql:
-                        if isinstance(value, str):
-                            sql = sql.replace(placeholder, f"'{value}'")
-                        else:
-                            sql = sql.replace(placeholder, str(value))
-
-            # Execute query
-            client = await self.get_client()
-            cursor = await self._run_in_executor(lambda: client.cursor().execute(sql))
-
-            # Get column names
-            col_names = [col[0] for col in cursor.description]
-
-            # Stream results in batches
-            batch_size = 1000
-
-            while True:
-                # Fetch a batch of rows
-                rows = await self._run_in_executor(lambda: cursor.fetchmany(batch_size))
-
-                if not rows:
-                    break
-
-                # Convert each row to a dictionary and yield
-                for row in rows:
-                    yield dict(zip(col_names, row))
-
-                    # Allow other tasks to run
-                    await asyncio.sleep(0)
-
-        except Exception as e:
-            logger.error(f"Error executing Snowflake streaming query: {str(e)}")
             raise
 
     async def get_query_explanation(

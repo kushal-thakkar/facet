@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import asyncpg
 
@@ -284,37 +284,6 @@ class PostgresConnector(DatabaseConnector):
 
         except Exception as e:
             logger.error(f"Error executing query: {str(e)}")
-            raise
-
-    async def execute_with_streaming(
-        self, sql: str, params: Optional[Dict[str, Any]] = None
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """Execute a SQL query with streaming results.
-
-        Args:
-            sql: The SQL query to execute
-            params: Query parameters
-
-        Returns:
-            An async generator yielding result rows
-        """
-        await self.connect()
-
-        try:
-            param_values = list(params.values()) if params else []
-
-            if self.pool is None:
-                raise RuntimeError("Database connection pool is not initialized")
-            async with self.pool.acquire() as conn:
-                async with conn.transaction():
-                    stmt = await conn.prepare(sql)
-                    cursor = await stmt.cursor(*param_values)
-
-                    async for record in cursor:
-                        yield dict(record)
-
-        except Exception as e:
-            logger.error(f"Error executing streaming query: {str(e)}")
             raise
 
     async def get_query_explanation(

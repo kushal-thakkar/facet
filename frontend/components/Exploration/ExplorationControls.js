@@ -115,6 +115,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
   // Handle table selection
   const handleTableSelect = async (tableName) => {
+    // Close dropdown immediately for better responsiveness
+    setShowTableDropdown(false);
+    setFilterText('');
+
     const connectionId = currentConnection?.id;
     const vizType = currentExploration.visualization?.type;
 
@@ -167,9 +171,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
     } catch (error) {
       console.error(`Error fetching columns for table ${tableName}:`, error);
     }
-
-    setShowTableDropdown(false);
-    setFilterText('');
   };
 
   useOutsideClickAndEscape(dropdownRef, () => {

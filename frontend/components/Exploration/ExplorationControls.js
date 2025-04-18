@@ -431,14 +431,14 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         {/* Top Controls - with table selector and run button side by side */}
         <div className="flex items-center justify-between mb-3">
           {/* Table Selector with Typeahead */}
-          <div className="relative flex-grow mr-4" ref={dropdownRef}>
+          <div className="relative w-3/4 mr-4" ref={dropdownRef}>
             <div
               onClick={() => setShowTableDropdown(!showTableDropdown)}
               className="cursor-pointer flex items-center h-10 px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md hover:border-blue-500 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400"
+                className="h-5 w-5 mr-2 flex-shrink-0 text-gray-500 dark:text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -451,16 +451,20 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 />
               </svg>
               <span
-                className={`text-sm ${
+                className={`text-sm truncate overflow-hidden ${
                   currentExploration.source?.table
                     ? 'text-gray-900 dark:text-gray-200 font-medium'
                     : 'text-gray-500 dark:text-gray-400'
                 }`}
+                title={currentExploration.source?.table}
               >
-                {currentExploration.source?.table || 'Select a data table'}
+                {currentExploration.source?.table
+                  ? currentExploration.source.table.split('.').pop() ||
+                    currentExploration.source.table
+                  : 'Select a data table'}
               </span>
               <svg
-                className="ml-auto w-4 h-4 text-gray-500 dark:text-gray-400"
+                className="ml-auto flex-shrink-0 w-4 h-4 text-gray-500 dark:text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -521,11 +525,12 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                             handleTableSelect(table.name);
                           }
                         }}
+                        title={table.name}
                       >
                         <div className="font-medium flex items-center">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 mr-2 text-blue-500 dark:text-blue-400"
+                            className="h-4 w-4 mr-2 flex-shrink-0 text-blue-500 dark:text-blue-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -537,7 +542,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                               d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
                             />
                           </svg>
-                          {table.name}
+                          {table.name.split('.').pop() || table.name}
                         </div>
                         {table.description && (
                           <div className="text-xs text-gray-500 dark:text-gray-400 ml-6">

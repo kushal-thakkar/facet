@@ -276,24 +276,51 @@ class BigQueryConnector(DatabaseConnector):
             )
 
             logger.info(f"BigQuery job created with ID: {job.job_id}")
-            results = await self._run_in_executor(lambda: list(job.result()))
-            logger.info(f"BigQuery query returned {len(results)} rows")
-            # FIXME Remove this
-            logger.info(f"BigQuery results temp: {results[0]}")
 
-            # Extract schema information
+            # Get result iterator WITHOUT consuming it yet
+            result_iterator = await self._run_in_executor(lambda: job.result())
+
+            # Extract schema from the result iterator BEFORE consuming it
             columns = []
-            if job.schema:  # Check if schema exists before iterating
-                for field in job.schema:
-                    columns.append(
-                        ColumnInfo(
-                            name=field.name,
-                            type=field.field_type.lower(),
-                        )
+            schema = result_iterator.schema
+            # Also create a type map to use for value conversion
+            field_types = {}
+
+            for field in schema:
+                field_type = field.field_type.lower()
+                logger.info(f"Column: {field.name}, Type: {field.field_type}")
+
+                # Store the field type for later use during conversion
+                field_types[field.name] = field_type
+
+                # Map BigQuery types to normalized types for the UI
+                normalized_type = field_type
+                if field_type in ("integer", "int64"):
+                    normalized_type = "integer"
+                elif field_type in ("float", "float64", "numeric"):
+                    normalized_type = "number"
+                elif field_type in ("string", "bytes"):
+                    normalized_type = "string"
+                elif field_type == "boolean":
+                    normalized_type = "boolean"
+                elif field_type in ("date", "datetime", "timestamp"):
+                    normalized_type = "timestamp" if "time" in field_type else "date"
+                elif field_type in ("record", "struct"):
+                    normalized_type = "json"
+
+                columns.append(
+                    ColumnInfo(
+                        name=field.name,
+                        type=normalized_type,
                     )
-                logger.info(f"Extracted schema with {len(columns)} columns")
-            else:
-                logger.warning("No schema information available from BigQuery result")
+                )
+            logger.info(f"Extracted schema with {len(columns)} columns")
+
+            # Now convert to list to get all rows
+            results = await self._run_in_executor(lambda: list(result_iterator))
+            logger.info(f"BigQuery query returned {len(results)} rows")
+            if results:
+                logger.info(f"First row keys: {list(results[0].keys())}")
 
             # Convert results to dictionaries
             result_dicts = []
@@ -302,18 +329,27 @@ class BigQueryConnector(DatabaseConnector):
                     # Handle both regular and nested fields
                     result_dict = {}
                     for key, value in row.items():
-                        if hasattr(value, "items"):  # This is a nested record
+                        # Check if this is a RECORD/STRUCT type field based on schema info
+                        field_type = field_types.get(key, "").lower()
+
+                        if field_type in ("record", "struct"):
                             # Convert nested record to JSON string for display
                             try:
                                 import json
 
-                                result_dict[key] = json.dumps(dict(value.items()))
+                                # For nested record, convert to dict first, then to JSON string
+                                if value is not None:
+                                    nested_dict = dict(value.items())
+                                    result_dict[key] = json.dumps(nested_dict)
+                                else:
+                                    result_dict[key] = None  # type: ignore
                             except Exception as nested_err:
                                 logger.warning(
                                     f"Could not convert nested field {key}: {str(nested_err)}"
                                 )
-                                result_dict[key] = str(value)
+                                raise
                         else:
+                            # For non-nested fields, use value directly
                             result_dict[key] = value
 
                     result_dicts.append(result_dict)

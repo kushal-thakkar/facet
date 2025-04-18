@@ -71,7 +71,7 @@ function ResultsTable({ results }) {
 
   // Format cell value for display
   const formatCellValue = (value, columnType) => {
-    if (value === null || value === undefined) return '-';
+    if (value === null || value === undefined) return '(null)';
 
     if (columnType === 'date' || columnType === 'timestamp') {
       // Display timestamp in original format without timezone conversion

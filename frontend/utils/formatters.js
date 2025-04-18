@@ -20,12 +20,16 @@ export function roundToTwoDecimals(value) {
  */
 export function formatValue(value) {
   if (value === null || value === undefined) {
-    return '-';
+    return '<i class="text-gray-400">(null)</i>';
   }
 
   if (typeof value === 'number') {
     const roundedValue = roundToTwoDecimals(value);
-    return roundedValue !== null ? roundedValue.toLocaleString() : '-';
+    // If roundedValue is null but the original value was a number, this is unexpected
+    if (roundedValue === null) {
+      throw new Error(`Unexpected null result when rounding number: ${value}`);
+    }
+    return roundedValue.toLocaleString();
   }
 
   if (typeof value === 'boolean') {

@@ -64,7 +64,9 @@ function ResultsPreview({ results }) {
 
   // Format cell value for display
   const formatCellValue = (value, columnType) => {
-    if (value === null || value === undefined) return '-';
+    if (value === null || value === undefined) {
+      return <i className="text-gray-400">(null)</i>;
+    }
 
     if (columnType === 'date' || columnType === 'timestamp') {
       // Format dates in a user-friendly way

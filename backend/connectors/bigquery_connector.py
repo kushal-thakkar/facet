@@ -29,7 +29,7 @@ class BigQueryConnector(DatabaseConnector):
             connection: The connection configuration
         """
         super().__init__(connection)
-        self.client = None
+        self.client: Optional[bigquery.Client] = None
         self._executor = ThreadPoolExecutor(max_workers=5)
 
     async def connect(self) -> None:

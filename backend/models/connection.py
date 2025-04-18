@@ -36,8 +36,6 @@ class Connection(BaseModel):
     config: ConnectionConfig
     created_at: datetime
     updated_at: datetime
-    bigquery_dataset_id: Optional[str] = None
-    bigquery_dataset_project_id: Optional[str] = None  # needed for samples dataset in BigQuery
 
 
 class ConnectionCreate(BaseModel):

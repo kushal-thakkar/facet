@@ -259,26 +259,68 @@ class BigQueryConnector(DatabaseConnector):
             # Execute query using thread pool
             client = await self.get_client()
             job_config = bigquery.QueryJobConfig()
+
+            # Enable query cache for better performance with frequently run queries
+            job_config.use_query_cache = True
+
+            # Set flatten_results to False to preserve nested structures (RECORD/STRUCT fields)
+            # This is critical for tables with nested data like github_nested
+            # When True (default), BigQuery flattens nested fields into dot-notation columns
+            # When False, it preserves the nested structure,
+            # allowing proper handling of complex records
+            job_config.flatten_results = False
+
+            logger.info(f"Executing BigQuery query with client project: {client.project}")
             job: QueryJob = await self._run_in_executor(
                 lambda: client.query(sql, job_config=job_config)
             )
 
+            logger.info(f"BigQuery job created with ID: {job.job_id}")
             results = await self._run_in_executor(lambda: list(job.result()))
+            logger.info(f"BigQuery query returned {len(results)} rows")
+            # FIXME Remove this
+            logger.info(f"BigQuery results temp: {results[0]}")
 
             # Extract schema information
             columns = []
-            for field in job.schema:
-                columns.append(
-                    ColumnInfo(
-                        name=field.name,
-                        type=field.field_type.lower(),
+            if job.schema:  # Check if schema exists before iterating
+                for field in job.schema:
+                    columns.append(
+                        ColumnInfo(
+                            name=field.name,
+                            type=field.field_type.lower(),
+                        )
                     )
-                )
+                logger.info(f"Extracted schema with {len(columns)} columns")
+            else:
+                logger.warning("No schema information available from BigQuery result")
 
             # Convert results to dictionaries
             result_dicts = []
             for row in results:
-                result_dicts.append(dict(row.items()))
+                try:
+                    # Handle both regular and nested fields
+                    result_dict = {}
+                    for key, value in row.items():
+                        if hasattr(value, "items"):  # This is a nested record
+                            # Convert nested record to JSON string for display
+                            try:
+                                import json
+
+                                result_dict[key] = json.dumps(dict(value.items()))
+                            except Exception as nested_err:
+                                logger.warning(
+                                    f"Could not convert nested field {key}: {str(nested_err)}"
+                                )
+                                result_dict[key] = str(value)
+                        else:
+                            result_dict[key] = value
+
+                    result_dicts.append(result_dict)
+                except Exception as e:
+                    logger.error(f"Error converting row to dict: {str(e)}")
+
+            logger.info(f"Converted {len(result_dicts)} rows to dictionaries")
 
             execution_time = time.time() - start_time
 

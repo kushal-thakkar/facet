@@ -455,8 +455,8 @@ class SnowflakeConnector(DatabaseConnector):
     def _map_snowflake_type(self, snowflake_type: str) -> str:
         """Map Snowflake type codes to type names."""
         type_map = {
-            0: "number",  # NUMBER
-            1: "string",  # REAL
+            0: "number",  # NUMBER # FIXME Why is this number instead of integer?
+            1: "string",  # REAL # FIXME why is this string
             2: "string",  # TEXT
             3: "date",  # DATE
             4: "timestamp",  # TIMESTAMP

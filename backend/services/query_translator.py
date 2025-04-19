@@ -154,13 +154,9 @@ class SQLTranslator:
                     column_name = field.split(".")[-1] if "." in field else field
 
                     expr = f"{func_name}({field})"
-                    alias = f"{func_name.lower()}({column_name})"
-
-                    # BigQuery uses backticks for aliases with special characters
-                    if self.dialect == "bigquery":
-                        select_expr = f"{expr} AS `{alias}`"
-                    else:
-                        select_expr = f'{expr} AS "{alias}"'
+                    # Use a consistent alias format without parentheses for all databases
+                    alias = f"{func_name.lower()}_{column_name}"
+                    select_expr = f"{expr} AS {alias}"
 
                     select_items.append(select_expr)
 
@@ -222,13 +218,10 @@ class SQLTranslator:
                     column_name = (
                         metric.column.split(".")[-1] if "." in metric.column else metric.column
                     )
-                    alias = metric.alias or f"{func_name.lower()}({column_name})"
 
-                    # Build the expression with the right alias format for the dialect
-                    if self.dialect == "bigquery":
-                        select_expr = f"{func_name}({metric.column}) AS `{alias}`"
-                    else:
-                        select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+                    # Use a consistent alias format without parentheses for all databases
+                    alias = metric.alias or f"{func_name.lower()}_{column_name}"
+                    select_expr = f"{func_name}({metric.column}) AS {alias}"
 
                     select_items.append(select_expr)
 
@@ -335,11 +328,8 @@ class SQLTranslator:
                     )
                     alias = metric.alias or f"{func_name.lower()}_{column_name}"
 
-                    # Build the expression with the right alias format for the dialect
-                    if self.dialect == "bigquery":
-                        select_expr = f"{func_name}({metric.column}) AS `{alias}`"
-                    else:
-                        select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+                    # Use a consistent alias format for all databases
+                    select_expr = f"{func_name}({metric.column}) AS {alias}"
 
                     select_items.append(select_expr)
 

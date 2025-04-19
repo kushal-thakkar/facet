@@ -155,7 +155,13 @@ class SQLTranslator:
 
                     expr = f"{func_name}({field})"
                     alias = f"{func_name.lower()}({column_name})"
-                    select_expr = f'{expr} AS "{alias}"'
+
+                    # BigQuery uses backticks for aliases with special characters
+                    if self.dialect == "bigquery":
+                        select_expr = f"{expr} AS `{alias}`"
+                    else:
+                        select_expr = f'{expr} AS "{alias}"'
+
                     select_items.append(select_expr)
 
         if not select_items:
@@ -218,8 +224,12 @@ class SQLTranslator:
                     )
                     alias = metric.alias or f"{func_name.lower()}({column_name})"
 
-                    # Build the expression with quoted alias
-                    select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+                    # Build the expression with the right alias format for the dialect
+                    if self.dialect == "bigquery":
+                        select_expr = f"{func_name}({metric.column}) AS `{alias}`"
+                    else:
+                        select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+
                     select_items.append(select_expr)
 
         # If there are selected fields and no metrics/group by, use the selected fields directly
@@ -325,8 +335,12 @@ class SQLTranslator:
                     )
                     alias = metric.alias or f"{func_name.lower()}_{column_name}"
 
-                    # Build the expression with quoted alias
-                    select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+                    # Build the expression with the right alias format for the dialect
+                    if self.dialect == "bigquery":
+                        select_expr = f"{func_name}({metric.column}) AS `{alias}`"
+                    else:
+                        select_expr = f'{func_name}({metric.column}) AS "{alias}"'
+
                     select_items.append(select_expr)
 
         # With granularity, we should always have at least the truncated time column

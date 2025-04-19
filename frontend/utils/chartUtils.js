@@ -75,7 +75,7 @@ export const formatXAxisTick = (value, granularity) => {
 };
 
 // Custom tooltip component for charts
-export const CustomTooltip = ({ active, payload, label, granularity }) => {
+export const CustomTooltip = ({ active, payload, label, granularity, xAxisDisplayName }) => {
   if (!active || !payload || !payload.length) {
     return null;
   }
@@ -88,7 +88,9 @@ export const CustomTooltip = ({ active, payload, label, granularity }) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 border border-gray-300 dark:border-gray-700 shadow-md rounded-md p-2 text-xs max-w-xs">
-      <div className="font-medium text-gray-900 dark:text-gray-200 mb-1">{formattedLabel}</div>
+      <div className="font-medium text-gray-900 dark:text-gray-200 mb-1">
+        {xAxisDisplayName ? `${xAxisDisplayName}: ${formattedLabel}` : formattedLabel}
+      </div>
       {payload.map((entry, index) => (
         <div key={`item-${index}`} className="flex items-center my-1">
           <span className="w-2 h-2 mr-1 rounded-full" style={{ backgroundColor: entry.color }} />

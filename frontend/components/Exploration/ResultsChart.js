@@ -208,7 +208,11 @@ function ResultsChart({ results, type }) {
 
   // Create a custom tooltip component that uses our resolved granularity
   const TooltipWithGranularity = (props) => (
-    <CustomTooltip {...props} granularity={resolveGranularity()} />
+    <CustomTooltip
+      {...props}
+      granularity={resolveGranularity()}
+      xAxisDisplayName={results?.columns.find((col) => col.name === chartConfig.xAxisKey)?.name}
+    />
   );
 
   return (
@@ -230,17 +234,22 @@ function ResultsChart({ results, type }) {
           <div className="h-full flex flex-col">
             {/* Display granularity information for line charts */}
             {type === 'line' && granularityDisplay && (
-              <div className="text-center mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+              <div className="text-right pr-4 text-sm font-medium text-gray-500 dark:text-gray-400">
                 {granularityDisplay}
               </div>
             )}
 
             <div className="flex-grow">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" margin={{ bottom: 20 }}>
                 {type === 'line' ? (
-                  <LineChart data={chartData}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                     <CartesianGrid opacity={0} />
-                    <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatAxisTick} />
+                    <XAxis
+                      dataKey={chartConfig.xAxisKey}
+                      tickFormatter={formatAxisTick}
+                      height={30}
+                      tickMargin={3}
+                    />
                     <YAxis />
                     <Tooltip content={<TooltipWithGranularity />} />
                     <Legend />
@@ -252,14 +261,23 @@ function ResultsChart({ results, type }) {
                         stroke={CHART_COLORS[index % CHART_COLORS.length]}
                         activeDot={{ r: 8 }}
                         connectNulls={true}
-                        name={results.columns.find((col) => col.name === key)?.displayName || key}
+                        name={results.columns.find((col) => col.name === key)?.name}
                       />
                     ))}
                   </LineChart>
                 ) : type === 'bar' ? (
-                  <BarChart data={chartData} barGap={4}>
+                  <BarChart
+                    data={chartData}
+                    barGap={4}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
+                  >
                     <CartesianGrid opacity={0} />
-                    <XAxis dataKey={chartConfig.xAxisKey} tickFormatter={formatAxisTick} />
+                    <XAxis
+                      dataKey={chartConfig.xAxisKey}
+                      tickFormatter={formatAxisTick}
+                      height={30}
+                      tickMargin={3}
+                    />
                     <YAxis />
                     <Tooltip
                       content={<TooltipWithGranularity />}
@@ -271,14 +289,14 @@ function ResultsChart({ results, type }) {
                         key={key}
                         dataKey={key}
                         fill={CHART_COLORS[index % CHART_COLORS.length]}
-                        name={results.columns.find((col) => col.name === key)?.displayName || key}
+                        name={results.columns.find((col) => col.name === key)?.name}
                         isAnimationActive={true}
                         background={{ fill: 'transparent' }}
                       />
                     ))}
                   </BarChart>
                 ) : (
-                  <PieChart>
+                  <PieChart margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
                     {chartData.length > 0 && (
                       <Pie
                         data={chartData}
@@ -306,6 +324,10 @@ function ResultsChart({ results, type }) {
                   </PieChart>
                 )}
               </ResponsiveContainer>
+            </div>
+            {/* Display x-axis column name below the chart */}
+            <div className="text-center -mt-4 mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+              {results.columns.find((col) => col.name === chartConfig.xAxisKey)?.name}
             </div>
           </div>
         )}

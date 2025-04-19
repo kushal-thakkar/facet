@@ -26,7 +26,6 @@ class ColumnMetadata(BaseModel):
 
     name: str
     tableName: str
-    displayName: Optional[str] = None
     description: Optional[str] = None
     dataType: str
     nullable: bool = True

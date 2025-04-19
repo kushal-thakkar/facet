@@ -111,7 +111,6 @@ class ColumnInfo(BaseModel):
     """Information about a column in query results."""
 
     name: str
-    displayName: Optional[str] = None
     type: Optional[str] = None
     cardinality: Optional[str] = None
 

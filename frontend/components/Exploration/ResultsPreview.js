@@ -146,7 +146,7 @@ function ResultsPreview({ results }) {
                     onClick={() => handleSort(column.name)}
                   >
                     <div className="flex items-center">
-                      <span>{column.displayName || column.name}</span>
+                      <span>{column.name}</span>
                       {sortColumn === column.name && (
                         <span className="ml-1 text-primary dark:text-primary">
                           {sortDirection === 'asc' ? '↑' : '↓'}

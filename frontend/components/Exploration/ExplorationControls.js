@@ -159,9 +159,8 @@ function ExplorationControls({ onRunQuery, isLoading }) {
         const key = `${tableName}.${column.name}`;
         columnsObject[key] = {
           name: column.name,
-          displayName: column.displayName || column.name,
-          dataType: column.dataType || 'string',
-          description: column.description || '',
+          dataType: column.dataType,
+          description: column.description,
         };
       });
 
@@ -257,8 +256,8 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       setSelectedFields([]);
     };
 
-    const filteredColumns = columns.filter((col) =>
-      col.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredColumns = columns.filter(
+      (col) => col.name && col.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (

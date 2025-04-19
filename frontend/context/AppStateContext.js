@@ -31,7 +31,7 @@ const initialState = {
   preferences: {
     theme: 'light',
     defaultTimeRange: 'last_7_days',
-    tablePageSize: 50,
+    tablePageSize: 100,
   },
 };
 

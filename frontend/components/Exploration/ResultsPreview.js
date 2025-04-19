@@ -1,30 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 
 function ResultsPreview({ results }) {
-  const { state } = useAppState();
+  const { state, actions } = useAppState();
   const { preferences } = state;
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(preferences.tablePageSize || 20);
+  const [pageSize, setPageSize] = useState(preferences.tablePageSize);
+
+  // Update pageSize when preferences change
+  useEffect(() => {
+    setPageSize(preferences.tablePageSize);
+  }, [preferences.tablePageSize]);
 
   // Sorting state
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
 
-  // For preview, limit to first 50 rows before any pagination
-  const previewLimit = 50;
-  const limitedData = results?.data?.slice(0, previewLimit) || [];
-
   // Calculate pagination values
-  const totalRows = limitedData.length || 0;
+  const totalRows = results?.data?.length || 0;
   const totalPages = Math.ceil(totalRows / pageSize);
   const startRow = (currentPage - 1) * pageSize;
   const endRow = Math.min(startRow + pageSize, totalRows);
 
   // Get current page of data
-  const currentData = limitedData.slice(startRow, endRow) || [];
+  const currentData = results?.data?.slice(startRow, endRow) || [];
 
   // Handle sort click
   const handleSort = (columnName) => {
@@ -40,7 +41,7 @@ function ResultsPreview({ results }) {
 
   // Sort the data
   const sortedData = () => {
-    if (!sortColumn || !limitedData) return currentData;
+    if (!sortColumn || !results?.data) return currentData;
 
     return [...currentData].sort((a, b) => {
       const valueA = a[sortColumn];
@@ -115,8 +116,14 @@ function ResultsPreview({ results }) {
 
   // Change page size
   const changePageSize = (size) => {
+    // Update component state
     setPageSize(size);
     setCurrentPage(1); // Reset to first page on size change
+
+    // Update app preferences so both components stay in sync
+    actions.updatePreferences({
+      tablePageSize: size,
+    });
   };
 
   return (
@@ -214,9 +221,6 @@ function ResultsPreview({ results }) {
                   Showing <span className="font-medium">{startRow + 1}</span> to{' '}
                   <span className="font-medium">{endRow}</span> of{' '}
                   <span className="font-medium">{totalRows}</span> results
-                  {results?.data?.length > previewLimit && (
-                    <span className="text-gray-500"> (limited to first {previewLimit} rows)</span>
-                  )}
                 </>
               ) : (
                 <>No results found</>
@@ -233,9 +237,9 @@ function ResultsPreview({ results }) {
                 value={pageSize}
                 onChange={(e) => changePageSize(Number(e.target.value))}
               >
-                <option value={10}>10 per page</option>
-                <option value={20}>20 per page</option>
-                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
+                <option value={200}>200 per page</option>
+                <option value={1000}>1000 per page</option>
               </select>
             </div>
 

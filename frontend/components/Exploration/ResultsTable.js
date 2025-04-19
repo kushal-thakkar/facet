@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 
 function ResultsTable({ results }) {
-  const { state } = useAppState();
+  const { state, actions } = useAppState();
   const { preferences } = state;
   // Store the columns to display at the time results are received
   const [displayColumns, setDisplayColumns] = useState([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(preferences.tablePageSize || 50);
+  const [pageSize, setPageSize] = useState(preferences.tablePageSize);
+
+  // Update pageSize when preferences change
+  useEffect(() => {
+    setPageSize(preferences.tablePageSize);
+  }, [preferences.tablePageSize]);
 
   // Sorting state
   const [sortColumn, setSortColumn] = useState(null);
@@ -150,8 +155,14 @@ function ResultsTable({ results }) {
 
   // Change page size
   const changePageSize = (size) => {
+    // Update component state
     setPageSize(size);
     setCurrentPage(1); // Reset to first page on size change
+
+    // Update app preferences so both components stay in sync
+    actions.updatePreferences({
+      tablePageSize: size,
+    });
   };
 
   return (
@@ -265,10 +276,9 @@ function ResultsTable({ results }) {
                 value={pageSize}
                 onChange={(e) => changePageSize(Number(e.target.value))}
               >
-                <option value={10}>10 per page</option>
-                <option value={50}>50 per page</option>
                 <option value={100}>100 per page</option>
-                <option value={250}>250 per page</option>
+                <option value={200}>200 per page</option>
+                <option value={1000}>1000 per page</option>
               </select>
             </div>
 

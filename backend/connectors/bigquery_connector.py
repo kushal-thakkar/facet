@@ -288,7 +288,6 @@ class BigQueryConnector(DatabaseConnector):
 
             for field in schema:
                 field_type = field.field_type.lower()
-                logger.info(f"Column: {field.name}, Type: {field.field_type}")
 
                 # Store the field type for later use during conversion
                 field_types[field.name] = field_type
@@ -319,8 +318,6 @@ class BigQueryConnector(DatabaseConnector):
             # Now convert to list to get all rows
             results = await self._run_in_executor(lambda: list(result_iterator))
             logger.info(f"BigQuery query returned {len(results)} rows")
-            if results:
-                logger.info(f"First row keys: {list(results[0].keys())}")
 
             # Convert results to dictionaries
             result_dicts = []

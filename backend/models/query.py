@@ -81,6 +81,8 @@ class QueryModel(BaseModel):
     comparison: Optional[Comparison] = None
     sort: List[SortOrder] = []
     limit: Optional[int] = 100
+    offset: Optional[int] = 0
+    isServerPagination: bool = False  # Flag to indicate server-side pagination
     visualization: Optional[Visualization] = None
     selectedFields: List[str] = []  # Added for field selection
     granularity: Optional[str] = None  # For time-based aggregation
@@ -121,12 +123,14 @@ class QueryResult(BaseModel):
     columns: List[ColumnInfo]
     data: List[Dict[str, Any]]
     rowCount: int
+    totalCount: Optional[int] = None  # Total count without pagination limit
     executionTime: float
     sql: str
     cacheHit: bool
     warnings: List[str] = []
     error: Optional[str] = None
     suggestions: Optional[List[str]] = None
+    hasMore: bool = False  # Indicates if there are more results available
 
 
 class QueryValidationResult(BaseModel):

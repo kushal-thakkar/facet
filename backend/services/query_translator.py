@@ -36,9 +36,24 @@ class SQLTranslator:
             SQL query string
         """
         try:
-            visualization_type = (
-                query_model.visualization.type if query_model.visualization else "table"
+            # Log the original query model properties
+            logger.debug(
+                f"Query model before translate: limit={query_model.limit}, "
+                f"offset={query_model.offset}, server_pagination={query_model.isServerPagination}"
             )
+
+            # Check for required values with server-side pagination
+            if query_model.isServerPagination:
+                if query_model.limit is None:
+                    raise ValueError("Server-side pagination requires a limit value")
+                if query_model.offset is None:
+                    raise ValueError("Server-side pagination requires an offset value")
+            else:
+                # When server-side pagination is disabled, offset should not be used
+                if query_model.offset is not None:
+                    raise ValueError("Offset can only be used with server-side pagination")
+
+            visualization_type = query_model.visualization.type
 
             # Check if time-based granularity should be applied (for line charts)
             # Only apply time-based granularity when:
@@ -98,7 +113,9 @@ class SQLTranslator:
 
             # Remaining clauses
             order_by_clause = self._build_order_by(query_model.sort)
-            limit_clause = self._build_limit(query_model.limit)
+            limit_clause = self._build_limit(
+                query_model.limit, query_model.offset, query_model.isServerPagination
+            )
 
             # Assemble final SQL
             sql = (
@@ -644,16 +661,52 @@ class SQLTranslator:
 
         return f"ORDER BY {', '.join(sort_items)}"
 
-    def _build_limit(self, limit: Optional[int]) -> str:
-        """Build the LIMIT clause.
+    def _build_limit(
+        self, limit: Optional[int], offset: Optional[int] = None, is_server_pagination: bool = False
+    ) -> str:
+        """Build the LIMIT and OFFSET clauses.
 
         Args:
             limit: Maximum number of rows to return
+            offset: Number of rows to skip
+            is_server_pagination: Flag to indicate server-side pagination
 
         Returns:
-            LIMIT clause string
+            LIMIT and OFFSET clause string
         """
-        if not limit:
+        # For server-side pagination, always include both LIMIT and OFFSET (even when offset is 0)
+        if is_server_pagination:
+            # Validation is already done in the translate method
+            actual_offset = 0 if offset is None else offset
+            return f"LIMIT {limit} OFFSET {actual_offset}"
+
+        # For standard queries (no server pagination):
+        if limit is None:
+            # If no limit is specified, don't use LIMIT clause
             return ""
 
-        return f"LIMIT {limit}"
+        # When limit is specified, always apply it
+        limit_clause = f"LIMIT {limit}"
+
+        # We don't include OFFSET for non-server pagination
+        # The translate method already validates this
+        return limit_clause
+
+    def translate_count(self, query_model: QueryModel) -> str:
+        """Generate a SQL COUNT query for the given query model.
+
+        Args:
+            query_model: The query model
+
+        Returns:
+            SQL COUNT query string
+        """
+        base_sql = self.translate(query_model)
+
+        # Start building the query
+        sql = f"SELECT COUNT(*) AS count FROM ({base_sql})"
+
+        if self.dialect == "clickhouse":
+            sql += " AS sub_query"
+
+        return sql

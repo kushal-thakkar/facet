@@ -1012,11 +1012,26 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 { id: '1000', label: '1000 rows' },
                 { id: 'none', label: 'No limit' },
               ]}
-              value={currentExploration.limit || '100'}
+              value={currentExploration.limit}
               onChange={(value) => {
-                actions.updateCurrentExploration({
-                  limit: value,
-                });
+                // Set isServerPagination flag when "No limit" is selected
+                const isServerPagination = value === 'none';
+
+                // When "No limit" is selected, we need to:
+                // 1. Set isServerPagination to true
+                // 2. Keep limit as 'none' for the UI display
+                // 3. Set offset to 0 for server pagination
+                // This approach maintains the UI state while ensuring correct API parameters
+                const updates = {
+                  limit: value, // Keep the original value for UI consistency
+                  isServerPagination: isServerPagination, // Enable server pagination for "No limit"
+                  offset: isNoLimit ? 0 : null, // Set initial offset for server pagination
+                };
+
+                // Log what we're updating
+                console.log('Updating exploration with:', updates);
+
+                actions.updateCurrentExploration(updates);
               }}
               disabled={!isTableSelected}
               icon={

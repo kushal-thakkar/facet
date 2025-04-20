@@ -117,39 +117,19 @@ class SnowflakeConnector(DatabaseConnector):
                 f"Fetching metadata for Snowflake database: {self.connection.config.database}"
             )
 
-            # Check if we're using SNOWFLAKE_SAMPLE_DATA
-            is_sample_data = "SNOWFLAKE_SAMPLE_DATA" in self.connection.config.database.upper()
+            schema = getattr(self.connection.config, "snowflake_schema")
 
-            # For SNOWFLAKE_SAMPLE_DATA, we need to specify a schema
-            if is_sample_data:
-                # Use a specific schema for sample data like TPCH_SF1, TPCDS_SF10, etc.
-                # Default to TPCH_SF1 if no schema is specified
-                schema = getattr(self.connection.config, "snowflake_schema", "TPCH_SF1")
-
-                tables_query = f"""
-                SELECT
-                    TABLE_NAME as name,
-                    TABLE_SCHEMA as schema,
-                    COMMENT as description,
-                    TABLE_TYPE as type,
-                    ROW_COUNT as row_count
-                FROM INFORMATION_SCHEMA.TABLES
-                WHERE TABLE_SCHEMA = '{schema}'
-                ORDER BY TABLE_SCHEMA, TABLE_NAME
-                """
-            else:
-                # Standard query for regular Snowflake databases
-                tables_query = """
-                SELECT
-                    TABLE_NAME as name,
-                    TABLE_SCHEMA as schema,
-                    COMMENT as description,
-                    TABLE_TYPE as type,
-                    ROW_COUNT as row_count
-                FROM INFORMATION_SCHEMA.TABLES
-                WHERE TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
-                ORDER BY TABLE_SCHEMA, TABLE_NAME
-                """
+            tables_query = f"""
+            SELECT
+                TABLE_NAME as name,
+                TABLE_SCHEMA as schema,
+                COMMENT as description,
+                TABLE_TYPE as type,
+                ROW_COUNT as row_count
+            FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = '{schema}'
+            ORDER BY TABLE_SCHEMA, TABLE_NAME
+            """
 
             client = await self.get_client()
             cursor = await self._run_in_executor(lambda: client.cursor().execute(tables_query))
@@ -181,7 +161,7 @@ class SnowflakeConnector(DatabaseConnector):
 
             if is_sample_data:
                 # Simplified query for sample data without foreign/primary key info
-                columns_query = """
+                columns_query = f"""
                 SELECT
                     TABLE_NAME,
                     COLUMN_NAME as name,
@@ -192,12 +172,12 @@ class SnowflakeConnector(DatabaseConnector):
                     null as referenced_table,
                     null as referenced_column
                 FROM INFORMATION_SCHEMA.COLUMNS c
-                WHERE c.TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
-                ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
+                WHERE c.TABLE_SCHEMA = '{schema}'
+                ORDER BY c.ORDINAL_POSITION
                 """
             else:
                 # Standard query with foreign/primary key info for regular Snowflake databases
-                columns_query = """
+                columns_query = f"""
                 SELECT
                     TABLE_NAME,
                     COLUMN_NAME as name,
@@ -234,6 +214,7 @@ class SnowflakeConnector(DatabaseConnector):
                     WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
                 ) fk ON fk.TABLE_NAME = c.TABLE_NAME AND fk.COLUMN_NAME = c.COLUMN_NAME
                 WHERE c.TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
+                AND c.table_schema = '{schema}'
                 ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
                 """
 

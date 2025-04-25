@@ -24,6 +24,37 @@ class MetadataService:
         # In-memory storage for metadata (would be replaced with a database in production)
         self.metadata = {}
 
+    async def _get_metadata(self, connection: Connection, metadata_type: str):
+        """Get metadata, refreshing from the database if not cached.
+
+        Args:
+            connection: The database connection
+            metadata_type: Type of metadata to retrieve ("tables", "columns", or "relationships")
+
+        Returns:
+            The requested metadata
+
+        Raises:
+            Exception: If metadata cannot be retrieved
+        """
+        connection_id = connection.id
+
+        # Check if we have cached metadata
+        if connection_id in self.metadata and metadata_type in self.metadata[connection_id]:
+            return self.metadata[connection_id][metadata_type]
+
+        # Extract metadata from database
+        await self.refresh_metadata(connection)
+
+        # Get refreshed metadata
+        if connection_id in self.metadata and metadata_type in self.metadata[connection_id]:
+            return self.metadata[connection_id][metadata_type]
+
+        # If we still don't have metadata, something went wrong
+        raise ValueError(
+            f"Failed to retrieve {metadata_type} metadata for connection {connection_id}"
+        )
+
     async def get_tables(self, connection: Connection) -> List[TableMetadata]:
         """
         Get tables for a connection.
@@ -35,20 +66,7 @@ class MetadataService:
             List of tables
         """
         try:
-            # Check if we have cached metadata for this connection
-            connection_id = connection.id
-            if connection_id in self.metadata and "tables" in self.metadata[connection_id]:
-                return self.metadata[connection_id]["tables"]
-
-            # Extract metadata from database
-            await self.refresh_metadata(connection)
-
-            # Return tables
-            if connection_id in self.metadata and "tables" in self.metadata[connection_id]:
-                return self.metadata[connection_id]["tables"]
-
-            return []
-
+            return await self._get_metadata(connection, "tables")
         except Exception as e:
             logger.error(f"Error getting tables: {str(e)}")
             raise
@@ -91,28 +109,10 @@ class MetadataService:
             List of columns
         """
         try:
-            # Check if we have cached metadata for this connection
-            connection_id = connection.id
-            if connection_id in self.metadata and "columns" in self.metadata[connection_id]:
-                # Filter columns for the specified table
-                return [
-                    column
-                    for column in self.metadata[connection_id]["columns"]
-                    if column.tableName == table_id
-                ]
+            columns = await self._get_metadata(connection, "columns")
 
-            # Extract metadata from database
-            await self.refresh_metadata(connection)
-
-            # Return columns for the specified table
-            if connection_id in self.metadata and "columns" in self.metadata[connection_id]:
-                return [
-                    column
-                    for column in self.metadata[connection_id]["columns"]
-                    if column.tableName == table_id
-                ]
-
-            return []
+            # Filter columns for the specified table
+            return [column for column in columns if column.tableName == table_id]
 
         except Exception as e:
             logger.error(f"Error getting columns for table {table_id}: {str(e)}")
@@ -129,20 +129,7 @@ class MetadataService:
             List of relationships
         """
         try:
-            # Check if we have cached metadata for this connection
-            connection_id = connection.id
-            if connection_id in self.metadata and "relationships" in self.metadata[connection_id]:
-                return self.metadata[connection_id]["relationships"]
-
-            # Extract metadata from database
-            await self.refresh_metadata(connection)
-
-            # Return relationships
-            if connection_id in self.metadata and "relationships" in self.metadata[connection_id]:
-                return self.metadata[connection_id]["relationships"]
-
-            return []
-
+            return await self._get_metadata(connection, "relationships")
         except Exception as e:
             logger.error(f"Error getting relationships: {str(e)}")
             raise

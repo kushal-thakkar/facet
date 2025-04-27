@@ -6,6 +6,7 @@ import { useAppState } from '../../context/AppStateContext';
 import api from '../../utils/apiClient';
 import { useOutsideClickAndEscape } from '../../utils/hooks';
 import { getAvailableColumns } from '../../utils/explorationUtils';
+import { isServerPagination } from '../../utils/tableUtils';
 
 function ExplorationControls({ onRunQuery, isLoading }) {
   const { state, actions } = useAppState();
@@ -696,9 +697,6 @@ function ExplorationControls({ onRunQuery, isLoading }) {
             ]}
             value={currentExploration.visualization?.type}
             onChange={(type) => {
-              const fromPreview = currentExploration.visualization?.type === 'preview';
-              const toPreview = type === 'preview';
-
               // Create update object for visualization type
               const updateObj = {
                 visualization: {
@@ -1016,6 +1014,9 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               onChange={(value) => {
                 actions.updateCurrentExploration({
                   limit: value,
+                  offset: isServerPagination(value, currentExploration.visualization?.type)
+                    ? 0
+                    : null,
                 });
               }}
               disabled={!isTableSelected}

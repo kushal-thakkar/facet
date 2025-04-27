@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import ExplorationControls from '../Exploration/ExplorationControls';
 import api from '../../utils/apiClient';
+import { isServerPagination } from '../../utils/tableUtils';
 
 function SidePanel({ toggleDarkMode, darkMode }) {
   const { state, actions } = useAppState();
-  const { currentConnection, metadata, explorations, currentExploration, connections } = state;
+  const { currentConnection, currentExploration, preferences, connections } = state;
   const [queryResults, setQueryResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [connectionLoading, setConnectionLoading] = useState(false);
@@ -202,6 +203,16 @@ function SidePanel({ toggleDarkMode, darkMode }) {
           ...queryWithConnectionId,
           agg: [], // Clear any aggregation
           groupBy: [], // Clear any grouping
+        };
+      }
+
+      // Special handling for server-side pagination
+      if (isServerPagination(currentExploration.limit, currentExploration.visualization?.type)) {
+        queryWithConnectionId = {
+          ...queryWithConnectionId,
+          limit: preferences.tablePageSize,
+          offset: currentExploration.offset,
+          isServerPagination: true,
         };
       }
 

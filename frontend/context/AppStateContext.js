@@ -21,6 +21,7 @@ const initialState = {
     selectedFields: [], // Default selected fields
     sort: [], // Initialize sort as empty array
     granularity: 'auto', // Default granularity to auto
+    offset: null, // only used for server-side pagination
   },
   queryResults: null,
   metadata: {

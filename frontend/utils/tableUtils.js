@@ -95,3 +95,7 @@ export const getPaginationInfo = (data, currentPage, pageSize) => {
     currentData: data?.slice(startRow, endRow) || [],
   };
 };
+
+export const isServerPagination = (limit, visualizationType) => {
+  return limit === 'none' && (visualizationType === 'preview' || visualizationType === 'table');
+};

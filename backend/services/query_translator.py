@@ -693,7 +693,7 @@ class SQLTranslator:
         # Start building the query
         sql = f"SELECT COUNT(*) AS count FROM ({base_sql})"
 
-        if self.dialect == "clickhouse":
+        if self.dialect in ("clickhouse"):
             sql += " AS sub_query"
 
         return sql

@@ -178,7 +178,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
 
   const FieldsSelector = ({ columns, currentSelection, onSelectionChange }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [selectedFields, setSelectedFields] = useState(currentSelection || []);
+    const [selectedFields, setSelectedFields] = useState(currentSelection);
     const [searchTerm, setSearchTerm] = useState('');
     const isInitialRender = useRef(true);
     const fieldsRef = useRef(null);
@@ -1012,7 +1012,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 { id: '1000', label: '1000 rows' },
                 { id: 'none', label: 'No limit' },
               ]}
-              value={currentExploration.limit || '100'}
+              value={currentExploration.limit}
               onChange={(value) => {
                 actions.updateCurrentExploration({
                   limit: value,
@@ -1054,7 +1054,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 { id: 'day', label: 'Day' },
                 { id: 'month', label: 'Month' },
               ]}
-              value={currentExploration.granularity || 'auto'}
+              value={currentExploration.granularity}
               onChange={(value) => {
                 // Update the exploration with the selected granularity
                 // When auto is selected, it will be resolved by the frontend
@@ -1142,10 +1142,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
           <div className={!isTableSelected ? 'pointer-events-none' : ''}>
             <FieldsSelector
               columns={availableColumns}
-              currentSelection={currentExploration.selectedFields || []}
+              currentSelection={currentExploration.selectedFields}
               onSelectionChange={(selectedFields) => {
                 // Only update if the selection actually changed
-                const current = currentExploration.selectedFields || [];
+                const current = currentExploration.selectedFields;
                 const hasChanged =
                   current.length !== selectedFields.length ||
                   current.some((field) => !selectedFields.includes(field)) ||

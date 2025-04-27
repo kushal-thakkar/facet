@@ -43,6 +43,13 @@ class QueryService:
             totalCount = None
             hasMore = False
 
+            # Execute the main query with pagination
+            # Log all key query model properties for debugging
+            logger.info(
+                f"Query model in service - limit: {query_model.limit}, "
+                f"offset: {query_model.offset}, type: {type(query_model.offset)}"
+            )
+
             # Only calculate totalCount if this is a null limit request (server-side pagination)
             # We only need this for preview and table views
             is_server_side_pagination_enabled = query_model.isServerPagination is True
@@ -61,22 +68,20 @@ class QueryService:
             if is_server_side_pagination_enabled:
                 # Create a count query version (without pagination)
                 count_query_model = QueryModel(**query_model.dict())
-                count_query_model.limit = None  # Only modify the copy
-                count_query_model.offset = None  # Only modify the copy
+                count_query_model.isServerPagination = False  # Only modify the copy for count query
+                count_query_model.limit = None  # Only modify the copy for count query
+                count_query_model.offset = None  # Only modify the copy for count query
 
                 # Get total count for the query
                 count_query = translator.translate_count(count_query_model)
                 logger.info(f"Executing count SQL: {count_query}")
                 count_result, _, _ = await connector.execute_query(count_query)
+                logger.info(f"count_result: {count_result}")
                 if count_result and len(count_result) > 0:
-                    totalCount = count_result[0]["count"]
-
-            # Execute the main query with pagination
-            # Log all key query model properties for debugging
-            logger.info(
-                f"Query model in service - limit: {query_model.limit}, "
-                f"offset: {query_model.offset}, type: {type(query_model.offset)}"
-            )
+                    first_row = count_result[0]
+                    # try both lowercase and uppercase
+                    # Snowflake seems to return uppercase
+                    totalCount = first_row["count"] if "count" in first_row else first_row["COUNT"]
 
             sql = translator.translate(query_model)
             logger.info(f"Executing SQL: {sql}")
@@ -102,7 +107,10 @@ class QueryService:
             return result
 
         except Exception as e:
-            logger.error(f"Error executing query: {str(e)}")
+            import traceback
+
+            error_traceback = traceback.format_exc()
+            logger.error(f"Error executing query: {str(e)}\nTraceback: {error_traceback}")
 
             # Return error result
             return QueryResult(

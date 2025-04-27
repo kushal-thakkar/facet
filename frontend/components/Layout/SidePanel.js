@@ -147,10 +147,10 @@ function SidePanel({ toggleDarkMode, darkMode }) {
       const { getGranularityForTimeRange } = require('../../utils/explorationUtils');
 
       // Use the sort field directly - it's already in the correct format
-      let sort = currentExploration.sort || [];
+      let sort = currentExploration.sort;
 
-      // Process the selected fields - use them directly if available
-      const selectedFields = currentExploration.selectedFields || [];
+      // Process the selected fields - use them directly
+      const selectedFields = currentExploration.selectedFields;
 
       // Handle granularity for time-based visualizations
       // If granularity is set to 'auto', resolve it based on the current time range
@@ -192,12 +192,7 @@ function SidePanel({ toggleDarkMode, darkMode }) {
         },
         sort: sort, // Apply the processed sort order
         selectedFields: selectedFields, // Include selected fields
-        limit:
-          currentExploration.limit === 'none'
-            ? null
-            : currentExploration.limit
-              ? parseInt(currentExploration.limit, 10)
-              : 100,
+        limit: currentExploration.limit === 'none' ? null : parseInt(currentExploration.limit, 10),
       };
 
       // Special handling for preview visualization type

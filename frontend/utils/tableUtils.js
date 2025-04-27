@@ -80,22 +80,6 @@ export const sortData = (data, sortColumn, sortDirection) => {
   });
 };
 
-// Calculate pagination values
-export const getPaginationInfo = (data, currentPage, pageSize) => {
-  const totalRows = data?.length || 0;
-  const totalPages = Math.ceil(totalRows / pageSize);
-  const startRow = (currentPage - 1) * pageSize;
-  const endRow = Math.min(startRow + pageSize, totalRows);
-
-  return {
-    totalRows,
-    totalPages,
-    startRow,
-    endRow,
-    currentData: data?.slice(startRow, endRow) || [],
-  };
-};
-
 export const isServerPagination = (limit, visualizationType) => {
   return limit === 'none' && (visualizationType === 'preview' || visualizationType === 'table');
 };

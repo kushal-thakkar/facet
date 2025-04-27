@@ -4,14 +4,34 @@ import ResultsChart from './ResultsChart';
 import ResultsPreview from './ResultsPreview';
 import { useAppState } from '../../context/AppStateContext';
 
-function ResultsArea({ results, isLoading }) {
+function ResultsArea({ results, isLoading, onRunQuery }) {
   const { state, actions } = useAppState();
-  const { currentExploration } = state;
+  const { currentExploration, preferences } = state;
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportMenuRef = useRef(null);
 
+  // Handle pagination changes (used by table and preview components)
+  const handlePaginationChange = (newOffset, newPageSize) => {
+    console.log(
+      `DEBUG: Pagination change request - offset: ${newOffset}, pageSize: ${newPageSize}`
+    );
+
+    // Create a modified query with pagination parameters
+    const newOffsetExploration = {
+      ...currentExploration,
+      offset: newOffset,
+    };
+
+    const newPageSizePreferences = {
+      ...preferences,
+      tablePageSize: newPageSize,
+    };
+
+    return onRunQuery(newOffsetExploration, newPageSizePreferences);
+  };
+
   // Get current visualization type or default to table
-  const visualizationType = currentExploration.visualization?.type || 'table';
+  const visualizationType = currentExploration.visualization?.type;
 
   // Handler for export button
   const handleExport = (format) => {
@@ -249,10 +269,10 @@ function ResultsArea({ results, isLoading }) {
           </div>
         ) : visualizationType === 'preview' ? (
           // Preview view
-          <ResultsPreview results={results} />
+          <ResultsPreview results={results} onPageChange={handlePaginationChange} />
         ) : visualizationType === 'table' ? (
           // Table view
-          <ResultsTable results={results} />
+          <ResultsTable results={results} onPageChange={handlePaginationChange} />
         ) : (
           // Chart view
           <ResultsChart results={results} type={visualizationType} />

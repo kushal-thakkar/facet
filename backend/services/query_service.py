@@ -41,7 +41,6 @@ class QueryService:
 
             # Initialize pagination-related values
             totalCount = None
-            hasMore = False
 
             # Execute the main query with pagination
             # Log all key query model properties for debugging
@@ -60,10 +59,6 @@ class QueryService:
                     raise ValueError("Server-side pagination requires a limit value")
                 if query_model.offset is None:
                     raise ValueError("Server-side pagination requires an offset value")
-            else:
-                # When server-side pagination is disabled, offset should not be used
-                if query_model.offset is not None:
-                    raise ValueError("Offset can only be used with server-side pagination")
 
             if is_server_side_pagination_enabled:
                 # Create a count query version (without pagination)
@@ -88,11 +83,6 @@ class QueryService:
 
             results, columns, execution_time = await connector.execute_query(sql)
 
-            # Determine if there are more results - only when server side pagination is enabled
-            if is_server_side_pagination_enabled:
-                current_offset = query_model.offset
-                hasMore = current_offset + len(results) < totalCount
-
             result = QueryResult(
                 columns=columns,
                 data=results,
@@ -101,7 +91,6 @@ class QueryService:
                 executionTime=execution_time,
                 sql=sql,
                 warnings=[],
-                hasMore=hasMore,
             )
 
             return result

@@ -131,7 +131,6 @@ class QueryResult(BaseModel):
     warnings: List[str] = []
     error: Optional[str] = None
     suggestions: Optional[List[str]] = None
-    hasMore: bool = False  # Indicates if there are more results available (server-side pagination)
 
 
 class QueryValidationResult(BaseModel):

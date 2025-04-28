@@ -404,6 +404,7 @@ function FilterBar({ disabled }) {
 
     actions.updateCurrentExploration({
       filters: filtersCopy,
+      offset: 0, // Reset pagination when removing a filter
     });
   };
 
@@ -414,6 +415,7 @@ function FilterBar({ disabled }) {
 
     actions.updateCurrentExploration({
       filters: updatedFilters,
+      offset: 0, // Reset pagination when updating a filter
     });
   };
 
@@ -435,7 +437,10 @@ function FilterBar({ disabled }) {
       // Only commit to filters array if all required fields are present
       if (filter.column && (!valueRequired || filter.value !== '' || columnType === 'boolean')) {
         const updatedFilters = [...filters, filter];
-        actions.updateCurrentExploration({ filters: updatedFilters });
+        actions.updateCurrentExploration({
+          filters: updatedFilters,
+          offset: 0, // Reset pagination when adding a filter
+        });
         setShowNewFilter(false);
         setNewFilter({ column: '', operator: '=', value: '' });
       } else {

@@ -110,6 +110,7 @@ function TimeRangeSelector({ disabled, hasTimestampColumns = true }) {
                               range: preset.id,
                               column: timeRange.column || 'timestamp',
                             },
+                            offset: 0, // Reset pagination when changing time range
                           });
                           setShowTimeDialog(false);
                         }}

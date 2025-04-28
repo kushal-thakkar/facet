@@ -13,7 +13,7 @@ function ResultsArea({ results, isLoading, onRunQuery }) {
   // Handle pagination changes (used by table and preview components)
   const handlePaginationChange = (newOffset, newPageSize) => {
     console.log(
-      `DEBUG: Pagination change request - offset: ${newOffset}, pageSize: ${newPageSize}`
+      `DEBUG: Pagination change request - offset: ${newOffset}, pageSize: ${newPageSize}, currentOffset: ${currentExploration.offset}`
     );
 
     // Create a modified query with pagination parameters
@@ -27,6 +27,7 @@ function ResultsArea({ results, isLoading, onRunQuery }) {
       tablePageSize: newPageSize,
     };
 
+    console.log(`Running query with new offset: ${newOffset}`);
     return onRunQuery(newOffsetExploration, newPageSizePreferences);
   };
 

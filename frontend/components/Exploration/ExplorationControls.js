@@ -141,8 +141,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
       updateObj.agg = []; // Clear aggregation for preview mode
     }
 
-    // Update the current exploration with the selected table
-    actions.updateCurrentExploration(updateObj);
+    // Update the current exploration with the selected table and reset pagination offset
+    actions.updateCurrentExploration({
+      ...updateObj,
+      offset: 0, // Reset pagination to first page when table changes
+    });
 
     // Clear query results when table changes
     actions.updateQueryResults(null);
@@ -726,7 +729,11 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               // Clear query results when visualization type changes
               actions.updateQueryResults(null);
 
-              actions.updateCurrentExploration(updateObj);
+              // Reset pagination offset when visualization type changes
+              actions.updateCurrentExploration({
+                ...updateObj,
+                offset: 0, // Reset to first page
+              });
             }}
             enableTypeahead={true}
             disabled={!isTableSelected}
@@ -779,9 +786,15 @@ function ExplorationControls({ onRunQuery, isLoading }) {
               value={(currentExploration.groupBy || [])[0] || 'none'}
               onChange={(value) => {
                 if (value === 'none') {
-                  actions.updateCurrentExploration({ groupBy: [] });
+                  actions.updateCurrentExploration({
+                    groupBy: [],
+                    offset: 0, // Reset pagination when changing groupBy
+                  });
                 } else {
-                  actions.updateCurrentExploration({ groupBy: [value] });
+                  actions.updateCurrentExploration({
+                    groupBy: [value],
+                    offset: 0, // Reset pagination when changing groupBy
+                  });
                 }
               }}
               enableTypeahead={true}
@@ -834,6 +847,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   // Update with the new direction
                   actions.updateCurrentExploration({
                     sort: [{ column: currentSort.column, direction: newDirection }],
+                    offset: 0, // Reset pagination when changing sort direction
                   });
                 }}
                 title={
@@ -901,6 +915,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   // Clear the sort
                   actions.updateCurrentExploration({
                     sort: [],
+                    offset: 0, // Reset pagination when changing sort
                   });
                 } else {
                   // Get current direction or use default
@@ -913,6 +928,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   // Set the sort with the new column and current direction
                   actions.updateCurrentExploration({
                     sort: [{ column: value, direction: currentDirection }],
+                    offset: 0, // Reset pagination when changing sort
                   });
                 }
               }}
@@ -974,7 +990,10 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                   updateObj.selectedFields = [];
                 }
 
-                actions.updateCurrentExploration(updateObj);
+                actions.updateCurrentExploration({
+                  ...updateObj,
+                  offset: 0, // Reset pagination when changing aggregation
+                });
               }}
               disabled={!isTableSelected || currentExploration.visualization?.type === 'preview'}
               icon={
@@ -1062,6 +1081,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                 // before sending to backend
                 actions.updateCurrentExploration({
                   granularity: value,
+                  offset: 0, // Reset pagination when changing granularity
                 });
 
                 // Clear existing results when granularity changes
@@ -1114,6 +1134,7 @@ function ExplorationControls({ onRunQuery, isLoading }) {
                       ...currentExploration.timeRange,
                       column: value,
                     },
+                    offset: 0, // Reset pagination when changing time column
                   });
                 }
               }}

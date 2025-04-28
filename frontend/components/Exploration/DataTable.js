@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import {
   formatCellValue,
@@ -14,21 +14,20 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
   // Store the columns to display at the time results are received
   const [displayColumns, setDisplayColumns] = useState([]);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  // Page size state
   const [pageSize, setPageSize] = useState(preferences.tablePageSize);
   const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [paginationError, setPaginationError] = useState(null);
+
+  // Derive current page from offset instead of maintaining separate state
+  const currentPage = useMemo(() => {
+    return Math.floor(currentExploration.offset / pageSize) + 1;
+  }, [currentExploration.offset, pageSize]);
 
   // Update pageSize when preferences change
   useEffect(() => {
     setPageSize(preferences.tablePageSize);
   }, [preferences.tablePageSize]);
-
-  // Reset to page 1 when results change (new query)
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [results?.sql]);
 
   // Sorting state
   const [sortColumn, setSortColumn] = useState(null);
@@ -42,7 +41,6 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
   }, [results]);
 
   const totalRows = results?.totalCount || results?.data?.length || 0;
-  const totalPages = Math.ceil(totalRows / pageSize);
 
   // Use the explicit isServerPagination flag
   const isServerPaginationEnabled = isServerPagination(
@@ -50,16 +48,34 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
     currentExploration.visualization?.type
   );
 
-  // Calculate display positions
-  const startRow = (currentPage - 1) * pageSize;
-  const endRow = isServerPaginationEnabled
-    ? startRow + (results?.data?.length || 0)
-    : Math.min(startRow + pageSize, totalRows);
+  // memoized consts so values change when any of the deps changes
+  const { startRow, endRow } = useMemo(() => {
+    const startRow = (currentPage - 1) * pageSize;
 
-  // Get current page of data
-  const currentData = isServerPaginationEnabled
-    ? results?.data || [] // For server pagination, just use what the server sent
-    : results?.data?.slice(startRow, endRow) || []; // For client pagination, slice the data
+    const endRow = isServerPaginationEnabled
+      ? startRow + (results?.data?.length || 0)
+      : Math.min(startRow + pageSize, totalRows);
+
+    return { startRow, endRow };
+  }, [currentPage, pageSize, totalRows, results?.data?.length, isServerPaginationEnabled]);
+
+  const totalPages = useMemo(() => {
+    const pages = Math.ceil(totalRows / pageSize);
+    return pages;
+  }, [totalRows, pageSize]);
+
+  // Memoized - Get current page of data
+  const currentData = useMemo(() => {
+    if (!results?.data) {
+      console.log('No results data available');
+      return [];
+    }
+
+    const data = isServerPaginationEnabled ? results.data : results.data.slice(startRow, endRow);
+
+    console.log(`Returning ${data.length} rows of data`);
+    return data;
+  }, [results?.data, startRow, endRow, isServerPaginationEnabled]);
 
   // Handle sort click
   const handleSort = (columnName) => {
@@ -106,19 +122,35 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
 
   // Handle page change
   const goToPage = (page) => {
-    if (page < 1 || page > totalPages) return;
+    if (page < 1 || page > totalPages) {
+      console.log(`Invalid page: ${page}, out of range (1-${totalPages})`);
+      return;
+    }
 
     const newOffset = (page - 1) * pageSize;
 
+    // Update exploration offset which will derive the current page
     actions.updateCurrentExploration({
       offset: newOffset,
     });
 
-    handlePaginationOperation(
-      () => onPageChange(newOffset, pageSize),
-      `Error loading page ${page}`,
-      () => setCurrentPage(page)
-    );
+    // For server pagination, fetch the new data
+    if (onPageChange && isServerPaginationEnabled) {
+      setIsLoadingPage(true);
+
+      onPageChange(newOffset, pageSize)
+        .then(() => {
+          console.log(`onPageChange successful for page ${page}`);
+        })
+        .catch((error) => {
+          // Show the error to the user
+          console.error(`Error loading page ${page}:`, error);
+          setPaginationError(`Error loading page ${page}: ${error.message}`);
+        })
+        .finally(() => {
+          setIsLoadingPage(false);
+        });
+    }
   };
 
   // Change page size
@@ -126,6 +158,7 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
     // Update component state
     setPageSize(size);
 
+    // Reset to first page (offset 0)
     const newOffset = 0;
     actions.updateCurrentExploration({
       offset: newOffset,
@@ -136,11 +169,20 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
       tablePageSize: size,
     });
 
-    handlePaginationOperation(
-      () => onPageChange(newOffset, size),
-      'Error changing page size',
-      () => setCurrentPage(1)
-    );
+    // For server pagination, fetch the new data
+    if (onPageChange && isServerPaginationEnabled) {
+      setIsLoadingPage(true);
+
+      onPageChange(newOffset, size)
+        .catch((error) => {
+          // Show the error to the user
+          setPaginationError(`Error changing page size: ${error.message}`);
+          console.error(`error changing page size:`, error);
+        })
+        .finally(() => {
+          setIsLoadingPage(false);
+        });
+    }
   };
 
   // Render cell content
@@ -281,9 +323,6 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
                   Showing <span className="font-medium">{startRow + 1}</span> to{' '}
                   <span className="font-medium">{endRow}</span> of{' '}
                   <span className="font-medium">{totalRows}</span> results
-                  {isServerPaginationEnabled && results?.hasMore && (
-                    <span className="text-gray-500 ml-1">(more available)</span>
-                  )}
                 </>
               ) : (
                 <>No results found</>
@@ -312,8 +351,8 @@ function DataTable({ results, onPageChange, emptyMessage = 'No data available' }
               aria-label="Pagination"
             >
               <button
-                onClick={() => goToPage(1) || isLoadingPage}
-                disabled={currentPage === 1}
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1 || isLoadingPage}
                 className={`relative inline-flex items-center px-2 py-1 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium ${
                   currentPage === 1 || isLoadingPage
                     ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
